@@ -1,0 +1,17 @@
+{
+  "name": "fossil-core",
+  "version": "0.0.0",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "components"
+  ],
+  "dependencies": {
+    "requirejs": "~2.1.6",
+    "requirejs-tpl": "latest",
+    "backbone": "~1.0.0",
+    "qunit": "~1.11.0",
+    "jquery": "~2.0.2",
+    "underscore": "~1.4.4"
+  }
+}
