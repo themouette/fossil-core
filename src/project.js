@@ -62,11 +62,15 @@ define([
         // expose project's PubSub to plug it in project.
         createPubSub: function () {
             var pubsub = {}, project = this;
-            _.each(['on', 'off', 'trigger'], function (method) {
+            _.each(['on', 'off', 'trigger', 'once'], function (method) {
                 pubsub[method] = _.bind(project[method], project);
             });
 
             return pubsub;
+        },
+
+        start: function () {
+            this.trigger('start');
         }
     });
 
