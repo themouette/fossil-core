@@ -77,7 +77,7 @@ define([
             var appChange = (this.currentApplication !== application);
             if (appChange && this.currentApplication) {
                 this.project.trigger('application:teardown', this.currentApplication);
-                application.teardown();
+                this.currentApplication.teardown();
             }
             if (appChange) {
                 this.project.trigger('application:change', this.currentApplication, application);

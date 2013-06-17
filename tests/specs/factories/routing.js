@@ -272,6 +272,57 @@ define([
 
                 routing.navigate('app1/foo/bar');
             });
+
+            it('should call Application `setup` and `teardown`', function(done) {
+                this.timeout(10);
+                done = _.after(3, done);
+                function success () {
+                    assert(true);
+                    done();
+                }
+                function failure() {
+                    assert(false);
+                }
+                var project = new Project();
+                var routing = new RoutingFactory(routingOptions);
+                project.connect('app1/', Application.extend({
+                    routes: {
+                        'foo': 'app:foo',
+                        'foo/bar': 'app:foo:bar'
+                    }
+                }));
+                project.use('router', routing);
+                project.connect('app2/', Application.extend({
+                    routes: {
+                        'bar/:id': 'app:bar'
+                    }
+                }));
+                project.start();
+                var app1 = project.getApplication('app1/');
+                var app2 = project.getApplication('app2/');
+
+                app1.setup = success;
+                app1.teardown = failure;
+                app2.setup = failure;
+                app2.teardown = failure;
+
+                routing.navigate('app1/foo');
+
+                app1.setup = failure;
+                app1.teardown = failure;
+                app2.setup = failure;
+                app2.teardown = failure;
+
+                routing.navigate('app1/foo/bar');
+
+                app1.setup = failure;
+                app1.teardown = success;
+                app2.setup = success;
+                app2.teardown = failure;
+
+                routing.navigate('app2/bar/1');
+
+            });
         });
     });
 });
