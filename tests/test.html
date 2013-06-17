@@ -33,11 +33,13 @@
         './specs/project',
         './specs/application',
         './specs/module',
-        './specs/factory'
+        './specs/factory',
+        './specs/factories/routing',
+        './specs/factories/session'
     ], function () {
         //QUnit.start();
         mocha.checkLeaks();
-        mocha.run();
+        jQuery(mocha.run);
     });
   </script>
 </body>
