@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Fossil-core tests</title>
+  <link rel="stylesheet" href="../components/mocha/mocha.css">
+</head>
+<body>
+  <div id="mocha"></div>
+  <script src="../components/mocha/mocha.js"></script>
+  <script src="../components/requirejs/require.js"></script>
+  <script type="text/javascript" charset="utf-8">
+//    QUnit.config.autostart = false;
+    mocha.setup('bdd');
+    require.config({
+        baseUrl: '',
+        paths: {
+            'fossil': '../src',
+            'jquery': '../components/jquery/jquery',
+            'underscore': '../components/underscore/underscore',
+            'backbone': '../components/backbone/backbone',
+            'chai': '../components/chai/chai',
+            'sinon': '../components/sinon/lib/sinon'
+        },
+        shim: {
+            'underscore': {exports: '_'},
+            'backbone': { deps: ['underscore', 'jquery'], exports: 'Backbone'},
+            'sinon': { exports: 'sinon' },
+            'sinon/mock': { exports: 'sinon', deps: ['sinon'] }
+        }
+    });
+    require([
+        './specs/project',
+        './specs/application',
+        './specs/module',
+        './specs/factory'
+    ], function () {
+        //QUnit.start();
+        mocha.checkLeaks();
+        mocha.run();
+    });
+  </script>
+</body>
+</html>
