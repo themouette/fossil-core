@@ -1,9 +1,9 @@
 define([
     "chai",
-    "fossil/project",
     "fossil/application",
+    "fossil/module",
     "fossil/factories/routing"
-], function (chai, Project, Application, RoutingFactory) {
+], function (chai, Application, Module, RoutingFactory) {
 
     describe('Fossil.Factory.Routing', function () {
         var assert = chai.assert;
@@ -61,7 +61,7 @@ define([
 
         describe('Fossil.Factory.Routing register routes ', function () {
 
-            it('should register application routes defined via extension', function(done) {
+            it('should register module routes defined via extension', function(done) {
                 this.timeout(10);
                 done = _.after(4, done);
                 function onAppBar(id) {
@@ -69,26 +69,26 @@ define([
                     done();
                 }
 
-                // initialize project
-                var project = new Project();
+                // initialize application
+                var application = new Application();
                 var routing = new RoutingFactory(routingOptions);
-                project.connect('app1/', Application.extend({
+                application.connect('app1/', Module.extend({
                     routes: {
                         'foo': 'app:foo',
                         'foo/bar': 'app:foo:bar'
                     }
                 }));
-                project.use('router', routing);
-                project.connect('app2/', Application.extend({
+                application.use('router', routing);
+                application.connect('app2/', Module.extend({
                     routes: {
                         'bar/:id': 'app:bar'
                     }
                 }));
-                project.start();
+                application.start();
 
-                project.on('app:foo', done);
-                project.on('app:foo:bar', done);
-                project.on('app:bar', onAppBar);
+                application.on('app:foo', done);
+                application.on('app:foo:bar', done);
+                application.on('app:bar', onAppBar);
 
                 routing.navigate('app1/foo');
                 routing.navigate('app1/foo/bar');
@@ -97,64 +97,64 @@ define([
                 // all those should not be triggered
                 routing.navigate('foo');
 
-                project.off('app:foo', done);
-                project.off('app:foo:bar', done);
-                project.off('app:bar', onAppBar);
+                application.off('app:foo', done);
+                application.off('app:foo:bar', done);
+                application.off('app:bar', onAppBar);
                 done();
             });
 
-            it('should register project routes defined via prototype', function(done) {
+            it('should register application routes defined via prototype', function(done) {
                 this.timeout(10);
                 done = _.after(2, done);
-                // initialize project
-                var Project1 = Project.extend({
+                // initialize application
+                var Application1 = Application.extend({
                     routes: {
-                        'project/prototype': 'project:prototype'
+                        'application/prototype': 'application:prototype'
                     }
                 });
-                var project = new Project1({
+                var application = new Application1({
                     routes: {
-                        'project/options': 'project:options'
+                        'application/options': 'application:options'
                     }
                 });
                 var routing = new RoutingFactory(routingOptions);
-                project.use('router', routing);
-                project.start();
+                application.use('router', routing);
+                application.start();
 
-                project.on('project:prototype', done);
-                routing.navigate('project/prototype');
-                project.off('project:prototype', done);
+                application.on('application:prototype', done);
+                routing.navigate('application/prototype');
+                application.off('application:prototype', done);
                 done();
             });
 
-            it('should register project routes defined via options', function(done) {
+            it('should register application routes defined via options', function(done) {
                 this.timeout(10);
                 done = _.after(2, done);
-                // initialize project
-                var Project1 = Project.extend({
+                // initialize application
+                var Application1 = Application.extend({
                     routes: {
-                        'project/prototype': 'project:prototype'
+                        'application/prototype': 'application:prototype'
                     }
                 });
-                var project = new Project1({
+                var application = new Application1({
                     routes: {
-                        'project/options': 'project:options'
+                        'application/options': 'application:options'
                     }
                 });
                 var routing = new RoutingFactory(routingOptions);
-                project.use('router', routing);
-                project.start();
+                application.use('router', routing);
+                application.start();
 
-                project.on('project:options', done);
-                routing.navigate('project/options');
-                project.off('project:options', done);
+                application.on('application:options', done);
+                routing.navigate('application/options');
+                application.off('application:options', done);
                 done();
             });
 
             it('should register router routes defined via options', function(done) {
                 this.timeout(10);
                 done = _.after(2, done);
-                var project = new Project();
+                var application = new Application();
                 var routing = new RoutingFactory(_.extend(
                     routingOptions,
                     {
@@ -162,79 +162,79 @@ define([
                             'router/options': 'router:options'
                         }
                     }));
-                project.use('router', routing);
-                project.start();
+                application.use('router', routing);
+                application.start();
 
-                project.on('router:options', done);
+                application.on('router:options', done);
                 routing.navigate('router/options');
-                project.off('router:options', done);
+                application.off('router:options', done);
                 done();
             });
 
         });
 
-        describe('Fossil.Factories.Routing triggers application workflow', function () {
+        describe('Fossil.Factories.Routing triggers module workflow', function () {
 
-            it('should trigger project events application:{teardown,change,setup} when app is changed', function (done) {
+            it('should trigger application events module:{teardown,change,setup} when app is changed', function (done) {
                 this.timeout(50);
                 done = _.after(9, done);
-                // initialize project
-                var project = new Project();
+                // initialize application
+                var application = new Application();
                 var routing = new RoutingFactory(routingOptions);
-                project.connect('app1/', Application.extend({
+                application.connect('app1/', Module.extend({
                     routes: {
                         'foo': 'app:foo',
                         'foo/bar': 'app:foo:bar'
                     }
                 }));
-                project.use('router', routing);
-                project.connect('app2/', Application.extend({
+                application.use('router', routing);
+                application.connect('app2/', Module.extend({
                     routes: {
                         'bar/:id': 'app:bar'
                     }
                 }));
-                project.start();
+                application.start();
 
                 // it will migrate to app1
-                project.once('application:change', function (prev, next) {
+                application.once('module:change', function (prev, next) {
                     assert.equal(next.path, 'app1/', 'app1/foo: change to app1');
                     assert.isNull(prev, 'no previous app');
                     done();
                 });
-                project.once('application:setup', function (application) {
-                    assert.equal(application.path, 'app1/', 'app1/foo: setup app1');
+                application.once('module:setup', function (module) {
+                    assert.equal(module.path, 'app1/', 'app1/foo: setup app1');
                     done();
                 });
                 routing.navigate('app1/foo');
 
                 // it will migrate to app2
-                project.once('application:teardown', function (application) {
-                    assert.equal(application.path, 'app1/', 'app2/bar/2: teardown app1');
+                application.once('module:teardown', function (module) {
+                    assert.equal(module.path, 'app1/', 'app2/bar/2: teardown app1');
                     done();
                 });
-                project.once('application:change', function (prev, next) {
+                application.once('module:change', function (prev, next) {
                     assert.equal(prev.path, 'app1/', 'app2/bar/2: change from app1');
                     assert.equal(next.path, 'app2/', 'app2/bar/2: change to app2');
                     done();
                 });
-                project.once('application:setup', function (application) {
-                    assert.equal(application.path, 'app2/', 'app2/bar/2: setup app2');
+                application.once('module:setup', function (module) {
+                    assert.equal(module.path, 'app2/', 'app2/bar/2: setup app2');
                     done();
                 });
                 routing.navigate('app2/bar/2');
 
                 // it will migrate to app1
-                project.once('application:teardown', function (application) {
-                    assert.equal(application.path, 'app2/', 'app1/foo/bar: teardown app2');
+                application.once('module:teardown', function (module) {
+                    assert.equal(module.path, 'app2/', 'app1/foo/bar: teardown app2');
                     done();
                 });
-                project.once('application:change', function (prev, next) {
+                application.once('module:change', function (prev, next) {
                     assert.equal(prev.path, 'app2/', 'app1/foo/bar: change from app2');
                     assert.equal(next.path, 'app1/', 'app1/foo/bar: change to app1');
                     done();
                 });
-                project.once('application:setup', function (application) {
-                    assert.equal(application.path, 'app1/', 'app1/foo/bar: setup app1');
+                application.once('module:setup', function (module) {
+                    assert.equal(module.path, 'app1/', 'app1/foo/bar: setup app1');
                     done();
                 });
 
@@ -243,37 +243,37 @@ define([
                 done();
             });
 
-            it('should trigger project events application:{teardown,change,setup} when app is not changed', function () {
+            it('should trigger application events module:{teardown,change,setup} when app is not changed', function () {
                 function failure() {
-                    assert(false, 'application did not change.');
+                    assert(false, 'module did not change.');
                 }
-                // initialize project
-                var project = new Project();
+                // initialize application
+                var application = new Application();
                 var routing = new RoutingFactory(routingOptions);
-                project.connect('app1/', Application.extend({
+                application.connect('app1/', Module.extend({
                     routes: {
                         'foo': 'app:foo',
                         'foo/bar': 'app:foo:bar'
                     }
                 }));
-                project.use('router', routing);
-                project.connect('app2/', Application.extend({
+                application.use('router', routing);
+                application.connect('app2/', Module.extend({
                     routes: {
                         'bar/:id': 'app:bar'
                     }
                 }));
-                project.start();
+                application.start();
 
                 routing.navigate('app1/foo');
 
-                project.on('application:teardown', failure);
-                project.on('application:change', failure);
-                project.on('application:setup', failure);
+                application.on('module:teardown', failure);
+                application.on('module:change', failure);
+                application.on('module:setup', failure);
 
                 routing.navigate('app1/foo/bar');
             });
 
-            it('should call Application `setup` and `teardown`', function(done) {
+            it('should call Module `setup` and `teardown`', function(done) {
                 this.timeout(10);
                 done = _.after(3, done);
                 function success () {
@@ -283,23 +283,23 @@ define([
                 function failure() {
                     assert(false);
                 }
-                var project = new Project();
+                var application = new Application();
                 var routing = new RoutingFactory(routingOptions);
-                project.connect('app1/', Application.extend({
+                application.connect('app1/', Module.extend({
                     routes: {
                         'foo': 'app:foo',
                         'foo/bar': 'app:foo:bar'
                     }
                 }));
-                project.use('router', routing);
-                project.connect('app2/', Application.extend({
+                application.use('router', routing);
+                application.connect('app2/', Module.extend({
                     routes: {
                         'bar/:id': 'app:bar'
                     }
                 }));
-                project.start();
-                var app1 = project.getApplication('app1/');
-                var app2 = project.getApplication('app2/');
+                application.start();
+                var app1 = application.getModule('app1/');
+                var app2 = application.getModule('app2/');
 
                 app1.setup = success;
                 app1.teardown = failure;

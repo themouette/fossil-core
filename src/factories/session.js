@@ -1,13 +1,13 @@
 // Fossil.Factories.Session helps in sharing data between every layer
-// this factory is exposed to applications as well as project.
+// this factory is exposed to modules as well as application.
 //
 // ```javascript
-// new Fossil.Project({
+// new Fossil.Application({
 //   factories: {
 //     session: Fossil.Factories.Session
 //   },
-//   applications: {
-//     '': Fossil.Application.extend({
+//   modules: {
+//     '': Fossil.Module.extend({
 //         foo: function () {
 //             this.factories.session.get('user');
 //         }
@@ -22,17 +22,17 @@ define([
     "fossil/factory"
 ], function (Fossil, _, Backbone, Factory) {
 
-    function requireProjectError () {
+    function requireApplicationError () {
         throw new Error();
     }
     var exposed = ['get', 'set', 'has'];
 
     var Session = Fossil.Factories.Session = Factory.extend({
         options: {
-            exposeToApplication: true,
+            exposeToModule: true,
             defaults: {}
         },
-        _doActivateProject: function(project, id) {
+        _doActivateApplication: function(application, id) {
             var factory = this;
 
             this.model = new Backbone.Model(this.options.defaults || {});
@@ -40,18 +40,18 @@ define([
                 factory[method] = _.bind(factory.model[method], factory.model);
             });
         },
-        _doSuspendProject: function(project, id) {
+        _doSuspendApplication: function(application, id) {
             var factory = this;
 
             this.model = null;
             _.each(exposed, function (method) {
-                factory[method] = requireProjectError;
+                factory[method] = requireApplicationError;
             });
         }
     });
 
     _.each(exposed, function (method) {
-        Session.prototype[method] = requireProjectError;
+        Session.prototype[method] = requireApplicationError;
     });
 
     return Session;

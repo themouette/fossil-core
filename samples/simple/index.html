@@ -31,10 +31,10 @@
         "fossil/fossil"
     ], function ($, Fossil) {
 
-        var MyProject = Fossil.Project.extend({
-            // all routes are bound to a project wide event.
-            // it is possible to register routes on Project
-            // and Application.
+        var MyApplication = Fossil.Application.extend({
+            // all routes are bound to a application wide event.
+            // it is possible to register routes on Application
+            // and Module.
             routes: {
                 // index route will trigger 'route:index' event.
                 '': 'route:index'
@@ -48,23 +48,23 @@
             }
         });
 
-        var MailApplication = Fossil.Application.extend({
+        var MailModule = Fossil.Module.extend({
             routes: {
-                // main application route will trigger 'route:mail:index'
+                // main module route will trigger 'route:mail:index'
                 '': 'route:mail:index',
                 // show route
                 '/:id': 'route:mail:show'
             },
-            // register listeners on project event dispatcher
-            projectEvents: {
+            // register listeners on application event dispatcher
+            applicationEvents: {
                 // main route will call index function
                 'route:mail:index': 'index',
                 // show route will call show function
                 'route:mail:show': 'show'
             },
-            // some application level events
+            // some module level events
             events: {
-                // call when application is selected
+                // call when module is selected
                 'setup': function () {
                     console.log('setup mails');
                     $('#main').html([
@@ -76,7 +76,7 @@
                         '</ul>'
                     ].join(''));
                 },
-                // called on application switch
+                // called on module switch
                 'teardown': function () {
                     console.log('teardown mails');
                 }
@@ -90,23 +90,23 @@
             }
         });
 
-        var ContactApplication = Fossil.Application.extend({
+        var ContactModule = Fossil.Module.extend({
             routes: {
-                // main application route will trigger 'route:contact:index'
+                // main module route will trigger 'route:contact:index'
                 '': 'route:contact:index',
                 // show route
                 '/:id': 'route:contact:show'
             },
-            // register listeners on project event dispatcher
-            projectEvents: {
+            // register listeners on application event dispatcher
+            applicationEvents: {
                 // main route will call index function
                 'route:contact:index': 'index',
                 // show route will call show function
                 'route:contact:show': 'show'
             },
-            // some application level events
+            // some module level events
             events: {
-                // call when application is selected
+                // call when module is selected
                 'setup': function () {
                     console.log('setup contacts');
                     $('#main').html([
@@ -118,7 +118,7 @@
                         '</ul>'
                     ].join(''));
                 },
-                // called on application switch
+                // called on module switch
                 'teardown': function () {
                     console.log('teardown contacts');
                 }
@@ -132,29 +132,29 @@
             }
         });
 
-        // create and start the project
-        var project = new MyProject({
+        // create and start the application
+        var application = new MyApplication({
             factories: {
                 'session': Fossil.Factories.Session,
                 'router': new Fossil.Factories.Routing({
-                        // create a link on applications
+                        // create a link on modules
                         // to access router via this.router
-                        linkToApplication: true
+                        linkToModule: true
                     })
             },
-            applications: {
-                // all routes for Mail application
+            modules: {
+                // all routes for Mail module
                 // will be prefixed with "mail"
                 // you can use whatever you want
-                'mails': MailApplication,
-                // all routes for Contact application
+                'mails': MailModule,
+                // all routes for Contact module
                 // will be prefixed with "contact"
-                'contacts': ContactApplication
+                'contacts': ContactModule
             }
         });
 
-        // finaly, start project.
-        project.start();
+        // finaly, start application.
+        application.start();
     });
   </script>
 </body>

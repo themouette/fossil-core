@@ -4,77 +4,113 @@ define([
     'backbone'
 ], function (Fossil, _, Backbone) {
 
-    var Application = Fossil.Application = function (project, path, options) {
-        if (typeof path === "string") {
-            this.path = path;
-            this.options = options || {};
-        } else {
-            options = path || {};
-            this.path = options.path || '';
-            this.options = options;
-        }
+    var messages = {
+        unknown_module: _.template("Unknown module at \"<%- path %>\".")
+    };
 
-        // a PubSub object fo communication with the project
-        this.project = project.createPubSub();
-        // init factories namespace
-        this.factories = {};
-        // init event listeners
+    var Application = Fossil.Application = function (options) {
+        this.options = options || {};
         initEventListeners(this);
-        // finally call initialize method
-        this.initialize.call(this, project);
+        initFactories(this);
+        initModules(this);
+        this.initialize.apply(this, arguments);
     };
 
     _.extend(Application.prototype, Backbone.Events, {
-        // events bound on project PubSub
-        projectEvents: {},
-        // events bound on application PubSub
-        events: {},
-        initialize: function (project) {
+        initialize: function () {
+        },
 
+        // connect an module at given subpath
+        connect: function (path, module) {
+            if (_.isFunction(module)) {
+                module = new module(this, path);
+            }
+            this.modules[path] = module;
+            this.trigger('module:connect', module, path, this);
+
+            return this;
         },
-        // called when application is selected.
-        // this is what the setup phase is about.
-        setup: function () {
-            this.trigger('setup');
+        // retreive an module from it's path
+        // or returns all modules if no path is given.
+        getModule: function (path) {
+            if (typeof path === "undefined") {
+                return this.modules;
+            }
+            if (this.modules[path]) {
+                return this.modules[path];
+            }
+
+            throw new Error(messages.unknown_module({path: path}));
         },
-        // called when selected application is changing.
-        // this is used to terminate current application before
-        // the new one is setup.
-        teardown: function () {
-            this.trigger('teardown');
+
+        // use a factory
+        use: function (id, factory) {
+            if (_.isFunction(factory)) {
+                factory = new factory();
+            }
+            // suspend previously registered factory with this name
+            if (this.factories[id]) {
+                this.factories[id].suspendApplication(this, id);
+            }
+            factory.activateApplication(this, id);
+            this.factories[id] = factory;
+            this.trigger('factory:use', factory, id, this);
+
+            return this;
         },
+
+        // expose application's PubSub to plug it in application.
+        createPubSub: function () {
+            var pubsub = {}, application = this;
+            _.each(['on', 'off', 'trigger', 'once'], function (method) {
+                pubsub[method] = _.bind(application[method], application);
+            });
+
+            return pubsub;
+        },
+
+        start: function () {
+            this.trigger('start');
+        }
     });
 
-    function initEventListeners (application) {
-        initProjectEvents(application);
-        initApplicationEvents(application);
-    }
-    function initProjectEvents (application) {
-        var events;
-        // listen to project events
-        events = _.extend(
-            application.projectEvents || {},
-            application.options.projectEvents || {}
+    function initFactories (application) {
+        var factories = _.extend(
+            {},
+            application.factories || {},
+            application.options.factories || {}
         );
-        _.each(events, function (method, eventId) {
-            if (!_.isFunction(method)) {
-                method = application[method];
-            }
-            application.listenTo(application.project, eventId, method, application);
+        application.factories = {};
+        _.each(factories, function (factory, id) {
+            application.use(id, factory);
         });
     }
-    // listen to application events
-    function initApplicationEvents (application) {
-        var events;
-        events = _.extend(
-            application.events || {},
-            application.options.events || {}
+
+    function initModules (application) {
+        var apps = _.extend(
+            {},
+            application.modules || {},
+            application.options.modules || {}
         );
-        _.each(events, function (method, eventId) {
-            if (!_.isFunction(method)) {
-                method = application[method];
+        application.modules = {};
+        _.each(apps, function (module, path) {
+            application.connect(path, module);
+        });
+    }
+
+    function initEventListeners (application) {
+        var events = _.extend(
+            {},
+            _.result(application, 'events'),
+            _.result(application.options, 'events')
+        );
+        _.each(events, function (callback, eventname) {
+            if (!_.isFunction(callback)) {
+                callback = application[callback];
             }
-            application.listenTo(application, eventId, method, application);
+            if (callback) {
+                application.listenTo(application, eventname, callback, application);
+            }
         });
     }
 

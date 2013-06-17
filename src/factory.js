@@ -14,91 +14,91 @@ define([
     _.extend(Factory.prototype, Backbone.Events, {
         // default options
         options: {
-            // should the factory be exposed  to application context ?
-            // an exposed factory will be available under application.factories[factoryid]
-            exposeToApplication: false,
-            // should there be a shortlink on application
-            // this would make factory available under application[factoryid]
+            // should the factory be exposed  to module context ?
+            // an exposed factory will be available under module.factories[factoryid]
+            exposeToModule: false,
+            // should there be a shortlink on module
+            // this would make factory available under module[factoryid]
             // to avoid conflic this MUST be set by user.
             linkToApplcation: false
         },
         // A hook to initialize factory,
-        // after project and applications are initialized.
+        // after application and modules are initialized.
         initialize: function (options) {
         },
 
-        // activate Factory for project
-        activateProject: function (project, id) {
+        // activate Factory for application
+        activateApplication: function (application, id) {
             var factory = this;
 
             // create pubSub
-            this.project = project.createPubSub();
-            // activate project
-            this._doActivateProject(project);
-            // activate all applications
-            _.each(project.getApplication(), function (application) {
-                factory.activateApplication.call(factory, application, project, id);
+            this.application = application.createPubSub();
+            // activate application
+            this._doActivateApplication(application);
+            // activate all modules
+            _.each(application.getModule(), function (module) {
+                factory.activateModule.call(factory, module, application, id);
             });
-            // register on new application connection
-            this.listenTo(project, 'application:connect', _.bind(this.activateApplicationListener, this, id));
+            // register on new module connection
+            this.listenTo(application, 'module:connect', _.bind(this.activateModuleListener, this, id));
             // tell the world we're ready
-            project.trigger(prefixEvent(id, 'ready'), this);
+            application.trigger(prefixEvent(id, 'ready'), this);
         },
-        // unplug for project
-        suspendProject: function (project, id) {
+        // unplug for application
+        suspendApplication: function (application, id) {
             var factory = this;
-            // suspend for every project applications
-            _.each(project.getApplication(), function (application) {
-                factory.suspendApplication.call(factory, application, project, id);
+            // suspend for every application modules
+            _.each(application.getModule(), function (module) {
+                factory.suspendModule.call(factory, module, application, id);
             });
             // remove event handler
             this.stopListening();
             // remove pubsub reference
-            this.project = null;
-            // finally suspend for project
-            this._doSuspendProject(project);
+            this.application = null;
+            // finally suspend for application
+            this._doSuspendApplication(application);
         },
 
-        activateApplication: function (application, project, id) {
-            if (!application.factories) {
-                // application isn't booted yet.
+        activateModule: function (module, application, id) {
+            if (!module.factories) {
+                // module isn't booted yet.
                 return ;
             }
-            if (this.options.exposeToApplication) {
-                application.factories[id] = this;
+            if (this.options.exposeToModule) {
+                module.factories[id] = this;
             }
             if (this.options.linkToApplcation) {
-                application[id] = this;
+                module[id] = this;
             }
-            this._doActivateApplication.apply(this, arguments);
-            application.trigger(prefixEvent(id, 'ready'), this);
+            this._doActivateModule.apply(this, arguments);
+            module.trigger(prefixEvent(id, 'ready'), this);
         },
-        suspendApplication: function (application, project, id) {
-            if (this.options.exposeToApplication) {
-                application.factories[id] = null;
+        suspendModule: function (module, application, id) {
+            if (this.options.exposeToModule) {
+                module.factories[id] = null;
             }
-            this._doSuspendApplication.apply(this, arguments);
+            this._doSuspendModule.apply(this, arguments);
         },
 
-        activateApplicationListener: function (id, application, path, project) {
-            this.activateApplication(application, project, id);
+        activateModuleListener: function (id, module, path, application) {
+            this.activateModule(module, application, id);
         },
 
-        // activate factory on project.
-        // this method has to be overriden with the factory logic.
-        _doActivateProject: function (project) {
-        },
         // activate factory on application.
         // this method has to be overriden with the factory logic.
-        _doActivateApplication: function (application, project) {
+        _doActivateApplication: function (application) {
         },
-        // suspend factory on project.
+        // activate factory on module.
         // this method has to be overriden with the factory logic.
-        _doSuspendProject: function (project) {
+        _doActivateModule: function (module, application) {
         },
         // suspend factory on application.
         // this method has to be overriden with the factory logic.
-        _doSuspendApplication: function (application, project) {
+        _doSuspendApplication: function (application) {
+        },
+        // suspend factory on module.
+        // this method has to be overriden with the factory logic.
+        _doSuspendModule: function (module, application) {
         }
     });
 

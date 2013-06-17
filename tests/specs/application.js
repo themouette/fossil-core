@@ -1,107 +1,237 @@
 define([
     "chai",
+    "underscore",
     "fossil/application",
-    "fossil/project"
-], function (chai, Application, Project) {
+    "fossil/module",
+    "fossil/factory",
+], function (chai, _, Application, Module, Factory) {
 
     var assert = chai.assert;
 
-    describe('Fossil.Application', function () {
-        describe('Fossil.Application constructor prototype', function () {
-
-            it('accepts `path` as second argument', function() {
-                var project = new Project();
-                var app = new Application(project, 'path');
-
-                assert.equal(app.path, 'path');
-                assert.isObject(app.options);
+    describe('Fossil.Application configuration', function () {
+        it('should be possible to give modules as options', function() {
+            var Module1 = Module.extend({});
+            var Module2 = Module.extend({});
+            var application = new Application({
+                modules: {
+                    '': Module1,
+                    'foo': Module2
+                }
             });
 
-            it('accepts `path` as an option', function() {
-                var project = new Project();
-                var app = new Application(project, {path: 'path'});
-
-                assert.equal(app.path, 'path');
-                assert.isObject(app.options);
-            });
-
-            it('sould be possible to give no path nor options', function() {
-                var project = new Project();
-                var app = new Application(project);
-
-                assert.equal(app.path, '');
-                assert.isObject(app.options);
-            });
+            assert.equal(_.size(application.getModule()), 2, 'It is possible to access all applicaitons at once');
+            assert.instanceOf(application.getModule(""), Module1, 'Applicaiton key can be empty');
+            assert.instanceOf(application.getModule("foo"), Module2, 'Applicaiton key can contain letters');
         });
 
-        describe('Fossil.Application can communicate with project via pubsub', function () {
-            it('proveds access to project pubsub', function(done) {
-                var project = new Project();
-                var app = new Application(project);
-
-                app.project.on('foo', done);
-                app.project.trigger('foo');
+        it('should be possible to register events as options', function(done) {
+            this.timeout(10);
+            done = _.after(2, done);
+            var Application1 = Application.extend({
+                bar: function () {
+                    assert.ok('It is possible to define callbacks directly in event hash');
+                    done();
+                }
             });
+            var application = new Application1({
+                events: {
+                    'foo': function () {
+                        assert.ok('It is possible to define callbacks directly in event hash');
+                        done();
+                    },
+                    'bar': 'bar'
+                }
+            });
+
+            application.trigger('foo');
+            application.trigger('bar');
+        });
+    });
+
+    describe('Fossil.Application can connect module', function () {
+
+        it('should be possible to connect an Module and retrieve it.', function () {
+            var application = new Application();
+            application.connect('', Module);
+
+            assert.equal(_.size(application.getModule()), 1, 'It is possible to access all applicaitons at once');
+            assert.instanceOf(application.getModule(""), Module, 'Registered module is accessible via path key');
         });
 
-        describe('Fossil.Application events registration', function () {
+        it('should be possible to connect multiple Module-s.', function () {
+            var Module1 = Module.extend({});
+            var Module2 = Module.extend({});
+            var Module3 = Module.extend({});
+            var application = new Application();
+            application.connect('', Module1);
+            application.connect('foo', Module2);
+            application.connect('bar/baz', Module3);
 
-            it('should regiter events on application pub sub', function (done) {
-                this.timeout(10);
-                done = _.after(2, done);
-                var project = new Project({
-                    applications: {
-                        app1: Application.extend({
-                            events: {
-                                'foo': 'foo',
-                                'bar': function () {
-                                    done();
-                                }
-                            },
-                            projectEvents: {
-                                'foo': function () {
-                                    assert.ok(false, 'It should not register projectEvents in app pubSub');
-                                }
-                            },
-                            foo: function () {
-                                done();
-                            }
-                        })
-                    }
-                });
+            assert.equal(_.size(application.getModule()), 3, 'It is possible to access all applicaitons at once');
+            assert.instanceOf(application.getModule(""), Module1, 'Applicaiton key can be empty');
+            assert.instanceOf(application.getModule("foo"), Module2, 'Applicaiton key can contain letters');
+            assert.instanceOf(application.getModule("bar/baz"), Module3, 'Module key can be a path');
+        });
 
-                project.getApplication('app1').trigger('foo');
-                project.getApplication('app1').trigger('bar');
+        it('should be possible to connect Module instance', function() {
+            var application = new Application();
+            application.connect('', new Module(application));
+
+            assert.equal(_.size(application.getModule()), 1, 'It is possible to access all applicaitons at once');
+            assert.instanceOf(application.getModule(""), Module, 'Registered module is accessible via path key');
+        });
+
+        it('connects module key as path', function () {
+            var application = new Application();
+            application.connect('foo', Module);
+
+            assert.equal(application.getModule('foo').path, 'foo');
+        });
+    });
+
+    describe('Fossil.Application can use Factory-s', function () {
+        it('should be possible to use a factory and retreive it', function () {
+            var application = new Application();
+            application.use('foo', new Factory());
+
+            assert.instanceOf(application.factories.foo, Factory);
+        });
+
+        it('should be possible to use multiple factories and retreive it', function () {
+            var application = new Application();
+            var Factory1 = Factory.extend({});
+            var Factory2 = Factory.extend({});
+
+            application.use('foo', new Factory1());
+            application.use('bar', new Factory2());
+
+            assert.instanceOf(application.factories.foo, Factory1);
+            assert.instanceOf(application.factories.bar, Factory2);
+        });
+
+        it('should be possible to use an uninstanciated factory', function () {
+            var application = new Application();
+            application.use('foo', Factory);
+
+            assert.instanceOf(application.factories.foo, Factory);
+        });
+
+        it('should be possible to define factories in options', function () {
+            var application = new Application({
+                factories: {
+                    'foo': Factory
+                }
             });
 
-            it('should regiter projectEvents on application pub sub', function (done) {
-                this.timeout(10);
-                done = _.after(2, done);
-                var project = new Project({
-                    applications: {
-                        app1: Application.extend({
-                            projectEvents: {
-                                'foo': 'foo',
-                                'bar': function () {
-                                    done();
-                                }
-                            },
-                            events: {
-                                'foo': function () {
-                                    assert.ok(false, 'It should not register events in project pubSub');
-                                }
-                            },
-                            foo: function () {
-                                done();
-                            }
-                        })
-                    }
-                });
+            assert.instanceOf(application.factories.foo, Factory);
+        });
 
-                project.trigger('foo');
-                project.trigger('bar');
+        it('should activate factory for application when in use', function (done) {
+            this.timeout(10);
+            var application = new Application();
+            var Factory1 = Factory.extend({
+                _doActivateApplication: function (_application) {
+                    assert.strictEqual(application, _application);
+                    done();
+                }
             });
+
+            application.use('factory1', Factory1);
+        });
+
+        it('should suspend previous factory for application when in use', function (done) {
+            this.timeout(10);
+            done = _.after(3, done);
+            var application = new Application();
+            var Factory1 = Factory.extend({
+                _doSuspendApplication: function (_application) {
+                    assert.strictEqual(application, _application);
+                    done();
+                }
+            });
+            var Factory2 = Factory.extend({
+                _doActivateApplication: function (_application) {
+                    assert.strictEqual(application, _application);
+                    done();
+                }
+            });
+
+            application.use('factory1', Factory1);
+            application.use('factory1', Factory2);
+            assert.instanceOf(application.factories.factory1, Factory2);
+            done();
+        });
+
+        it('should trigger a factory:use event when new factory is used', function (done) {
+            this.timeout(10);
+            var application = new Application();
+            var factory = new Factory();
+            application.on('factory:use', function (_factory, id, application) {
+                assert.strictEqual(_factory, factory);
+                assert.equal(id, 'factory1');
+                done();
+            });
+            application.use('factory1', factory);
+        });
+    });
+
+    describe('Fossil.Application provides a PubSub', function (done) {
+        it('should be possible to communicate using events', function() {
+            this.timeout(10);
+            var application = new Application();
+            application.on('foo', done);
+            application.trigger('foo');
+        });
+
+        it('should accept events definition in the prototype', function(done) {
+            this.timeout(10);
+            var Application1 = Application.extend({
+                events: {
+                    'bar': 'foo'
+                },
+                foo: function () {
+                    done();
+                }
+            });
+
+            var application = new Application1();
+            application.trigger('bar');
+        });
+    });
+
+    describe('Fossil.Application Publish Subscribe generation', function () {
+        it('should be able to register listeners on application', function(done) {
+            this.timeout(10);
+            var application = new Application();
+            var pubsub = application.createPubSub();
+
+            pubsub.on('foo', done);
+            application.trigger('foo');
+        });
+
+        it('should be able to trigger events on application', function(done) {
+            this.timeout(10);
+            var application = new Application();
+            var pubsub = application.createPubSub();
+
+            application.on('foo', function () {
+                assert.deepEqual(arguments, ["a", "b"], 'It is possible to pass arguments');
+                done();
+            });
+            pubsub.trigger('foo', "a", "b");
+        });
+
+        it('should be able to unregister a listener', function() {
+            var application = new Application();
+            var pubsub = application.createPubSub();
+
+            function callback() {
+                throw new Error('this should have been removed');
+            }
+
+            application.on('foo', callback);
+            pubsub.off('foo', callback);
+            application.trigger('foo', "a", "b");
         });
     });
 });
-

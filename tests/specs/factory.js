@@ -3,9 +3,9 @@ define([
     "sinon",
     "underscore",
     "fossil/factory",
-    "fossil/project",
-    "fossil/application"
-], function (chai, sinon, _, Factory, Project, Application) {
+    "fossil/application",
+    "fossil/module"
+], function (chai, sinon, _, Factory, Application, Module) {
 
     var assert = chai.assert;
 
@@ -45,213 +45,213 @@ define([
         });
     });
 
-    describe('Fossil.Factory applies on project', function () {
-        it('provides a way to communicate with project via PubSub', function(done) {
+    describe('Fossil.Factory applies on application', function () {
+        it('provides a way to communicate with application via PubSub', function(done) {
             this.timeout(10);
-            var project = new Project();
+            var application = new Application();
             var factory = new Factory();
-            factory.activateProject(project);
+            factory.activateApplication(application);
 
-            factory.project.on('foo', done);
-            factory.project.trigger('foo');
+            factory.application.on('foo', done);
+            factory.application.trigger('foo');
         });
 
-        it('activates project on instanciation', function(done) {
+        it('activates application on instanciation', function(done) {
             this.timeout(10);
-            var project = new Project();
+            var application = new Application();
             var Factory1 = Factory.extend({
-                _doActivateProject: function (_project) {
-                    assert.strictEqual(project, _project);
+                _doActivateApplication: function (_application) {
+                    assert.strictEqual(application, _application);
                     done();
                 }
             });
             var factory = new Factory1();
-            factory.activateProject(project);
+            factory.activateApplication(application);
         });
 
         it('can be suspended', function(done) {
             this.timeout(10);
             done = _.after(2, done);
 
-            var project = new Project();
+            var application = new Application();
             var Factory1 = Factory.extend({
-                _doSuspendProject: function (_project) {
-                    assert.strictEqual(project, _project);
+                _doSuspendApplication: function (_application) {
+                    assert.strictEqual(application, _application);
                     done();
                 }
             });
             var factory = new Factory1();
-            factory.activateProject(project);
-            factory.suspendProject(project);
+            factory.activateApplication(application);
+            factory.suspendApplication(application);
 
-            assert.isNull(factory.project, 'pubsub is removed');
+            assert.isNull(factory.application, 'pubsub is removed');
             done();
         });
     });
 
-    describe('Fossil.Factory applies on application', function () {
-        it('activate any application registered later', function(done) {
+    describe('Fossil.Factory applies on module', function () {
+        it('activate any module registered later', function(done) {
             this.timeout(10);
-            var application, factory, project;
+            var module, factory, application;
 
-            project = new Project();
-            application = new Application(project);
+            application = new Application();
+            module = new Module(application);
 
-            // create a stub factory to monitor application activation
+            // create a stub factory to monitor module activation
             var Factory1 = Factory.extend({
-                _doActivateApplication: function (_application, _project) {
+                _doActivateModule: function (_module, _application) {
+                    assert.strictEqual(module, _module);
                     assert.strictEqual(application, _application);
-                    assert.strictEqual(project, _project);
                     done();
                 }
             });
 
             factory = new Factory1();
-            factory.activateProject(project);
-            project.connect('', application);
+            factory.activateApplication(application);
+            application.connect('', module);
         });
 
-        it('activate any application registered before', function(done) {
+        it('activate any module registered before', function(done) {
             this.timeout(10);
-            var application, factory, project;
+            var module, factory, application;
 
-            project = new Project();
-            application = new Application(project);
+            application = new Application();
+            module = new Module(application);
 
-            // create a stub factory to monitor application activation
+            // create a stub factory to monitor module activation
             var Factory1 = Factory.extend({
-                _doActivateApplication: function (_application, _project) {
+                _doActivateModule: function (_module, _application) {
+                    assert.strictEqual(module, _module);
                     assert.strictEqual(application, _application);
-                    assert.strictEqual(project, _project);
                     done();
                 }
             });
 
-            project.connect('', application);
+            application.connect('', module);
             factory = new Factory1();
-            factory.activateProject(project);
+            factory.activateApplication(application);
         });
 
-        it('does not affect application when suspended', function() {
+        it('does not affect module when suspended', function() {
 
-            var project = new Project();
-            var application = new Application(project);
+            var application = new Application();
+            var module = new Module(application);
             var Factory1 = Factory.extend({
-                _doActivateApplication: function (_application, _project) {
+                _doActivateModule: function (_module, _application) {
                     assert.fail('It should be desactivated');
                 }
             });
             var factory = new Factory1();
-            factory.activateProject(project);
-            factory.suspendProject(project);
+            factory.activateApplication(application);
+            factory.suspendApplication(application);
 
-            project.connect('', application);
+            application.connect('', module);
         });
 
-        it('suspend any application registered before', function(done) {
+        it('suspend any module registered before', function(done) {
             this.timeout(10);
-            var application, factory, project;
+            var module, factory, application;
 
-            project = new Project();
-            application = new Application(project);
+            application = new Application();
+            module = new Module(application);
 
-            // create a stub factory to monitor application activation
+            // create a stub factory to monitor module activation
             var Factory1 = Factory.extend({
-                _doSuspendApplication: function (_application, _project) {
+                _doSuspendModule: function (_module, _application) {
+                    assert.strictEqual(module, _module);
                     assert.strictEqual(application, _application);
-                    assert.strictEqual(project, _project);
                     done();
                 }
             });
 
-            project.connect('', application);
+            application.connect('', module);
             factory = new Factory1();
-            factory.activateProject(project);
-            factory.suspendProject(project);
+            factory.activateApplication(application);
+            factory.suspendApplication(application);
         });
     });
 
-    describe('Fossil.Factory exposition to application', function () {
+    describe('Fossil.Factory exposition to module', function () {
         it('should not be exposed as default', function() {
-            var factory, project;
+            var factory, application;
 
             factory = new Factory();
-            project = new Project({
+            application = new Application({
                 factories: {
                     'foo': factory
                 },
-                applications: {
-                    '': Application
+                modules: {
+                    '': Module
                 }
             });
 
-            assert.isUndefined(project.getApplication('').factories.foo);
+            assert.isUndefined(application.getModule('').factories.foo);
         });
 
         it('should be exposed', function () {
-            var factory, project;
+            var factory, application;
 
-            // create a stub factory to monitor application activation
+            // create a stub factory to monitor module activation
             var Factory1 = Factory.extend({
                 options: {
-                    exposeToApplication: true
+                    exposeToModule: true
                 }
             });
 
-            project = new Project();
+            application = new Application();
             factory = new Factory1();
 
-            project.connect('', Application);
-            project.use('foo', factory);
-            project.connect('bar', Application);
+            application.connect('', Module);
+            application.use('foo', factory);
+            application.connect('bar', Module);
 
-            assert.strictEqual(project.getApplication('').factories.foo, factory);
-            assert.strictEqual(project.getApplication('bar').factories.foo, factory);
+            assert.strictEqual(application.getModule('').factories.foo, factory);
+            assert.strictEqual(application.getModule('bar').factories.foo, factory);
         });
 
-        it('should be possible to define factories and applications in options', function (done) {
+        it('should be possible to define factories and modules in options', function (done) {
             this.timeout(10);
             var times = 0;
             done = _.after(3, done);
-            var Project1 = Project.extend({
+            var Application1 = Application.extend({
                 factories: {
                     'factory1': new (Factory.extend({
-                        options: {exposeToApplication: true},
+                        options: {exposeToModule: true},
                         // this should be called only once
-                        _doActivateApplication: function (app) {
+                        _doActivateModule: function (app) {
                             ++times;
                             if (times > 2) {
-                                assert.ok(false, 'Application should be activated only once per application.');
+                                assert.ok(false, 'Module should be activated only once per module.');
                             }
                             done();
                         }
                     }))()
                 },
-                applications: {
-                    '': Application.extend({}),
-                    'app2': Application.extend({})
+                modules: {
+                    '': Module.extend({}),
+                    'app2': Module.extend({})
                 }
             });
 
-            new Project1();
+            new Application1();
             setTimeout(done, 5);
         });
     });
 
     describe('Fossil.Factory events', function () {
 
-        it('should trigger a factory:%id%:ready on application when application is activated', function (done) {
+        it('should trigger a factory:%id%:ready on module when module is activated', function (done) {
             this.timeout(10);
             done = _.after(2, done);
             function eventTriggered() {
                 done();
             }
-            var project = new Project({
+            var application = new Application({
                 factories: {
                     my_factory: Factory
                 },
-                applications: {
-                    '': Application.extend({
+                modules: {
+                    '': Module.extend({
                         events: {
                             'factory:my_factory:ready': eventTriggered
                         }
@@ -259,16 +259,16 @@ define([
                 }
             });
 
-            project.connect('app/', Application.extend({
+            application.connect('app/', Module.extend({
                 events: {
                     'factory:my_factory:ready': eventTriggered
                 }
             }));
         });
 
-        it('should trigger a factory:%id%:ready on project when project is activated', function(done) {
+        it('should trigger a factory:%id%:ready on application when application is activated', function(done) {
             this.timeout(10);
-            var project = new Project({
+            var application = new Application({
                 factories: {
                     my_factory: Factory
                 },

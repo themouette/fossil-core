@@ -1,30 +1,30 @@
 define([
     "chai",
-    "fossil/project",
     "fossil/application",
+    "fossil/module",
     "fossil/factories/session"
-], function (chai, Project, Application, Session) {
+], function (chai, Application, Module, Session) {
 
     var assert = chai.assert;
 
-    describe('Fossil.Facroty.Session and Application', function () {
-        it('should be exposed to application', function() {
-            var project = new Project({
+    describe('Fossil.Facroty.Session and Module', function () {
+        it('should be exposed to module', function() {
+            var application = new Application({
                 factories: {
                     'session': Session
                 },
-                applications: {
-                    '': Application
+                modules: {
+                    '': Module
                 }
             });
 
-            assert.instanceOf(project.getApplication('').factories.session, Session);
+            assert.instanceOf(application.getModule('').factories.session, Session);
         });
     });
 
     describe('Fossil.Facroty.Session lifecycle', function () {
 
-        it('should throw an error when not initialized with a project', function() {
+        it('should throw an error when not initialized with a application', function() {
             var session = new Session();
 
             assert.throw(session.get);
@@ -32,12 +32,12 @@ define([
             assert.throw(session.has);
         });
 
-        it('should throw an error when suspended from project', function() {
+        it('should throw an error when suspended from application', function() {
             var session = new Session();
-            var project = new Project();
+            var application = new Application();
 
-            session.activateProject(project);
-            session.suspendProject(project);
+            session.activateApplication(application);
+            session.suspendApplication(application);
 
             assert.throw(session.get);
             assert.throw(session.set);
@@ -49,8 +49,8 @@ define([
 
         it('should expose model access', function() {
             var session = new Session();
-            var project = new Project();
-            session.activateProject(project);
+            var application = new Application();
+            session.activateApplication(application);
 
             assert.isFalse(session.has('foo'));
             session.set('foo', 'bar');

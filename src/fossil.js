@@ -1,7 +1,7 @@
 define([
     "fossil/core",
-    "fossil/project",
     "fossil/application",
+    "fossil/module",
     "fossil/factory",
     "fossil/factories/routing",
     "fossil/factories/session"

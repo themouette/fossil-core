@@ -17,7 +17,7 @@ define([
                 trigger: true
             }
         },
-        currentApplication: null,
+        currentModule: null,
         initialize: function () {
             // create router
             this.router = new Backbone.Router();
@@ -39,57 +39,57 @@ define([
                 );
             });
         },
-        _doActivateProject: function (project) {
-            // add all project routes
-            this.registerRoutesFor(project);
+        _doActivateApplication: function (application) {
+            // add all application routes
+            this.registerRoutesFor(application);
 
             // add event handler on router:navigate
             // to trigger navigation
-            this.listenTo(project, 'router:navigate', this.navigate, this);
-            this.listenTo(project, 'start', this.startListener, this);
+            this.listenTo(application, 'router:navigate', this.navigate, this);
+            this.listenTo(application, 'start', this.startListener, this);
         },
-        _doActivateApplication: function (application, project) {
-            // add all application routes
+        _doActivateModule: function (module, application) {
+            // add all module routes
             var factory = this;
-            var prefix = prefixPath(application.path, this.options.prefix);
-            _.each(application.routes || {}, function (eventname, path) {
+            var prefix = prefixPath(module.path, this.options.prefix);
+            _.each(module.routes || {}, function (eventname, path) {
                 factory.router.route(
                     prefixPath(path, prefix),
                     eventname,
-                    _.bind(factory.applicationRouteListener, factory, application, eventname)
+                    _.bind(factory.moduleRouteListener, factory, module, eventname)
                 );
             });
         },
-        _doSuspendProject: function (project) {
-            // remove all project routes
+        _doSuspendApplication: function (application) {
+            // remove all application routes
             Backbone.history.stop();
             // remove event handler for navigation
             this.stopListening();
         },
-        _doSuspendApplication: function (application, project) {
-            // remove all application routes
+        _doSuspendModule: function (module, application) {
+            // remove all module routes
         },
 
         startListener: function () {
             Backbone.history.start(this.options.history);
         },
-        applicationRouteListener: function (application, eventname) {
-            var appChange = (this.currentApplication !== application);
-            if (appChange && this.currentApplication) {
-                this.project.trigger('application:teardown', this.currentApplication);
-                this.currentApplication.teardown();
+        moduleRouteListener: function (module, eventname) {
+            var appChange = (this.currentModule !== module);
+            if (appChange && this.currentModule) {
+                this.application.trigger('module:teardown', this.currentModule);
+                this.currentModule.teardown();
             }
             if (appChange) {
-                this.project.trigger('application:change', this.currentApplication, application);
-                application.setup();
-                this.project.trigger('application:setup', application);
+                this.application.trigger('module:change', this.currentModule, module);
+                module.setup();
+                this.application.trigger('module:setup', module);
             }
-            this.currentApplication = application;
+            this.currentModule = module;
             var args = _.tail(arguments);
-            this.project.trigger.apply(this.project, args);
+            this.application.trigger.apply(this.application, args);
         },
         routeListener: function (eventname) {
-            this.project.trigger.apply(this.project, arguments);
+            this.application.trigger.apply(this.application, arguments);
         },
 
         navigate: function (fragment, options) {
