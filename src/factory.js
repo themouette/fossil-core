@@ -13,14 +13,18 @@ define([
 
     _.extend(Factory.prototype, Backbone.Events, {
         // default options
-        options: {},
+        options: {
+            // should the factory be exposed  to application context ?
+            // an exposed factory will be available under application.factories
+            exposeToApplication: false
+        },
         // A hook to initialize factory,
         // after project and applications are initialized.
         initialize: function (options) {
         },
 
         // activate Factory for project
-        activateProject: function (project) {
+        activateProject: function (project, id) {
             var factory = this;
 
             // create pubSub
@@ -29,35 +33,41 @@ define([
             this._doActivateProject(project);
             // activate all applications
             _.each(project.getApplication(), function (application) {
-                factory.activateApplication.call(factory, application, project);
+                factory.activateApplication.call(factory, application, project, id);
             });
             // register on new application connection
-            this.project.on('application:connect', this.activateApplicationListener, this);
+            this.listenTo(project, 'application:connect', _.bind(this.activateApplicationListener, this, id));
         },
         // unplug for project
-        suspendProject: function (project) {
+        suspendProject: function (project, id) {
             var factory = this;
             // suspend for every project applications
             _.each(project.getApplication(), function (application) {
-                factory.suspendApplication.call(factory, application, project);
+                factory.suspendApplication.call(factory, application, project, id);
             });
             // remove event handler
-            this.project.off('application:connect', this.activateApplicationListener, this);
+            this.stopListening();
             // remove pubsub reference
             this.project = null;
             // finally suspend for project
             this._doSuspendProject(project);
         },
 
-        activateApplication: function (application, project) {
+        activateApplication: function (application, project, id) {
+            if (this.options.exposeToApplication) {
+                application.factories[id] = this;
+            }
             this._doActivateApplication.apply(this, arguments);
         },
-        suspendApplication: function (application, project) {
+        suspendApplication: function (application, project, id) {
+            if (this.options.exposeToApplication) {
+                application.factories[id] = null;
+            }
             this._doSuspendApplication.apply(this, arguments);
         },
 
-        activateApplicationListener: function (application, path, project) {
-            this.activateApplication(application, project);
+        activateApplicationListener: function (id, application, path, project) {
+            this.activateApplication(application, project, id);
         },
 
         // activate factory on project.

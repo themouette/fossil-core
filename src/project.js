@@ -50,9 +50,9 @@ define([
             }
             // suspend previously registered factory with this name
             if (this.factories[id]) {
-                this.factories[id].suspendProject(this);
+                this.factories[id].suspendProject(this, id);
             }
-            factory.activateProject(this);
+            factory.activateProject(this, id);
             this.factories[id] = factory;
             this.trigger('factory:use', factory, id, this);
 

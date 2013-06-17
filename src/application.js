@@ -16,6 +16,8 @@ define([
 
         // a PubSub object fo communication with the project
         this.project = project.createPubSub();
+        // init factories namespace
+        this.factories = {};
         // init event listeners
         initEventListeners(project, this);
         // finally call initialize method

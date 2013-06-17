@@ -19,7 +19,10 @@ define([
         });
 
         it('accepts an object as options', function() {
-            var factory = new Factory({foo: 'bar'});
+            var Factory1 = Factory.extend({
+                options: {}
+            });
+            var factory = new Factory1({foo: 'bar'});
             assert.deepEqual(factory.options, {foo: "bar"});
         });
 
@@ -165,6 +168,45 @@ define([
             factory = new Factory1();
             factory.activateProject(project);
             factory.suspendProject(project);
+        });
+    });
+
+    describe('Fossil.Factory exposition to application', function () {
+        it('should not be exposed as default', function() {
+            var factory, project;
+
+            factory = new Factory();
+            project = new Project({
+                factories: {
+                    'foo': factory
+                },
+                applications: {
+                    '': Application
+                }
+            });
+
+            assert.isUndefined(project.getApplication('').factories.foo);
+        });
+
+        it('should be exposed', function () {
+            var factory, project;
+
+            // create a stub factory to monitor application activation
+            var Factory1 = Factory.extend({
+                options: {
+                    exposeToApplication: true
+                }
+            });
+
+            project = new Project();
+            factory = new Factory1();
+
+            project.connect('', Application);
+            project.use('foo', factory);
+            project.connect('bar', Application);
+
+            assert.strictEqual(project.getApplication('').factories.foo, factory);
+            assert.strictEqual(project.getApplication('bar').factories.foo, factory);
         });
     });
 });
