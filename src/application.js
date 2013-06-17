@@ -27,6 +27,12 @@ define([
     _.extend(Application.prototype, Backbone.Events, {
         initialize: function (project) {
 
+        },
+        setup: function () {
+            this.trigger('setup');
+        },
+        teardown: function () {
+            this.trigger('teardown');
         }
     });
 
