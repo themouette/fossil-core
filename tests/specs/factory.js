@@ -208,5 +208,33 @@ define([
             assert.strictEqual(project.getApplication('').factories.foo, factory);
             assert.strictEqual(project.getApplication('bar').factories.foo, factory);
         });
+
+        it('should be possible to define factories and applications in options', function (done) {
+            this.timeout(10);
+            var times = 0;
+            done = _.after(3, done);
+            var Project1 = Project.extend({
+                factories: {
+                    'factory1': new (Factory.extend({
+                        options: {exposeToApplication: true},
+                        // this should be called only once
+                        _doActivateApplication: function (app) {
+                            ++times;
+                            if (times > 2) {
+                                assert.ok(false, 'Application should be activated only once per application.');
+                            }
+                            done();
+                        }
+                    }))()
+                },
+                applications: {
+                    '': Application.extend({}),
+                    'app2': Application.extend({})
+                }
+            });
+
+            new Project1();
+            setTimeout(done, 5);
+        });
     });
 });

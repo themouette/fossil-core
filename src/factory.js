@@ -54,6 +54,10 @@ define([
         },
 
         activateApplication: function (application, project, id) {
+            if (!application.factories) {
+                // application isn't booted yet.
+                return ;
+            }
             if (this.options.exposeToApplication) {
                 application.factories[id] = this;
             }
