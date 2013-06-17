@@ -15,8 +15,12 @@ define([
         // default options
         options: {
             // should the factory be exposed  to application context ?
-            // an exposed factory will be available under application.factories
-            exposeToApplication: false
+            // an exposed factory will be available under application.factories[factoryid]
+            exposeToApplication: false,
+            // should there be a shortlink on application
+            // this would make factory available under application[factoryid]
+            // to avoid conflic this MUST be set by user.
+            linkToApplcation: false
         },
         // A hook to initialize factory,
         // after project and applications are initialized.
@@ -37,6 +41,8 @@ define([
             });
             // register on new application connection
             this.listenTo(project, 'application:connect', _.bind(this.activateApplicationListener, this, id));
+            // tell the world we're ready
+            project.trigger(prefixEvent(id, 'ready'), this);
         },
         // unplug for project
         suspendProject: function (project, id) {
@@ -61,7 +67,11 @@ define([
             if (this.options.exposeToApplication) {
                 application.factories[id] = this;
             }
+            if (this.options.linkToApplcation) {
+                application[id] = this;
+            }
             this._doActivateApplication.apply(this, arguments);
+            application.trigger(prefixEvent(id, 'ready'), this);
         },
         suspendApplication: function (application, project, id) {
             if (this.options.exposeToApplication) {
@@ -91,6 +101,10 @@ define([
         _doSuspendApplication: function (application, project) {
         }
     });
+
+    function prefixEvent (id, event) {
+        return ['factory', id, event].join(':');
+    }
 
     Factory.extend = Backbone.Model.extend;
 

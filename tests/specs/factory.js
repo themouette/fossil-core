@@ -237,4 +237,48 @@ define([
             setTimeout(done, 5);
         });
     });
+
+    describe('Fossil.Factory events', function () {
+
+        it('should trigger a factory:%id%:ready on application when application is activated', function (done) {
+            this.timeout(10);
+            done = _.after(2, done);
+            function eventTriggered() {
+                done();
+            }
+            var project = new Project({
+                factories: {
+                    my_factory: Factory
+                },
+                applications: {
+                    '': Application.extend({
+                        events: {
+                            'factory:my_factory:ready': eventTriggered
+                        }
+                    })
+                }
+            });
+
+            project.connect('app/', Application.extend({
+                events: {
+                    'factory:my_factory:ready': eventTriggered
+                }
+            }));
+        });
+
+        it('should trigger a factory:%id%:ready on project when project is activated', function(done) {
+            this.timeout(10);
+            var project = new Project({
+                factories: {
+                    my_factory: Factory
+                },
+                events: {
+                    'factory:my_factory:ready': function (factory) {
+                        assert.instanceOf(factory, Factory);
+                        done();
+                    }
+                }
+            });
+        });
+    });
 });
