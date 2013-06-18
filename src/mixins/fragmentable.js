@@ -23,7 +23,7 @@ define([
             }
             fragment = new this.fragments[fragmentid](this);
             this.fragments[fragmentid] = fragment;
-            this.trigger('fragmentable:setup');
+            this.trigger('fragmentable:fragment:setup', fragment, fragmentid, this);
             return fragment;
         },
         renderFragments: function ($el) {
@@ -33,8 +33,9 @@ define([
                 var id = el.getAttribute('data-fossil-fragment');
                 var fragment = fragmentable.setupFragment(id);
                 fragment.render($fragment);
+                fragmentable.trigger('fragmentable:fragment:render', fragment, id, fragmentable);
             });
-            this.trigger('fragmentable:render');
+            this.trigger('fragmentable:render', this);
         },
         removeFragments: function () {
             var fragmentable = this;
@@ -42,8 +43,9 @@ define([
                 var id = el.getAttribute('data-fossil-fragment');
                 var fragment = fragmentable.setupFragment(id);
                 fragment.remove();
+                fragmentable.trigger('fragmentable:fragment:remove', fragment, id, fragmentable);
             });
-            this.trigger('fragmentable:remove');
+            this.trigger('fragmentable:remove', this);
         }
     };
 
