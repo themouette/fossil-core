@@ -47,6 +47,7 @@
                     this.factories.router.navigate('mails', {replace: false})
                 }
             },
+            selector: '#main',
             template: function () {
                 return [
                         '<h1>My simple Fossil application</h1>',
@@ -126,7 +127,6 @@
         // create and start the application
         var application = new MyApplication({
             factories: {
-                'layout': Fossil.Factories.Layout,
                 'session': Fossil.Factories.Session,
                 'router': new Fossil.Factories.Routing({
                         // create a link on modules
