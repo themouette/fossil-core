@@ -6,7 +6,8 @@ define([
     'fossil/mixins/events',
     'fossil/mixins/layoutable',
     'fossil/mixins/elementable',
-    'fossil/mixins/fragmentable'
+    'fossil/mixins/fragmentable',
+    'fossil/mixins/deferrable'
 ], function (Fossil, $, _, Backbone) {
 
     var messages = {
@@ -27,7 +28,8 @@ define([
         Fossil.Mixins.Events,
         Fossil.Mixins.Elementable,
         Fossil.Mixins.Layoutable,
-        Fossil.Mixins.Fragmentable, {
+        Fossil.Mixins.Fragmentable,
+        Fossil.Mixins.Deferrable, {
             // default selector for application to append to.
             selector: 'body',
             currentModule: null,
