@@ -23,7 +23,7 @@ define([
         // init factories namespace
         this.factories = {};
         // init event listeners
-        this.registerEvents();
+        this.registerEvents(application);
         // init fragmentable
         this.initFragmentable();
         // finally call initialize method
@@ -42,12 +42,21 @@ define([
             initialize: function (application) {
 
             },
+            registerEvents: function (application) {
+                Fossil.Mixins.Events.registerEvents.call(this);
+                this.listenTo(this, 'elementable:attach', _.bind(this.elementAttachListener, this, application));
+                this.listenTo(this, 'elementable:detach', _.bind(this.elementDetachListener, this, application));
+            },
+            elementAttachListener: function (application) {
+                this.setup(application);
+            },
+            elementDetachListener: function (application) {
+                this.teardown(application);
+            },
             // called when module is selected.
             // this is what the setup phase is about.
             setup: function (application) {
                 this.trigger('setup', this, application);
-                var $el = application.$('[data-fossil-placeholder=module]');
-                this.setElement($el);
                 this.renderLayout();
                 this.renderFragments();
                 this.trigger('start', this, application);

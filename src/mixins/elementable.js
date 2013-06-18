@@ -19,8 +19,8 @@ define([
         // up to now, nothing is done here.
         // when element is changed or detached, this method is and must be called.
         detachElement: function () {
-            this.$el = null;
             this.trigger('elementable:detach', this);
+            this.$el = null;
         },
         $: function () {
             if (!this.$el) {
