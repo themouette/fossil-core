@@ -73,10 +73,14 @@ define([
             Backbone.history.start(this.options.history);
         },
         moduleRouteListener: function (application, module, eventname) {
+            module.deferred();
             application.switchModule(module);
             // remove both application and module
             var args = _.tail(_.tail(arguments));
-            module.trigger.apply(module, args);
+            module.then(function moduleReady() {
+                module.trigger.apply(module, args);
+            });
+            module.resolve();
         },
         routeListener: function (eventname) {
             this.application.trigger.apply(this.application, arguments);

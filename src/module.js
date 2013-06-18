@@ -5,7 +5,8 @@ define([
     'fossil/mixins/events',
     'fossil/mixins/layoutable',
     'fossil/mixins/elementable',
-    'fossil/mixins/fragmentable'
+    'fossil/mixins/fragmentable',
+    'fossil/mixins/deferrable'
 ], function (Fossil, _, Backbone) {
 
     var Module = Fossil.Module = function (application, path, options) {
@@ -34,7 +35,8 @@ define([
         Fossil.Mixins.Events,
         Fossil.Mixins.Elementable,
         Fossil.Mixins.Layoutable,
-        Fossil.Mixins.Fragmentable, {
+        Fossil.Mixins.Fragmentable,
+        Fossil.Mixins.Deferrable, {
             // events bound on application PubSub
             applicationEvents: {},
             // events bound on module PubSub
@@ -56,10 +58,15 @@ define([
             // called when module is selected.
             // this is what the setup phase is about.
             setup: function (application) {
+                this.deferred();
                 this.trigger('setup', this, application);
+                this.then(_.bind(this.render, this, application));
+                this.resolve();
+            },
+            render: function (application) {
                 this.renderLayout();
                 this.renderFragments();
-                this.trigger('start', this, application);
+                this.trigger('start', this);
             },
             // called when selected module is changing.
             // this is used to terminate current module before

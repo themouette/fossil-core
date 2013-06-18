@@ -90,10 +90,14 @@ define([
                 if (moduleChange) {
                     var $el = this.$('[data-fossil-placeholder=module]');
                     this.trigger('module:change', this.currentModule, module);
+                    module.deferred();
                     module.setElement($el);
-                    this.trigger('module:setup', module);
+                    module.then(_.bind(function moduleReady () {
+                        this.trigger('module:setup', module);
+                        this.currentModule = module;
+                    }, this));
+                    module.resolve();
                 }
-                this.currentModule = module;
             }
     });
 
