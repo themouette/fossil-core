@@ -23,7 +23,7 @@ define([
         ensureFragment: function(id) {
             var fragment = this.fragments[id];
             if (!fragment) {
-                throw new Error(messages.unknown_fragment({id: fragmentid}));
+                throw new Error(messages.unknown_fragment({id: id}));
             }
             if (fragment.ensureFragment) {
                 // fragment is already instanciated
