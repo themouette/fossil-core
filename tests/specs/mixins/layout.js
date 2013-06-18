@@ -3,8 +3,9 @@ define([
     'jquery',
     'underscore',
     'fossil/mixins/events',
+    'fossil/mixins/elementable',
     'fossil/mixins/layout'
-], function (chai, $, _, Events, Layoutable) {
+], function (chai, $, _, Events, Elementable, Layoutable) {
 
     var assert = chai.assert;
 
@@ -13,7 +14,7 @@ define([
         var Layout = function (options) {
             this.options = options || {};
         };
-        _.extend(Layout.prototype, Events, Layoutable);
+        _.extend(Layout.prototype, Events, Elementable, Layoutable);
 
         describe('event workflow', function () {
 
@@ -21,22 +22,23 @@ define([
                 this.timeout(10);
                 var $div = $('<div />');
                 var l = new Layout();
-                l.on('layout:setup', function (layoutable, $el) {
+                l.on('layout:setup', function (layoutable) {
                     assert.strictEqual(layoutable, l, 'first agument is the layoutable');
-                    assert.strictEqual($el, $div, 'second argument is the element');
                     done();
                 });
-                l.renderLayout($div);
+                l.setElement($div);
+                l.renderLayout();
             });
 
             it('should trigger layout:setup only once', function() {
                 var l = new Layout();
-                l.renderLayout($('<div />'));
+                l.setElement($('<div>'));
+                l.renderLayout();
                 l.on('layout:setup', function () {
                         assert.ok(false, 'layout:setup should have been called already');
                     });
                 l.removeLayout();
-                l.renderLayout($('<div />'));
+                l.renderLayout();
             });
 
             it('should trigger layout:render every time render is called', function(done) {
@@ -44,13 +46,14 @@ define([
                 this.timeout(10);
 
                 var l = new Layout();
+                l.setElement($('<div>'));
                 l.on('layout:render', function (layoutable) {
                     assert.strictEqual(layoutable, l, 'first agument is the layoutable');
                     done();
                 });
-                l.renderLayout($('<div />'));
+                l.renderLayout();
                 l.removeLayout();
-                l.renderLayout($('<div />'));
+                l.renderLayout();
             });
 
             it('should trigger layout:remove every time remove is called', function(done) {
@@ -58,25 +61,27 @@ define([
                 this.timeout(10);
 
                 var l = new Layout();
+                l.setElement($('<div>'));
                 l.on('layout:remove', function (layoutable) {
                     assert.strictEqual(layoutable, l, 'first agument is the layoutable');
                     done();
                 });
-                l.renderLayout($('<div />'));
+                l.renderLayout();
                 l.removeLayout();
-                l.renderLayout($('<div />'));
+                l.renderLayout();
                 l.removeLayout();
             });
         });
 
         describe('template property', function () {
-            it('should accept sting template', function () {
+            it('should accept string template', function () {
                 var l = new Layout({
                     template: 'foo'
                 });
                 var $el = $('<div/>');
-                l.renderLayout($el);
-                assert.equal($el.html(), '<div>foo</div>');
+                l.setElement($el);
+                l.renderLayout();
+                assert.equal($el.html(), 'foo');
             });
             it('should accept function template', function () {
                 var l = new Layout({
@@ -86,8 +91,9 @@ define([
                     }
                 });
                 var $el = $('<div/>');
-                l.renderLayout($el);
-                assert.equal($el.html(), '<div>foo</div>');
+                l.setElement($el);
+                l.renderLayout();
+                assert.equal($el.html(), 'foo');
             });
 
             it('should accept view template', function () {
@@ -101,7 +107,8 @@ define([
                     })
                 });
                 var $el = $('<div/>');
-                l.renderLayout($el);
+                l.setElement($el);
+                l.renderLayout();
                 assert.equal($el.html(), '<div class="view">foo</div>');
             });
 
@@ -116,7 +123,8 @@ define([
                     }))()
                 });
                 var $el = $('<div/>');
-                l.renderLayout($el);
+                l.setElement($el);
+                l.renderLayout();
                 assert.equal($el.html(), '<div class="view">foo</div>');
             });
         });

@@ -25,44 +25,48 @@ define([
 
     var Layout = Fossil.Mixins.Layout = {
         // use the template property to specify template.
-        template: '',
-        setupLayout: function ($el) {
+        template: null,
+        setupLayout: function () {
             var layout = this.template;
             if (this.options && this.options.template) {
                 layout = this.options.template;
             }
+
             // place layout property in the object.
             if (_.isFunction(layout) && !layout.prototype.render) {
                 layout = layout.call(this);
             }
             if (typeof layout === 'string') {
                 layout = new LayoutView({
+                    el: this.$el,
                     template: layout
                 });
+            } else if (!layout) {
+                // use the html content
+                layout = new LayoutView({
+                    el: this.$el,
+                    template: this.$el.html()
+                });
             } else if (layout instanceof Backbone.View) {
-                // nothing to do here
+                this.$el.append(layout.$el);
             } else if (layout.prototype.render) {
-                layout = new layout();
+                layout = new layout({});
+                this.$el.append(layout.$el);
             }
             this.layout = layout;
-            this.layout.render();
-            this.trigger('layout:setup', this, $el);
+            this.trigger('layout:setup', this);
         },
-        renderLayout: function ($el) {
+        renderLayout: function () {
             if (!this.layout) {
-                this.setupLayout($el);
+                this.setupLayout();
             }
-            if ($el) {
-                $el.append(this.layout.$el);
-            }
+            this.layout.render();
             this.trigger('layout:render', this);
         },
         removeLayout: function () {
-            this.layout.$el.detach();
+            this.detachElement();
+            this.layout.remove();
             this.trigger('layout:remove', this);
-        },
-        $: function () {
-            return this.layout.$.apply(this.layout, arguments);
         }
     };
 
