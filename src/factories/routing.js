@@ -17,7 +17,6 @@ define([
                 trigger: true
             }
         },
-        currentModule: null,
         initialize: function () {
             // create router
             this.router = new Backbone.Router();
@@ -74,17 +73,7 @@ define([
             Backbone.history.start(this.options.history);
         },
         moduleRouteListener: function (application, module, eventname) {
-            var moduleChange = (this.currentModule !== module);
-            if (moduleChange && this.currentModule) {
-                this.application.trigger('module:teardown', this.currentModule);
-                this.currentModule.teardown();
-            }
-            if (moduleChange) {
-                this.application.trigger('module:change', this.currentModule, module);
-                module.setup(application);
-                this.application.trigger('module:setup', module);
-            }
-            this.currentModule = module;
+            application.switchModule(module);
             // remove both application and module
             var args = _.tail(_.tail(arguments));
             module.trigger.apply(module, args);

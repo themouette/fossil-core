@@ -237,5 +237,77 @@ define([
                 application.trigger('foo', "a", "b");
             });
         });
+
+        describe('Application switch', function () {
+
+            it('keeps track of current application', function() {
+                var application = new Application({
+                    modules: {
+                        '1': Module,
+                        '2': Module
+                    }
+                });
+                application.start();
+
+                var module1 = application.getModule('1');
+                var module2 = application.getModule('2');
+
+                assert.ok(!application.currentModule, 'current module is falsy');
+                application.switchModule(module1);
+                assert.strictEqual(application.currentModule, module1);
+                application.switchModule(module2);
+                assert.strictEqual(application.currentModule, module2);
+            });
+
+            it('setup and teardown modules on switches', function(done) {
+                this.timeout(10);
+                done = _.after(3, done);
+                function success () {
+                    assert(true);
+                    done();
+                }
+                function failure() {
+                    assert(false);
+                }
+
+                var application = new Application({
+                    modules: {
+                        '1': Module,
+                        '2': Module
+                    }
+                });
+                application.start();
+
+                var module1 = application.getModule('1');
+                var module2 = application.getModule('2');
+
+                var observable = _.clone(Backbone.Events);
+
+                observable.listenTo(module1, 'setup', success);
+                observable.listenTo(module1, 'teardown', failure);
+                observable.listenTo(module2, 'setup', failure);
+                observable.listenTo(module2, 'teardown', failure);
+                // switch
+                application.switchModule(module1);
+
+                observable.stopListening();
+                observable.listenTo(module1, 'setup', failure);
+                observable.listenTo(module1, 'teardown', success);
+                observable.listenTo(module2, 'setup', success);
+                observable.listenTo(module2, 'teardown', failure);
+
+                // switch again
+                application.switchModule(module2);
+
+                observable.stopListening();
+                observable.listenTo(module1, 'setup', failure);
+                observable.listenTo(module1, 'teardown', failure);
+                observable.listenTo(module2, 'setup', failure);
+                observable.listenTo(module2, 'teardown', failure);
+
+                // no app switch implies no events
+                application.switchModule(module2);
+            });
+        });
     });
 });

@@ -30,6 +30,8 @@ define([
         Fossil.Mixins.Fragmentable, {
             // default selector for application to append to.
             selector: 'body',
+            currentModule: null,
+            template: '<div data-fossil-placeholder="module"></div>',
             initialize: function () {
             },
 
@@ -78,6 +80,20 @@ define([
                 this.renderLayout();
                 this.renderFragments();
                 this.trigger('start', this);
+            },
+            switchModule: function (module) {
+                var moduleChange = (this.currentModule !== module);
+                if (moduleChange && this.currentModule) {
+                    this.trigger('module:teardown', this.currentModule);
+                    this.currentModule.detachElement();
+                }
+                if (moduleChange) {
+                    var $el = this.$('[data-fossil-placeholder=module]');
+                    this.trigger('module:change', this.currentModule, module);
+                    module.setElement($el);
+                    this.trigger('module:setup', module);
+                }
+                this.currentModule = module;
             }
     });
 
