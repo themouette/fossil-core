@@ -74,12 +74,12 @@ define([
             Backbone.history.start(this.options.history);
         },
         moduleRouteListener: function (module, eventname) {
-            var appChange = (this.currentModule !== module);
-            if (appChange && this.currentModule) {
+            var moduleChange = (this.currentModule !== module);
+            if (moduleChange && this.currentModule) {
                 this.application.trigger('module:teardown', this.currentModule);
                 this.currentModule.teardown();
             }
-            if (appChange) {
+            if (moduleChange) {
                 this.application.trigger('module:change', this.currentModule, module);
                 module.setup();
                 this.application.trigger('module:setup', module);
