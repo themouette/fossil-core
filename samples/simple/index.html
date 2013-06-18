@@ -9,6 +9,7 @@
     <div id="main">
         <h1>Did you forget the bower install in samples/simple directory ?</h1>
         <p>Then go to samples/simple/components and type <code>ln -s ../../.. fossil-core</code></p>
+        <p>Loading...</p>
     </div>
   <script src="components/requirejs/require.js" ></script>
   <script type="text/javascript" charset="utf-8">
@@ -65,6 +66,18 @@
                         '<section data-fossil-placeholder="module"></section>',
                         '<p>Open your console to see something.</p>'
                     ].join('');
+            },
+            initialize: function () {
+                this.deferred();
+                var p = new $.Deferred();
+                this.registerAsync(p);
+                setTimeout(function () {
+                    p.resolve();
+                }, 500);
+                this.then(_.bind(this.start, this), function (err) {
+                        console.log('err', err.message);
+                });
+                this.resolve();
             }
         });
 
@@ -196,8 +209,6 @@
             }
         });
 
-        // finaly, start application.
-        application.start();
     });
   </script>
 </body>
