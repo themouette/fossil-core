@@ -21,6 +21,34 @@ define([
                 }
                 observable.listenTo(observable, eventid, method, observable);
             });
+        },
+
+        // expose application's PubSub to plug it in application.
+        createPubSub: function (observer, property) {
+            var pubsub = {}, observable = this;
+            _.each(['on', 'off', 'trigger', 'once'], function (method) {
+                pubsub[method] = _.bind(observable[method], observable);
+            });
+
+            // in case there is no observer
+            if (!observer) {return pubsub;}
+
+            var events = _.extend(
+                {},
+                _.result(observer, property),
+                _.result(observer.options || {}, property)
+            );
+
+            _.each(events, function (method, eventid) {
+                // create callback from method
+                // if it is not a function already, it should be a method
+                if (!_.isFunction(method)) {
+                    method = observer[method];
+                }
+                observable.listenTo(observable, eventid, method, observer);
+            });
+
+            return pubsub;
         }
     });
 
