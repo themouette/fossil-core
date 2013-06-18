@@ -92,8 +92,8 @@
             },
             template: [
                 '<h3>Mails</h3>',
-                '<div data-fossil-fragment="groups" class="sidebar"></div>',
-                '<div data-fossil-fragment="main" class="content"></div>',
+                //'<div data-fossil-fragment="groups" class="sidebar"></div>',
+                //'<div data-fossil-fragment="main" class="content"></div>',
                 '<div style="clear:both"></div>'
             ].join(''),
             // our methods
@@ -182,7 +182,7 @@
                 'router': new Fossil.Factories.Routing({
                         // create a link on modules
                         // to access router via this.router
-                        linkToModule: true
+                        link: true
                     })
             },
             modules: {
