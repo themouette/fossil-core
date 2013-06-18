@@ -214,8 +214,10 @@ define([
             var application = new Application();
             var pubsub = application.createPubSub();
 
-            application.on('foo', function () {
-                assert.deepEqual(arguments, ["a", "b"], 'It is possible to pass arguments');
+            application.on('foo', function (a, b) {
+                assert.equal(arguments.length, 2);
+                assert.deepEqual(a, "a");
+                assert.deepEqual(b, "b");
                 done();
             });
             pubsub.trigger('foo', "a", "b");

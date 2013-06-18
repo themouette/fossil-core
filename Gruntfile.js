@@ -16,14 +16,12 @@ module.exports = function(grunt) {
         }
     },
     watch: {},
-    qunit: {
-        all: {
-            options: {
-                urls: [
-                    'http://localhost:8000/tests/test.html'
-                ]
-            }
-        }
+    mocha: {
+        options: {
+            log: true,
+            reporter: 'Nyan'
+        },
+        all: ['tests/test.html']
     },
     connect: {
         server: {
@@ -50,6 +48,7 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-uglify');
   grunt.loadNpmTasks('grunt-contrib-watch');
   grunt.loadNpmTasks('grunt-concurrent');
+  grunt.loadNpmTasks('grunt-mocha');
 
   // Default task(s).
   grunt.registerTask('test', ['connect:server', 'qunit']);
