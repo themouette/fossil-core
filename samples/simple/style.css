@@ -1,0 +1,44 @@
+body, html, div {
+    padding: 0;
+    margin: 0;
+}
+
+/* layout */
+#main {
+    width: 940px;
+    margin: auto;
+}
+header {
+    padding: 0 10px;
+}
+header h1, header nav, header nav ul, header nav li {
+    height: 60px;
+    line-height: 60px;
+    vertical-align: top;
+    display: inline-block;
+    padding: 0;
+    margin: 0;
+}
+header nav li a {
+    line-height: 60px;
+    display: inline-block;
+    padding: 0 0 0 10px;
+}
+.sidebar {
+    float: left;
+    width: 150px;
+}
+.content {
+
+}
+/* theme */
+body {
+    background-color: #888;
+}
+header {
+    background-color: #222;
+    color: #888;
+}
+#main {
+    background-color: #fff;
+}

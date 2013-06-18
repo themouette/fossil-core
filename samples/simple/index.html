@@ -3,13 +3,13 @@
 <head>
   <meta charset="utf-8">
   <title>Fossil-core simple example</title>
+  <link rel="stylesheet" href="style.css" type="text/css" media="screen" title="no title" charset="utf-8">
 </head>
 <body>
     <div id="main">
         <h1>Did you forget the bower install in samples/simple directory ?</h1>
         <p>Then go to samples/simple/components and type <code>ln -s ../../.. fossil-core</code></p>
     </div>
-    <p>Open your console to see something.</p>
   <script src="components/requirejs/require.js" ></script>
   <script type="text/javascript" charset="utf-8">
     require.config({
@@ -53,14 +53,17 @@
             selector: '#main',
             template: function () {
                 return [
-                        '<h1>My simple Fossil application</h1>',
-                        '<nav>',
-                            '<ul>',
-                                '<li><a class="contacts" href="#contacts">contacts</a></li>',
-                                '<li><a class="mails" href="#mails">mails</a></li>',
-                            '</ul>',
-                        '</nav>',
-                        '<section data-fossil-placeholder="module"></section>'
+                        '<header>',
+                            '<h1>My simple Fossil application</h1>',
+                            '<nav>',
+                                '<ul>',
+                                    '<li><a class="contacts" href="#contacts">contacts</a></li>',
+                                    '<li><a class="mails" href="#mails">mails</a></li>',
+                                '</ul>',
+                            '</nav>',
+                        '</header>',
+                        '<section data-fossil-placeholder="module"></section>',
+                        '<p>Open your console to see something.</p>'
                     ].join('');
             }
         });
@@ -88,7 +91,10 @@
                 }
             },
             template: [
-                'Mail application goes here'
+                '<h3>Mails</h3>',
+                '<div data-fossil-fragment="groups" class="sidebar"></div>',
+                '<div data-fossil-fragment="main" class="content"></div>',
+                '<div style="clear:both"></div>'
             ].join(''),
             // our methods
             index: function () {
@@ -124,8 +130,9 @@
             // main template for contact module
             template: [
                 '<h3>Contacts</h3>',
-                '<div data-fossil-fragment="groups"></div>',
-                '<div data-fossil-fragment="main"></div>',
+                '<div data-fossil-fragment="groups" class="sidebar"></div>',
+                '<div data-fossil-fragment="main" class="content"></div>',
+                '<div style="clear:both"></div>'
             ].join(''),
             fragments: {
                 // this is the fragment rendered in the group placeholder
