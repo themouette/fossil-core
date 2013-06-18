@@ -12,40 +12,62 @@ define([
         fragments: {},
         initFragmentable: function () {
         },
-        setupFragment: function (fragmentid) {
-            var fragment = this.fragments[fragmentid];
+        // usually container is the Fragmentable
+        // but in case of Fragment, the Module or Application
+        // should be used as container.
+        // This ease communication.
+        getFragmentContainer: function () {
+            return this;
+        },
+        // ensure Fragment is instanciated
+        ensureFragment: function(id) {
+            var fragment = this.fragments[id];
             if (!fragment) {
                 throw new Error(messages.unknown_fragment({id: fragmentid}));
             }
-            // is the fragment already instanciated ?
-            if (fragment.render) {
+            if (fragment.ensureFragment) {
+                // fragment is already instanciated
                 return fragment;
             }
-            fragment = new this.fragments[fragmentid](this);
-            this.fragments[fragmentid] = fragment;
-            this.trigger('fragmentable:fragment:setup', fragment, fragmentid, this);
+            // instanciate fragment
+            fragment = new fragment(this.getFragmentContainer());
             return fragment;
         },
-        renderFragments: function ($el) {
+        // setup all the fragments.
+        // all available fragments are instanciated if not already
+        // and attached to the DOM elements.
+        renderFragments: function () {
             var fragmentable = this;
-            $el.find('[data-fossil-fragment]').each(function (index, el) {
-                var $fragment = $el.find(el);
+            this.$('[data-fossil-fragment]').each(function (index, el) {
                 var id = el.getAttribute('data-fossil-fragment');
-                var fragment = fragmentable.setupFragment(id);
-                fragment.render($fragment);
-                fragmentable.trigger('fragmentable:fragment:render', fragment, id, fragmentable);
+                fragmentable.renderFragment(id, fragmentable.$(el));
             });
             this.trigger('fragmentable:render', this);
         },
+        // setup a single fragment
+        renderFragment: function (fragmentid, $el) {
+            var fragment = this.ensureFragment(fragmentid);
+            fragment.setElement($el);
+            fragment.render();
+            this.trigger('fragmentable:fragment:render', fragment, fragmentid, this);
+        },
+        // teardown all the fragments
         removeFragments: function () {
             var fragmentable = this;
             this.$('[data-fossil-fragment]').each(function (index, el) {
                 var id = el.getAttribute('data-fossil-fragment');
-                var fragment = fragmentable.setupFragment(id);
-                fragment.remove();
-                fragmentable.trigger('fragmentable:fragment:remove', fragment, id, fragmentable);
+                fragmentable.removeFragment(id);
             });
             this.trigger('fragmentable:remove', this);
+        },
+        // element is detached.
+        removeFragment: function (fragmentid) {
+            var fragment = this.fragments[fragmentid];
+            if (!fragment || !fragment.$el) {
+                return ;
+            }
+            fragment.detachElement();
+            this.trigger('fragmentable:fragment:remove', fragment, fragmentid, this);
         }
     };
 

@@ -2,6 +2,7 @@ define([
     'fossil/core',
     'fossil/mixins/events',
     'fossil/mixins/layout',
+    'fossil/mixins/elementable',
     'fossil/mixins/fragmentable'
 ], function (Fossil) {
 
@@ -13,19 +14,29 @@ define([
         this.container = container.createPubSub(this, 'parentEvents');
         this.initialize.apply(this, arguments);
     };
-    _.extend(Fragment.prototype, Fossil.Mixins.Events, Fossil.Mixins.Layout, Fossil.Mixins.Fragmentable, {
-        initialize: function () {},
-        fagments: {},
-        render: function ($el) {
-            this.renderLayout($el);
-            this.$el = this.layout.$el;
-            this.renderFragments(this.$el);
-            return this;
-        },
-        remove: function () {
-            this.removeFragments();
-            this.removeLayout();
-        }
+    _.extend(Fragment.prototype,
+        Fossil.Mixins.Events,
+        Fossil.Mixins.Elementable,
+        Fossil.Mixins.Layout,
+        Fossil.Mixins.Fragmentable, {
+            initialize: function () {},
+            fagments: {},
+            setup: function () {
+                this.renderLayout();
+                this.renderFragments();
+            },
+            teardown: function () {
+                this.removeFragments();
+                this.removeLayout();
+            },
+            render: function () {
+                this.setup();
+                return this;
+            },
+            remove: function () {
+                this.teardown();
+                return this;
+            }
     });
 
     Fragment.extend = Backbone.Model.extend;

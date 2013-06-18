@@ -4,6 +4,7 @@ define([
     'backbone',
     'fossil/mixins/events',
     'fossil/mixins/layout',
+    'fossil/mixins/elementable',
     'fossil/mixins/fragmentable'
 ], function (Fossil, _, Backbone) {
 
@@ -29,31 +30,36 @@ define([
         this.initialize.call(this, application);
     };
 
-    _.extend(Module.prototype, Fossil.Mixins.Events, Fossil.Mixins.Layout, Fossil.Mixins.Fragmentable, {
-        // events bound on application PubSub
-        applicationEvents: {},
-        // events bound on module PubSub
-        events: {},
-        initialize: function (application) {
+    _.extend(Module.prototype,
+        Fossil.Mixins.Events,
+        Fossil.Mixins.Elementable,
+        Fossil.Mixins.Layout,
+        Fossil.Mixins.Fragmentable, {
+            // events bound on application PubSub
+            applicationEvents: {},
+            // events bound on module PubSub
+            events: {},
+            initialize: function (application) {
 
-        },
-        // called when module is selected.
-        // this is what the setup phase is about.
-        setup: function (application) {
-            this.trigger('setup', this, application);
-            var $el = application.$('[data-fossil-placeholder=module]');
-            this.renderLayout($el);
-            this.renderFragments($el);
-            this.trigger('start', this, application);
-        },
-        // called when selected module is changing.
-        // this is used to terminate current module before
-        // the new one is setup.
-        teardown: function (application) {
-            this.removeFragments();
-            this.removeLayout();
-            this.trigger('teardown', this, application);
-        }
+            },
+            // called when module is selected.
+            // this is what the setup phase is about.
+            setup: function (application) {
+                this.trigger('setup', this, application);
+                var $el = application.$('[data-fossil-placeholder=module]');
+                this.setElement($el);
+                this.renderLayout();
+                this.renderFragments();
+                this.trigger('start', this, application);
+            },
+            // called when selected module is changing.
+            // this is used to terminate current module before
+            // the new one is setup.
+            teardown: function (application) {
+                this.removeFragments();
+                this.removeLayout();
+                this.trigger('teardown', this, application);
+            }
     });
 
     Module.extend = Backbone.Model.extend;

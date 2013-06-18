@@ -42,6 +42,7 @@
         './specs/factories/session'
     ], function (Application) {
         // ensure applications runs into a sandboxed dom.
+        Application.prototype.selector = $('<div>');
         mocha.checkLeaks();
         jQuery(mocha.run);
     });
