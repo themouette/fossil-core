@@ -70,6 +70,7 @@ define([
         },
 
         start: function () {
+            this.trigger('setup');
             this.trigger('start');
         }
     });
