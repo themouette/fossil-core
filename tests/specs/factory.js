@@ -280,5 +280,14 @@ define([
                 }
             });
         });
+
+        it('should offer a prefixEvent method when application is active', function() {
+            var factory = new Factory();
+            assert.ok(!factory.prefixEvent);
+            var application = new Application();
+            application.use('factory', factory);
+            assert.ok(factory.prefixEvent);
+            assert.equal(factory.prefixEvent('foo'), 'factory:factory:foo');
+        });
     });
 });

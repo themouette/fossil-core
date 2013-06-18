@@ -30,6 +30,7 @@ define([
         // activate Factory for application
         activateApplication: function (application, id) {
             var factory = this;
+            this.prefixEvent = _.bind(prefixEvent, this, id);
 
             // create pubSub
             this.application = application.createPubSub();
@@ -42,7 +43,7 @@ define([
             // register on new module connection
             this.listenTo(application, 'module:connect', _.bind(this.activateModuleListener, this, id));
             // tell the world we're ready
-            application.trigger(prefixEvent(id, 'ready'), this);
+            application.trigger(this.prefixEvent('ready'), this);
         },
         // unplug for application
         suspendApplication: function (application, id) {
@@ -71,7 +72,7 @@ define([
                 module[id] = this;
             }
             this._doActivateModule.apply(this, arguments);
-            module.trigger(prefixEvent(id, 'ready'), this);
+            module.trigger(this.prefixEvent('ready'), this);
         },
         suspendModule: function (module, application, id) {
             if (this.options.exposeToModule) {
