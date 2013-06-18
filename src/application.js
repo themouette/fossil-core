@@ -68,9 +68,11 @@ define([
         },
 
         start: function () {
-            this.trigger('setup');
-            this.renderLayout($(this.selector));
-            this.trigger('start');
+            this.trigger('setup', this);
+            var $el = $(this.selector);
+            this.renderLayout($el);
+            this.renderFragments($el);
+            this.trigger('start', this);
         }
     });
 

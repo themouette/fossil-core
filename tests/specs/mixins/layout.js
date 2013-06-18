@@ -19,9 +19,14 @@ define([
 
             it('should trigger layout:setup when layout is not initialized', function(done) {
                 this.timeout(10);
+                var $div = $('<div />');
                 var l = new Layout();
-                l.on('layout:setup', done);
-                l.renderLayout($('<div />'));
+                l.on('layout:setup', function (layoutable, $el) {
+                    assert.strictEqual(layoutable, l, 'first agument is the layoutable');
+                    assert.strictEqual($el, $div, 'second argument is the element');
+                    done();
+                });
+                l.renderLayout($div);
             });
 
             it('should trigger layout:setup only once', function() {
@@ -39,7 +44,10 @@ define([
                 this.timeout(10);
 
                 var l = new Layout();
-                l.on('layout:render', done);
+                l.on('layout:render', function (layoutable) {
+                    assert.strictEqual(layoutable, l, 'first agument is the layoutable');
+                    done();
+                });
                 l.renderLayout($('<div />'));
                 l.removeLayout();
                 l.renderLayout($('<div />'));
@@ -50,7 +58,10 @@ define([
                 this.timeout(10);
 
                 var l = new Layout();
-                l.on('layout:remove', done);
+                l.on('layout:remove', function (layoutable) {
+                    assert.strictEqual(layoutable, l, 'first agument is the layoutable');
+                    done();
+                });
                 l.renderLayout($('<div />'));
                 l.removeLayout();
                 l.renderLayout($('<div />'));
@@ -70,6 +81,7 @@ define([
             it('should accept function template', function () {
                 var l = new Layout({
                     template: function () {
+                        assert.strictEqual(this, l, 'context is the layout object');
                         return 'foo';
                     }
                 });

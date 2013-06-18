@@ -40,15 +40,19 @@ define([
         // called when module is selected.
         // this is what the setup phase is about.
         setup: function (application) {
-            this.renderLayout(application.$('[data-fossil-placeholder=module]'));
-            this.trigger('setup');
+            this.trigger('setup', this, application);
+            var $el = application.$('[data-fossil-placeholder=module]');
+            this.renderLayout($el);
+            this.renderFragments($el);
+            this.trigger('start', this, application);
         },
         // called when selected module is changing.
         // this is used to terminate current module before
         // the new one is setup.
         teardown: function (application) {
+            this.removeFragments();
             this.removeLayout();
-            this.trigger('teardown');
+            this.trigger('teardown', this, application);
         }
     });
 

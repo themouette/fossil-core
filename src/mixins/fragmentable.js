@@ -4,31 +4,35 @@ define([
     'underscore',
     'backbone'
 ], function (Fossil, _, Backbone) {
+    var messages = {
+        unknown_fragment: _.template('No fragment available for "<%= id %>".')
+    };
     var Fragmentable = Fossil.Mixins.Fragmentable = {
         // list all fragments
         fragments: {},
         initFragmentable: function () {
-            this.listenTo(this, 'layout:render', this.renderFragments, this);
-            this.listenTo(this, 'layout:remove', this.removeFragments, this);
         },
         setupFragment: function (fragmentid) {
             var fragment = this.fragments[fragmentid];
+            if (!fragment) {
+                throw new Error(messages.unknown_fragment({id: fragmentid}));
+            }
             // is the fragment already instanciated ?
             if (fragment.render) {
                 return fragment;
             }
             fragment = new this.fragments[fragmentid](this);
             this.fragments[fragmentid] = fragment;
-            fragment.render();
             this.trigger('fragmentable:setup');
             return fragment;
         },
-        renderFragments: function () {
+        renderFragments: function ($el) {
             var fragmentable = this;
-            this.$('[data-fossil-fragment]').each(function (index, el) {
+            $el.find('[data-fossil-fragment]').each(function (index, el) {
+                var $fragment = $el.find(el);
                 var id = el.getAttribute('data-fossil-fragment');
                 var fragment = fragmentable.setupFragment(id);
-                fragmentable.$(el).append(fragment.$el);
+                fragment.render($fragment);
             });
             this.trigger('fragmentable:render');
         },
@@ -37,7 +41,7 @@ define([
             this.$('[data-fossil-fragment]').each(function (index, el) {
                 var id = el.getAttribute('data-fossil-fragment');
                 var fragment = fragmentable.setupFragment(id);
-                fragment.$el.detach();
+                fragment.remove();
             });
             this.trigger('fragmentable:remove');
         }

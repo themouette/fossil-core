@@ -26,14 +26,14 @@ define([
     var Layout = Fossil.Mixins.Layout = {
         // use the template property to specify template.
         template: '',
-        setupLayout: function () {
+        setupLayout: function ($el) {
             var layout = this.template;
             if (this.options && this.options.template) {
                 layout = this.options.template;
             }
             // place layout property in the object.
             if (_.isFunction(layout) && !layout.prototype.render) {
-                layout = layout();
+                layout = layout.call(this);
             }
             if (typeof layout === 'string') {
                 layout = new LayoutView({
@@ -46,20 +46,20 @@ define([
             }
             this.layout = layout;
             this.layout.render();
-            this.trigger('layout:setup');
+            this.trigger('layout:setup', this, $el);
         },
         renderLayout: function ($el) {
             if (!this.layout) {
-                this.setupLayout();
+                this.setupLayout($el);
             }
             if ($el) {
                 $el.append(this.layout.$el);
             }
-            this.trigger('layout:render');
+            this.trigger('layout:render', this);
         },
         removeLayout: function () {
             this.layout.$el.detach();
-            this.trigger('layout:remove');
+            this.trigger('layout:remove', this);
         },
         $: function () {
             return this.layout.$.apply(this.layout, arguments);
