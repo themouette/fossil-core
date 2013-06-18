@@ -44,7 +44,7 @@ No events declared.
 ### Fossil.Mixins.Layout
 
 * `layout:setup`: triggered when layout is first rendered on $el
-  `function(layoutable, $el)`
+  `function(layoutable)`
 * `layout:render`: triggered when layout is attached on DOM
   `function(layoutable)`
 * `layout:remove`: triggered when layout is detached from DOM
@@ -55,9 +55,9 @@ No events declared.
 * `fragmentable:fragment:setup`: triggered when fragment is first rendered on
   $el `function(fragemnt, fragmentid, fragmentable)`
 * `fragmentable:fragment:render`: triggered every time fragment is rendered
-  `function(fragemnt, fragmentid, fragmentablee)`
+  `function(fragemnt, fragmentid, fragmentable)`
 * `fragmentable:fragment:remove`: triggered every time fragment is removed
-  `function(fragemnt, fragmentid, fragmentablee)`
+  `function(fragemnt, fragmentid, fragmentable)`
 * `fragmentable:render`: triggered when fragment is rendered on DOM
   `function(fragmentable)`
 * `fragmentable:remove`: triggered when fragment is removed from DOM
