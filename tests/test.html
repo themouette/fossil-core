@@ -30,7 +30,9 @@
         }
     });
     require([
+        'fossil/application',
         './specs/mixins/events',
+        './specs/mixins/elementable',
         './specs/mixins/layout',
         './specs/mixins/fragmentable',
         './specs/application',
@@ -38,8 +40,8 @@
         './specs/factory',
         './specs/factories/routing',
         './specs/factories/session'
-    ], function () {
-        //QUnit.start();
+    ], function (Application) {
+        // ensure applications runs into a sandboxed dom.
         mocha.checkLeaks();
         jQuery(mocha.run);
     });
