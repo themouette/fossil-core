@@ -4,7 +4,8 @@ define([
     "fossil/module",
     "fossil/factory",
     "fossil/factories/routing",
-    "fossil/factories/session"
+    "fossil/factories/session",
+    "fossil/factories/layout"
 ], function (Fossil) {
     return Fossil;
 });
