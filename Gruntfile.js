@@ -51,7 +51,7 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-mocha');
 
   // Default task(s).
-  grunt.registerTask('test', ['connect:server', 'qunit']);
+  grunt.registerTask('test', ['mocha']);
   grunt.registerTask('dev', ['concurrent:dev']);
   grunt.registerTask('release', ['test', 'uglify']);
   grunt.registerTask('default', ['release']);
