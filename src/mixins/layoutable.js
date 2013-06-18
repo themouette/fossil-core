@@ -23,7 +23,7 @@ define([
         }
     });
 
-    var Layout = Fossil.Mixins.Layout = {
+    var Layoutable = Fossil.Mixins.Layoutable = {
         // use the template property to specify template.
         template: null,
         setupLayout: function () {
@@ -73,5 +73,5 @@ define([
         }
     };
 
-    return Layout;
+    return Layoutable;
 });

@@ -48,7 +48,7 @@ No events declared.
 * `elementable:detach`: triggered when element is detached from object
   `function(elementable)`
 
-### Fossil.Mixins.Layout
+### Fossil.Mixins.Layoutable
 
 * `layout:setup`: triggered when layout is first rendered on $el
   `function(layoutable)`
@@ -85,7 +85,7 @@ Following events are triggered by `Fossil.Application`.
 `Fossil.Application` implements following mixins (and therefore triggers related
 events):
 
-* `Layout`
+* `Layoutable`
 * `Fragmentable`
 * `Events`
 
@@ -101,7 +101,7 @@ Following events are triggered by `Fossil.Module`
 `Fossil.Module` implements following mixins (and therefore triggers related
 events):
 
-* `Layout`
+* `Layoutable`
 * `Fragmentable`
 * `Events`
 

@@ -3,7 +3,7 @@ define([
     'underscore',
     'backbone',
     'fossil/mixins/events',
-    'fossil/mixins/layout',
+    'fossil/mixins/layoutable',
     'fossil/mixins/elementable',
     'fossil/mixins/fragmentable'
 ], function (Fossil, _, Backbone) {
@@ -33,7 +33,7 @@ define([
     _.extend(Module.prototype,
         Fossil.Mixins.Events,
         Fossil.Mixins.Elementable,
-        Fossil.Mixins.Layout,
+        Fossil.Mixins.Layoutable,
         Fossil.Mixins.Fragmentable, {
             // events bound on application PubSub
             applicationEvents: {},

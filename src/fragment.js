@@ -1,7 +1,7 @@
 define([
     'fossil/core',
     'fossil/mixins/events',
-    'fossil/mixins/layout',
+    'fossil/mixins/layoutable',
     'fossil/mixins/elementable',
     'fossil/mixins/fragmentable'
 ], function (Fossil) {
@@ -18,7 +18,7 @@ define([
     _.extend(Fragment.prototype,
         Fossil.Mixins.Events,
         Fossil.Mixins.Elementable,
-        Fossil.Mixins.Layout,
+        Fossil.Mixins.Layoutable,
         Fossil.Mixins.Fragmentable, {
             initialize: function () {},
             fagments: {},

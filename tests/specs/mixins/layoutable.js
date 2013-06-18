@@ -4,12 +4,12 @@ define([
     'underscore',
     'fossil/mixins/events',
     'fossil/mixins/elementable',
-    'fossil/mixins/layout'
+    'fossil/mixins/layoutable'
 ], function (chai, $, _, Events, Elementable, Layoutable) {
 
     var assert = chai.assert;
 
-    describe('Fossil.Mixins.Layout', function () {
+    describe('Fossil.Mixins.Layoutable', function () {
         // create an object implementing Layoutable
         var Layout = function (options) {
             this.options = options || {};

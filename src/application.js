@@ -4,7 +4,7 @@ define([
     'underscore',
     'backbone',
     'fossil/mixins/events',
-    'fossil/mixins/layout',
+    'fossil/mixins/layoutable',
     'fossil/mixins/elementable',
     'fossil/mixins/fragmentable'
 ], function (Fossil, $, _, Backbone) {
@@ -26,7 +26,7 @@ define([
     _.extend(Application.prototype,
         Fossil.Mixins.Events,
         Fossil.Mixins.Elementable,
-        Fossil.Mixins.Layout,
+        Fossil.Mixins.Layoutable,
         Fossil.Mixins.Fragmentable, {
             // default selector for application to append to.
             selector: 'body',

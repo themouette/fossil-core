@@ -2,9 +2,9 @@ define([
     'chai',
     'underscore',
     'fossil/mixins/events',
-    'fossil/mixins/layout',
+    'fossil/mixins/layoutable',
     'fossil/mixins/fragmentable'
-], function (chai, _, Events, Layout, Fragmentable) {
+], function (chai, _, Events, Layoutable, Fragmentable) {
 
     var assert = chai.assert;
 
@@ -13,7 +13,7 @@ define([
         var Fragment = function (options) {
             this.options = options || {};
         };
-        _.extend(Fragment.prototype, Events, Layout, Fragmentable, {
+        _.extend(Fragment.prototype, Events, Layoutable, Fragmentable, {
             fagments: {
                 foo: ''
             }
