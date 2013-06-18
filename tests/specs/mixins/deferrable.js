@@ -11,141 +11,337 @@ define([
         var Queue = function () {};
         _.extend(Queue.prototype, Deferrable);
 
-        describe('Case async mode is started', function () {
-            it('can start and resolve async mode', function(done) {
-                this.timeout(10);
-                var q = new Queue();
-                q.deferred();
-                q.then(function () {
-                    done();
-                });
-                q.resolve();
-            });
-            it('can start and resolve async mode with promises', function(done) {
-                this.timeout(10);
-                var q = new Queue();
-                var async = new Deferred();
-                q.deferred();
-                q.registerAsync(async);
-                q.then(function () {
-                    done();
-                });
-                q.resolve();
-                async.resolve();
-            });
-            it('should be possible to attach callbacks on resolution', function(done) {
-                this.timeout(10);
-                var q = new Queue();
-                var async = new Deferred();
-                var testifier = 'immediate';
-                q.deferred();
-                q.registerAsync(async);
-                q.then(function success() {
-                    assert.equal(testifier, 'wait');
-                    done();
-                }, function failed(err) {
-                    assert.ok(false);
-                });
-                q.resolve();
-                testifier = 'wait';
-                async.resolve();
-            });
-            it('should trigger error on reject', function(done) {
-                this.timeout(10);
-                var q = new Queue();
-                var async = new Deferred();
-                var testifier = 'immediate';
-                q.deferred();
-                q.registerAsync(async);
-                q.then(function success() {
-                    assert.ok(false);
-                }, function failed(err) {
-                    assert.equal(testifier, 'wait');
-                    done();
-                });
-                q.resolve();
-                testifier = 'wait';
-                async.reject();
-            });
-            it('should be possible to resolve promises and then resolve the asyncable', function(done) {
-                this.timeout(10);
-                var q = new Queue();
-                var async = new Deferred();
-                var testifier = 'immediate';
-                q.deferred();
-                q.registerAsync(async);
-                q.then(function success() {
-                    assert.equal(testifier, 'wait');
-                    done();
-                }, function failed(err) {
-                    assert.ok(false);
-                });
-                async.resolve();
-                testifier = 'wait';
-                q.resolve();
-            });
-            it('is resolved immediately when not in deferred mode.', function(done) {
-                this.timeout(10);
-                var q = new Queue();
-                var async = new Deferred();
-                var testifier = 'immediate';
+        it('implements fluent interface', function () {
+            var q = new Queue();
 
-                q.registerAsync(async);
-                q.then(function (err) {
-                    assert.equal(testifier, 'immediate');
-                    done();
-                });
-                q.resolve();
-                testifier = 'wait';
-                async.resolve();
-            });
-            it('accepts a timeout', function (done) {
+            assert.strictEqual(q, q.waitFor(new Deferred()));
+            assert.strictEqual(q, q.then());
+            assert.strictEqual(q, q.thenWith());
+            assert.strictEqual(q, q.abort());
+        });
+
+        describe('waitFor method', function () {
+            it('should be possible to give no options', function(done) {
                 this.timeout(10);
                 var q = new Queue();
-                var async = new Deferred();
-                q.deferred(5);
-                q.registerAsync(async);
-                q.then(function success() {
-                    assert.ok(false);
-                }, function error (err) {
-                    assert.ok(err, 'timeout triggers an error');
+                var d = new Deferred();
+                q.waitFor(d);
+
+                q.then(function () {
                     done();
                 });
+
+                d.resolve();
+            });
+            it('should be possible to add parallel promises', function(done) {
+                this.timeout(10);
+                var q = new Queue();
+                var d1 = new Deferred();
+                var d2 = new Deferred();
+                var calls = 0;
+
+                q.waitFor(d1);
+                q.waitFor(d2);
+
+                q.then(function () {
+                    assert.equal(calls, 2);
+                    done();
+                });
+
+                calls++;
+                d1.resolve();
+                calls++;
+                d2.resolve();
+            });
+            it('accepts failFast=true', function (done) {
+                this.timeout(10);
+                var q = new Queue();
+                var d1 = new Deferred();
+                var d2 = new Deferred();
+                q.waitFor(d1, {failFast:true});
+                q.waitFor(d2, {failFast:true});
+
+                q.then(
+                    function () { assert.ok(false, 'no success here'); },
+                    function () { done(); }
+                );
+
+                d2.reject();
+            });
+            it('accepts failFast=false', function () {
+                var q = new Queue();
+                var d1 = new Deferred();
+                var d2 = new Deferred();
+                q.waitFor(d1, {failFast:false});
+                q.waitFor(d2, {failFast:false});
+
+                q.then(
+                    function () { assert.ok(false, 'no success here'); },
+                    function () { assert.ok(false, 'no error here'); }
+                );
+
+                d2.reject();
+            });
+            it('failFast=false triggers error if any is rejected', function (done) {
+                var q = new Queue();
+                var d1 = new Deferred();
+                var d2 = new Deferred();
+                q.waitFor(d1, {failFast:false});
+                q.waitFor(d2, {failFast:false});
+
+                q.then(
+                    function () { assert.ok(false, 'no success here'); },
+                    function () { done(); }
+                );
+
+                d1.reject();
+                d2.resolve();
+            });
+            it('accepts timeout', function (done) {
+                this.timeout(10);
+                var q = new Queue();
+                var d1 = new Deferred();
+                q.waitFor(d1, {timeout: 2});
+                q.then(
+                    function () { assert.ok(false, 'no success here'); },
+                    function () { done(); }
+                );
             });
         });
 
-        describe('several calls to deferred', function () {
-            it('can be deferred several time', function(done) {
+        describe('then method', function () {
+            it('can be used in synchronous mode', function() {
+                var value = 0;
+                var q = new Queue();
+                q.then(function () { value = 1; });
+
+                assert.equal(value, 1);
+            });
+            it('synchronous mode calls success and always', function() {
+                var calls = 0;
+                var q = new Queue();
+                q.then(
+                    function () { calls++; },
+                    function () { assert.ok(false, 'this should not be called'); },
+                    function () { calls++; }
+                );
+
+                assert.equal(calls, 2);
+            });
+            it('calls error and always callback when rejected', function() {
+                var calls = 0;
+                var message = "this is an error";
+                var q = new Queue();
+                var d = new Deferred();
+                q.waitFor(d);
+                q.then(
+                    function () { assert.ok(false, 'success should not be called'); },
+                    function (error) { assert.equal(error, message); calls++; },
+                    function () { calls++; }
+                );
+
+                d.reject(message);
+                assert.equal(calls, 2);
+            });
+            it('calls success and always callback when resolved', function() {
+                var calls = 0;
+                var message = "this is an error";
+                var q = new Queue();
+                var d = new Deferred();
+                q.waitFor(d);
+                q.then(
+                    function () { calls++; },
+                    function () { assert.ok(false, 'success should not be called'); },
+                    function () { calls++; }
+                );
+
+                d.resolve();
+                assert.equal(calls, 2);
+            });
+        });
+
+        describe('thenWith method', function () {
+            it('can be used in synchronous mode', function() {
+                var value = 0;
+                var q = new Queue();
+                var q2 = new Queue();
+                q.thenWith(q2, function () {
+                    value = 1;
+                    assert.equal(this, q2);
+                });
+
+                assert.equal(value, 1);
+            });
+            it('synchronous mode calls success and always', function() {
+                var calls = 0;
+                var q = new Queue();
+                var q2 = new Queue();
+                q.thenWith(
+                    q2,
+                    function () {
+                        calls++;
+                        assert.equal(this, q2);
+                    },
+                    function () {
+                        assert.ok(false, 'this should not be called');
+                    },
+                    function () {
+                        calls++;
+                        assert.equal(this, q2);
+                    }
+                );
+
+                assert.equal(calls, 2);
+            });
+            it('when rejected error is called', function() {
+                var calls = 0;
+                var message = "this is an error";
+                var q = new Queue();
+                var q2 = new Queue();
+                var d = new Deferred();
+                q.waitFor(d);
+                q.thenWith(
+                    q2,
+                    function () {
+                        assert.ok(false, 'success should not be called');
+                    },
+                    function (error) {
+                        calls++;
+                        assert.equal(error, message);
+                        assert.equal(this, q2);
+                    },
+                    function () {
+                        calls++;
+                        assert.equal(this, q2);
+                    }
+                );
+
+                d.reject(message);
+                assert.equal(calls, 2);
+            });
+            it('when resolved success and always are called', function() {
+                var calls = 0;
+                var q = new Queue();
+                var q2 = new Queue();
+                var d = new Deferred();
+                q.waitFor(d);
+                q.thenWith(
+                    q2,
+                    function () {
+                        calls++;
+                        assert.equal(this, q2);
+                    },
+                    function () {
+                        assert.ok(false, 'success should not be called');
+                    },
+                    function () {
+                        calls++;
+                        assert.equal(this, q2);
+                    }
+                );
+
+                d.resolve();
+                assert.equal(calls, 2);
+            });
+        });
+
+        describe('abort method', function () {
+            it('should be possible to abort', function (done) {
                 this.timeout(10);
                 var q = new Queue();
-                var tester = null;
-                var async0 = new Deferred();
-                var async1 = new Deferred();
-                var async2 = new Deferred();
-                q.deferred();
-                q.registerAsync(async0);
-                q.resolve();
+                var d1 = new Deferred();
+                var d2 = new Deferred();
+                var calls = 0;
 
-                q.deferred();
-                q.registerAsync(async1);
-                q.resolve();
+                q.waitFor(d1);
+                q.waitFor(d2);
 
-                q.deferred();
-                q.registerAsync(async2);
-                q.resolve();
+                q.then(
+                    function () { assert.ok(false, 'no success called on abort'); },
+                    function (error) { done(); }
+                );
 
-                q.then(function success() {
-                    assert.equal(tester, 2);
+                q.abort();
+            });
+            it('When aborted, deferred resolution does not trigger callbacks', function (done) {
+                this.timeout(10);
+                done = _.after(2, done);
+                var q = new Queue();
+                var d1 = new Deferred();
+                var d2 = new Deferred();
+                var calls = 0;
+
+                q.waitFor(d1);
+                q.waitFor(d2);
+
+                q.then(
+                    function () { assert.ok(false, 'no success called on abort'); },
+                    function (error) { done(); }
+                );
+
+                q.abort();
+                d1.resolve();
+                d2.resolve();
+                done();
+            });
+            it('calls deferred abort method if any.', function(done) {
+                this.timeout(10);
+                var q = new Queue();
+                var d1 = new Deferred();
+                var d2 = new Deferred();
+                d1.abort = function () {
                     done();
-                }, function error(err) {
-                    assert.ok(false, err);
-                });
-                tester = 0;
-                async0.resolve();
-                tester = 1;
-                async1.resolve();
-                tester = 2;
-                async2.resolve();
+                };
+                var calls = 0;
+
+                q.waitFor(d1);
+                q.waitFor(d2);
+
+                q.abort();
+            });
+        });
+
+        describe('multiple queues', function () {
+            it('should be possible to create a new async after first one is aborted', function (done) {
+                this.timeout(10);
+                var q = new Queue();
+                var d1 = new Deferred();
+                var d2 = new Deferred();
+
+                q.waitFor(d1);
+
+                q.then(
+                    function () { assert.ok(false, 'no success called'); }
+                );
+
+                q.abort();
+
+                q.waitFor(d2);
+                q.then(function () {done();});
+                d2.resolve();
+            });
+            it('should be possible to create a new async after first one is complete', function (done) {
+                this.timeout(10);
+                done = _.after(2, done);
+                var q = new Queue();
+                var d1 = new Deferred();
+                var d2 = new Deferred();
+
+                q.waitFor(d1);
+
+                q.then(
+                    function () { done(); },
+                    function () { assert.ok(false, 'no success called'); }
+                );
+
+                d1.resolve();
+
+                q.waitFor(d2);
+                q.then(
+                    function () { assert.ok(false, 'no success called'); },
+                    function () {done();}
+                );
+                d2.reject();
             });
         });
     });
