@@ -17,13 +17,14 @@ define([
         initialize: function () {},
         fagments: {},
         render: function ($el) {
-            this.$el = $el;
             this.renderLayout($el);
-            this.renderFragments($el);
+            this.$el = this.layout.$el;
+            this.renderFragments(this.$el);
             return this;
         },
         remove: function () {
-            this.$el.empty();
+            this.removeFragments();
+            this.removeLayout();
         }
     });
 
