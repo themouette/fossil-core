@@ -45,6 +45,9 @@
                 'route:index': function () {
                     // forward to 'mail' url.
                     this.factories.router.navigate('mails', {replace: false})
+                },
+                'layout:setup': function (application, $el) {
+                    $el.empty();
                 }
             },
             selector: '#main',
@@ -84,6 +87,9 @@
                     console.log('teardown mails');
                 }
             },
+            template: [
+                'Mail application goes here'
+            ].join(''),
             // our methods
             index: function () {
                 console.log('mail index');
@@ -114,6 +120,44 @@
                 'teardown': function () {
                     console.log('teardown contacts');
                 }
+            },
+            // main template for contact module
+            template: [
+                '<h3>Contacts</h3>',
+                '<div data-fossil-fragment="groups"></div>',
+                '<div data-fossil-fragment="main"></div>',
+            ].join(''),
+            fragments: {
+                // this is the fragment rendered in the group placeholder
+                'groups': Fossil.Fragment.extend({
+                    template: function () {
+                        return _.template([
+                            '<ul>',
+                                '<li><a href="#<%= path %>">list</a></li>',
+                            '</ul>'
+                        ].join(''), {
+                            path: this.path
+                        });
+                    }
+                }),
+                // this is the fragment rendered in the main placeholder
+                'main': Fossil.Fragment.extend({
+                    parentEvents: {
+                        'route:contact:index': function (id) {
+                            this.$el.html(_.template([
+                                '<ul>',
+                                    '<li><a href="#<%= path %>/1">contact1</a></li>',
+                                    '<li><a href="#<%= path %>/2">contact2</a></li>',
+                                '</ul>'
+                                ].join(''), {
+                                    path: this.path
+                                }));
+                        },
+                        'route:contact:show': function (id) {
+                            this.$el.html('Show contact '+id);
+                        }
+                    }
+                })
             },
             // our methods
             index: function () {
