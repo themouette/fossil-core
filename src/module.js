@@ -1,8 +1,9 @@
 define([
     'fossil/core',
+    'fossil/events',
     'underscore',
     'backbone'
-], function (Fossil, _, Backbone) {
+], function (Fossil, Events, _, Backbone) {
 
     var Module = Fossil.Module = function (application, path, options) {
         if (typeof path === "string") {
@@ -15,16 +16,16 @@ define([
         }
 
         // a PubSub object fo communication with the application
-        this.application = application.createPubSub();
+        this.application = application.createPubSub(this, 'applicationEvents');
         // init factories namespace
         this.factories = {};
         // init event listeners
-        initEventListeners(this);
+        this.registerEvents();
         // finally call initialize method
         this.initialize.call(this, application);
     };
 
-    _.extend(Module.prototype, Backbone.Events, {
+    _.extend(Module.prototype, Fossil.Events, {
         // events bound on application PubSub
         applicationEvents: {},
         // events bound on module PubSub
@@ -48,39 +49,6 @@ define([
             this.trigger('teardown');
         }
     });
-
-    function initEventListeners (module) {
-        initApplicationEvents(module);
-        initModuleEvents(module);
-    }
-    function initApplicationEvents (module) {
-        var events;
-        // listen to application events
-        events = _.extend(
-            module.applicationEvents || {},
-            module.options.applicationEvents || {}
-        );
-        _.each(events, function (method, eventId) {
-            if (!_.isFunction(method)) {
-                method = module[method];
-            }
-            module.listenTo(module.application, eventId, method, module);
-        });
-    }
-    // listen to module events
-    function initModuleEvents (module) {
-        var events;
-        events = _.extend(
-            module.events || {},
-            module.options.events || {}
-        );
-        _.each(events, function (method, eventId) {
-            if (!_.isFunction(method)) {
-                method = module[method];
-            }
-            module.listenTo(module, eventId, method, module);
-        });
-    }
 
     Module.extend = Backbone.Model.extend;
 

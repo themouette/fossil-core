@@ -1,8 +1,9 @@
 define([
     'fossil/core',
+    'fossil/events',
     'underscore',
     'backbone'
-], function (Fossil, _, Backbone) {
+], function (Fossil, Events, _, Backbone) {
 
     var messages = {
         unknown_module: _.template("Unknown module at \"<%- path %>\".")
@@ -10,13 +11,13 @@ define([
 
     var Application = Fossil.Application = function (options) {
         this.options = options || {};
-        initEventListeners(this);
+        this.registerEvents();
         initFactories(this);
         initModules(this);
         this.initialize.apply(this, arguments);
     };
 
-    _.extend(Application.prototype, Backbone.Events, {
+    _.extend(Application.prototype, Fossil.Events, {
         initialize: function () {
         },
 
@@ -59,16 +60,6 @@ define([
             return this;
         },
 
-        // expose application's PubSub to plug it in application.
-        createPubSub: function () {
-            var pubsub = {}, application = this;
-            _.each(['on', 'off', 'trigger', 'once'], function (method) {
-                pubsub[method] = _.bind(application[method], application);
-            });
-
-            return pubsub;
-        },
-
         start: function () {
             this.trigger('setup');
             this.trigger('setup:layout');
@@ -97,22 +88,6 @@ define([
         application.modules = {};
         _.each(apps, function (module, path) {
             application.connect(path, module);
-        });
-    }
-
-    function initEventListeners (application) {
-        var events = _.extend(
-            {},
-            _.result(application, 'events'),
-            _.result(application.options, 'events')
-        );
-        _.each(events, function (callback, eventname) {
-            if (!_.isFunction(callback)) {
-                callback = application[callback];
-            }
-            if (callback) {
-                application.listenTo(application, eventname, callback, application);
-            }
         });
     }
 

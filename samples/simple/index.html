@@ -28,8 +28,9 @@
 
     require([
         "jquery",
-        "fossil/fossil"
-    ], function ($, Fossil) {
+        "fossil/fossil",
+        "underscore"
+    ], function ($, Fossil, _) {
 
         var MyApplication = Fossil.Application.extend({
             // all routes are bound to a application wide event.
@@ -45,6 +46,18 @@
                     // forward to 'mail' url.
                     this.factories.router.navigate('mails', {replace: false})
                 }
+            },
+            template: function () {
+                return [
+                        '<h1>My simple Fossil application</h1>',
+                        '<nav>',
+                            '<ul>',
+                                '<li><a class="contacts" href="#contacts">contacts</a></li>',
+                                '<li><a class="mails" href="#mails">mails</a></li>',
+                            '</ul>',
+                        '</nav>',
+                        '<section data-fossil-placeholder="module"></section>'
+                    ].join('');
             }
         });
 
@@ -64,14 +77,6 @@
                 // call when module is selected
                 'setup': function () {
                     console.log('setup mails');
-                    $('#main').html([
-                        '<h1>Mails</h1>',
-                        '<ul>',
-                            '<li><a href="#mails">mails</a></li>',
-                            '<li><a href="#mails/1">mail 1</a></li>',
-                            '<li><a href="#contacts">contacts</a></li>',
-                        '</ul>'
-                    ].join(''));
                 },
                 // called on module switch
                 'teardown': function () {
@@ -103,14 +108,6 @@
                 // call when module is selected
                 'setup': function () {
                     console.log('setup contacts');
-                    $('#main').html([
-                        '<h1>Contacts</h1>',
-                        '<ul>',
-                            '<li><a href="#contacts">contacts</a></li>',
-                            '<li><a href="#contacts/1">contact 1</a></li>',
-                            '<li><a href="#mails">mails</a></li>',
-                        '</ul>'
-                    ].join(''));
                 },
                 // called on module switch
                 'teardown': function () {
@@ -129,6 +126,7 @@
         // create and start the application
         var application = new MyApplication({
             factories: {
+                'layout': Fossil.Factories.Layout,
                 'session': Fossil.Factories.Session,
                 'router': new Fossil.Factories.Routing({
                         // create a link on modules

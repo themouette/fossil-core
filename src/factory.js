@@ -1,17 +1,19 @@
 define([
     'fossil/core',
+    'fossil/events',
     'underscore',
     'backbone'
-], function (Fossil, _, Backbone) {
+], function (Fossil, Events, _, Backbone) {
 
     Fossil.Factories = {};
 
     var Factory = Fossil.Factory = function (options) {
         this.options = _.extend({}, this.options, options || {});
+        this.registerEvents();
         this.initialize.apply(this, arguments);
     };
 
-    _.extend(Factory.prototype, Backbone.Events, {
+    _.extend(Factory.prototype, Fossil.Events, {
         // default options
         options: {
             // should the factory be exposed  to module context ?
@@ -33,7 +35,7 @@ define([
             this.prefixEvent = _.bind(prefixEvent, this, id);
 
             // create pubSub
-            this.application = application.createPubSub();
+            this.application = application.createPubSub(this, 'applicationEvents');
             // activate application
             this._doActivateApplication(application);
             // activate all modules
