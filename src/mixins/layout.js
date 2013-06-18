@@ -64,12 +64,11 @@ define([
             this.trigger('layout:render', this);
         },
         removeLayout: function () {
-            if (this.layout && this.layout.$el !== this.$el) {
+            if (this.layout && this.layout.$el[0] !== this.$el[0]) {
                 this.layout.remove();
             } else {
                 this.layout.undelegateEvents();
             }
-            this.detachElement();
             this.trigger('layout:remove', this);
         }
     };
