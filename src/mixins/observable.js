@@ -4,7 +4,9 @@ define([
     'backbone'
 ], function (Fossil, _, Backbone) {
 
-    var Events = Fossil.Mixins.Events = _.extend({}, Backbone.Events, {
+    var exposedPubsubProperties = ['_listenerId', 'createPubSub'].concat(_.keys(Backbone.Events));
+
+    var Eventable = Fossil.Mixins.Observable = _.extend({}, Backbone.Events, {
         registerEvents: function () {
             var events = _.extend(
                 {},
@@ -26,8 +28,12 @@ define([
         // expose application's PubSub to plug it in application.
         createPubSub: function (observer, property) {
             var pubsub = {}, observable = this;
-            _.each(['on', 'off', 'trigger', 'once'], function (method) {
-                pubsub[method] = _.bind(observable[method], observable);
+            _.each(exposedPubsubProperties, function (property) {
+                if (_.isFunction(observable[property])) {
+                    pubsub[property] = _.bind(observable[property], observable);
+                } else {
+                    pubsub[property] = observable[property];
+                }
             });
 
             // in case there is no observer
@@ -52,5 +58,5 @@ define([
         }
     });
 
-    return Events;
+    return Eventable;
 });

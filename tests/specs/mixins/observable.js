@@ -1,18 +1,18 @@
 define([
     'chai',
-    'fossil/mixins/events'
-], function (chai, Events) {
+    'fossil/mixins/observable'
+], function (chai, Eventable) {
     'use strict';
 
     var assert = chai.assert;
 
-    describe('Fossil.Events', function () {
+    describe('Fossil.Mixins.Observable', function () {
 
         var Observable = function (options) {
             this.options = options;
             this.registerEvents();
         };
-        _.extend(Observable.prototype, Events);
+        _.extend(Observable.prototype, Eventable);
 
         describe('Init methods', function () {
 
@@ -68,28 +68,36 @@ define([
             });
         });
 
-        describe('it is possible to expose pubsub', function () {
+        describe('create pubsub', function () {
             it('should be possible to expose pubsub', function(done) {
-                this.timeout(10);
+                this.timeout(20);
                 done = _.after(2, done);
 
                 var parent = new Observable();
+                var o;
 
                 var Obj = function (options) {
                     Observable.call(this, options);
                 };
                 _.extend(Obj.prototype, Observable.prototype, {
                     parentEvents: {
-                        foo: done,
+                        foo: 'mymethod',
                         bar: function () {
                             assert.ok(false, 'This should be overriden');
                         }
+                    },
+                    mymethod: function () {
+                        assert.strictEqual(this, o);
+                        done();
                     }
                 });
 
-                var o = new Obj({
+                o = new Obj({
                     parentEvents: {
-                        bar: done
+                        bar: function () {
+                            assert.strictEqual(this, o);
+                            done();
+                        }
                     }
                 });
 
