@@ -173,7 +173,7 @@ define([
 
         describe('Fossil.Services.Routing triggers module workflow', function () {
 
-            it('should trigger application events module:{teardown,change,setup} when app is changed', function (done) {
+            it('should trigger application events module:{standby,change,start} when app is changed', function (done) {
                 this.timeout(50);
                 done = _.after(9, done);
                 // initialize application
@@ -199,15 +199,15 @@ define([
                     assert.isNull(prev, 'no previous app');
                     done();
                 });
-                application.once('module:setup', function (module) {
-                    assert.equal(module.path, 'app1/', 'app1/foo: setup app1');
+                application.once('module:start', function (module) {
+                    assert.equal(module.path, 'app1/', 'app1/foo: start app1');
                     done();
                 });
                 routing.navigate('app1/foo');
 
                 // it will migrate to app2
-                application.once('module:teardown', function (module) {
-                    assert.equal(module.path, 'app1/', 'app2/bar/2: teardown app1');
+                application.once('module:standby', function (module) {
+                    assert.equal(module.path, 'app1/', 'app2/bar/2: standby app1');
                     done();
                 });
                 application.once('module:change', function (prev, next) {
@@ -215,15 +215,15 @@ define([
                     assert.equal(next.path, 'app2/', 'app2/bar/2: change to app2');
                     done();
                 });
-                application.once('module:setup', function (module) {
-                    assert.equal(module.path, 'app2/', 'app2/bar/2: setup app2');
+                application.once('module:start', function (module) {
+                    assert.equal(module.path, 'app2/', 'app2/bar/2: start app2');
                     done();
                 });
                 routing.navigate('app2/bar/2');
 
                 // it will migrate to app1
-                application.once('module:teardown', function (module) {
-                    assert.equal(module.path, 'app2/', 'app1/foo/bar: teardown app2');
+                application.once('module:standby', function (module) {
+                    assert.equal(module.path, 'app2/', 'app1/foo/bar: standby app2');
                     done();
                 });
                 application.once('module:change', function (prev, next) {
@@ -231,8 +231,8 @@ define([
                     assert.equal(next.path, 'app1/', 'app1/foo/bar: change to app1');
                     done();
                 });
-                application.once('module:setup', function (module) {
-                    assert.equal(module.path, 'app1/', 'app1/foo/bar: setup app1');
+                application.once('module:start', function (module) {
+                    assert.equal(module.path, 'app1/', 'app1/foo/bar: start app1');
                     done();
                 });
 
@@ -241,7 +241,7 @@ define([
                 done();
             });
 
-            it('should trigger application events module:{teardown,change,setup} when app is not changed', function () {
+            it('should trigger application events module:{standby,change,start} when app is not changed', function () {
                 function failure() {
                     assert(false, 'module did not change.');
                 }
@@ -264,14 +264,14 @@ define([
 
                 routing.navigate('app1/foo');
 
-                application.on('module:teardown', failure);
+                application.on('module:standby', failure);
                 application.on('module:change', failure);
-                application.on('module:setup', failure);
+                application.on('module:start', failure);
 
                 routing.navigate('app1/foo/bar');
             });
 
-            it('should call Module `setup` and `teardown`', function(done) {
+            it('should call Module `start` and `standby`', function(done) {
                 this.timeout(10);
                 done = _.after(3, done);
                 function success () {
@@ -299,24 +299,24 @@ define([
                 var app1 = application.getModule('app1/');
                 var app2 = application.getModule('app2/');
 
-                app1.setup = success;
-                app1.teardown = failure;
-                app2.setup = failure;
-                app2.teardown = failure;
+                app1.start = success;
+                app1.standby = failure;
+                app2.start = failure;
+                app2.standby = failure;
 
                 routing.navigate('app1/foo');
 
-                app1.setup = failure;
-                app1.teardown = failure;
-                app2.setup = failure;
-                app2.teardown = failure;
+                app1.start = failure;
+                app1.standby = failure;
+                app2.start = failure;
+                app2.standby = failure;
 
                 routing.navigate('app1/foo/bar');
 
-                app1.setup = failure;
-                app1.teardown = success;
-                app2.setup = success;
-                app2.teardown = failure;
+                app1.start = failure;
+                app1.standby = success;
+                app2.start = success;
+                app2.standby = failure;
 
                 routing.navigate('app2/bar/1');
 

@@ -58,7 +58,7 @@ Examples
 var Startable = function (){};
 _.extend(
     Startable.prototype,
-    Fossil.Mixins.Events,
+    Fossil.Mixins.Observable,
     Fossil.Mixins.Deferrable,
     Fossil.Mixins.Startable, {
     _firstStart: function () {

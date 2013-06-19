@@ -1,6 +1,6 @@
 define([
     'fossil/core',
-    'fossil/mixins/events',
+    'fossil/mixins/observable',
     'underscore',
     'backbone'
 ], function (Fossil, Events, _, Backbone) {
@@ -13,7 +13,7 @@ define([
         this.initialize.apply(this, arguments);
     };
 
-    _.extend(Service.prototype, Fossil.Mixins.Events, {
+    _.extend(Service.prototype, Fossil.Mixins.Observable, {
         // default options
         options: {
             // default configuration for service exposure

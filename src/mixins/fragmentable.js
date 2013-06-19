@@ -16,7 +16,7 @@ define([
         // but in case of Fragment, the Module or Application
         // should be used as container.
         // This ease communication.
-        getFragmentContainer: function () {
+        getFragmentAncestor: function () {
             return this;
         },
         // ensure Fragment is instanciated
@@ -25,12 +25,12 @@ define([
             if (!fragment) {
                 throw new Error(messages.unknown_fragment({id: id}));
             }
-            if (fragment.ensureFragment) {
+            if (typeof fragment === "object") {
                 // fragment is already instanciated
                 return fragment;
             }
             // instanciate fragment
-            fragment = new fragment(this.getFragmentContainer());
+            fragment = new fragment(this.getFragmentAncestor());
             this.trigger('fragmentable:fragment:setup', fragment, id, this);
             return fragment;
         },

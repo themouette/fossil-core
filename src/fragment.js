@@ -1,37 +1,45 @@
 define([
     'fossil/core',
-    'fossil/mixins/events',
+    'fossil/mixins/observable',
     'fossil/mixins/layoutable',
     'fossil/mixins/elementable',
-    'fossil/mixins/fragmentable'
+    'fossil/mixins/fragmentable',
+    'fossil/mixins/deferrable',
+    'fossil/mixins/startable'
 ], function (Fossil) {
 
-    var Fragment = Fossil.Fragment = function (container, options) {
+    var Fragment = Fossil.Fragment = function (ancestor, options) {
         this.options = options || {};
         this.services = {};
-        this.path = container.path || '';
+        this.path = ancestor.path || '';
+        this.ancestor = ancestor.createPubSub(this, 'ancestorEvents');
         this.registerEvents();
         this.initFragmentable();
-        this.container = container.createPubSub(this, 'parentEvents');
         this.initialize.apply(this, arguments);
     };
     _.extend(Fragment.prototype,
-        Fossil.Mixins.Events,
+        Fossil.Mixins.Observable,
         Fossil.Mixins.Elementable,
         Fossil.Mixins.Layoutable,
-        Fossil.Mixins.Fragmentable, {
+        Fossil.Mixins.Fragmentable,
+        Fossil.Mixins.Deferrable,
+        Fossil.Mixins.Startable, {
             initialize: function () {},
             fagments: {},
+            // usually container is the Fragmentable
+            // but in case of Fragment, the Module or Application
+            // should be used as container.
+            // This ease communication.
+            getFragmentAncestor: function () {
+                return this.ancestor;
+            },
             registerEvents: function () {
-                Fossil.Mixins.Events.registerEvents.call(this);
-                this.listenTo(this, 'elementable:attach', _.bind(this.setup, this));
-                this.listenTo(this, 'elementable:detach', _.bind(this.teardown, this));
-            },
-            setup: function () {
-                this.trigger('setup', this);
-            },
-            teardown: function () {
-                this.trigger('teardown', this);
+                Fossil.Mixins.Observable.registerEvents.call(this);
+                this.listenTo(this, 'elementable:attach', _.bind(this.start, this));
+                this.listenTo(this, 'elementable:detach', _.bind(this.standby, this));
+
+                this.listenTo(this.ancestor, 'standby', _.bind(this.standby, this));
+                this.listenTo(this.ancestor, 'stop', _.bind(this.stop, this));
             },
             render: function () {
                 this.renderLayout();

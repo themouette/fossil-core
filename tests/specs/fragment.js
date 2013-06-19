@@ -20,11 +20,11 @@ define([
         });
 
         describe('Fragments events', function () {
-            it('should trigger "setup" when attached to element', function(done) {
+            it('should trigger "start" when attached to element', function(done) {
                 this.timeout(10);
                 var f = new Fragment(parent, {
                     events: {
-                        'setup': function (component) {
+                        'start': function (component) {
                             assert.strictEqual(component, f);
                             done();
                         }
@@ -32,16 +32,17 @@ define([
                 });
                 f.setElement($('<div />'));
             });
-            it('should trigger "teardown" when detached from element', function(done) {
+            it('should trigger "standby" when detached from element', function(done) {
                 this.timeout(10);
                 var f = new Fragment(parent, {
                     events: {
-                        'teardown': function (component) {
+                        'standby': function (component) {
                             assert.strictEqual(component, f);
                             done();
                         }
                     }
                 });
+                f.setElement($('<div />'));
                 f.detachElement();
             });
         });

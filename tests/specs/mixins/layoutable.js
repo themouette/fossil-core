@@ -2,7 +2,7 @@ define([
     'chai',
     'jquery',
     'underscore',
-    'fossil/mixins/events',
+    'fossil/mixins/observable',
     'fossil/mixins/elementable',
     'fossil/mixins/layoutable'
 ], function (chai, $, _, Events, Elementable, Layoutable) {

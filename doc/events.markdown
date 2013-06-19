@@ -1,10 +1,10 @@
 Fossil Events
 =============
 
-Fossil.Mixins.Events
+Fossil.Mixins.Observable
 --------------------
 
-Fossil provides a mixin for observables under `Fossi.Mixins.Events`.
+Fossil provides a mixin for observables under `Fossi.Mixins.Observable`.
 This mixin extends `Backbone.Events` and add tha ability to:
 
 * simply declare event listeners;
@@ -21,7 +21,7 @@ var Observable = function (options) {
     this.registerEvents();
 }
 // add the Observable behavior
-_.extend(Observable.prototype, Fossil.Mixins.Events, {
+_.extend(Observable.prototype, Fossil.Mixins.Observable, {
     events: {
         // calls object.bar when foo event is triggered
         foo: 'bar',
@@ -37,7 +37,7 @@ _.extend(Observable.prototype, Fossil.Mixins.Events, {
 Built in events
 ---------------
 
-### Fossil.Mixins.Events
+### Fossil.Mixins.Observable
 
 No events declared.
 
@@ -50,7 +50,7 @@ No events declared.
 
 ### Fossil.Mixins.Layoutable
 
-* `layout:setup`: triggered when layout is first rendered on $el
+* `layout:start`: triggered when layout is first rendered on $el
   `function(layoutable)`
 * `layout:render`: triggered when layout is attached on DOM
   `function(layoutable)`
@@ -59,7 +59,7 @@ No events declared.
 
 ### Fossil.Mixins.Fragmentable
 
-* `fragmentable:fragment:setup`: triggered when fragment is first rendered on
+* `fragmentable:fragment:start`: triggered when fragment is first rendered on
   $el `function(fragemnt, fragmentid, fragmentable)`
 * `fragmentable:fragment:render`: triggered every time fragment is rendered
   `function(fragemnt, fragmentid, fragmentable)`
@@ -70,6 +70,13 @@ No events declared.
 * `fragmentable:remove`: triggered when fragment is removed from DOM
   `function(fragmentable)`
 
+### Fossil.Mixins.Startable
+
+* `start:first`: triggered when startable is first started `function(startable)`
+* `start`: triggered whenever startable is started `function(startable)`
+* `standby`: triggered whenever startable is standby `function(startable)`
+* `stop`: triggered whenever startable is stopped `function(startable)`
+
 ### Fossil.Application
 
 Following events are triggered by `Fossil.Application`.
@@ -78,35 +85,35 @@ Following events are triggered by `Fossil.Application`.
   application)`
 * `service:use`: a new service is used `function(service, service_id,
   application)`
-* `setup`: triggered when application setup begins  `function(application)`
-* `start`: triggered when application initialization is over
-  `function(application)`
 
 `Fossil.Application` implements following mixins (and therefore triggers related
 events):
 
 * `Layoutable`
 * `Fragmentable`
-* `Events`
+* `Observable`
+* `Startable`
 
 ### Fossil.Module
-
-Following events are triggered by `Fossil.Module`
-
-* `setup`: triggered when module setup begins  `function(module, application)`
-* `start`: triggered when module setup is over `function(module, application)`
-* `teardown`: triggered when module teardown is over `function(module,
-  application)`
 
 `Fossil.Module` implements following mixins (and therefore triggers related
 events):
 
 * `Layoutable`
 * `Fragmentable`
-* `Events`
+* `Observable`
+* `Startable`
 
 `Fossil.Application` Pub/Sub is available under `module.application`.
 Application level events can be declared through `module.applicationEvents`
 property.
 
 ### Fossil.Fragment
+
+`Fossil.Fragment` implements following mixins (and therefore triggers related
+events):
+
+* `Layoutable`
+* `Fragmentable`
+* `Observable`
+* `Startable`

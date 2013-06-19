@@ -1,7 +1,7 @@
 define([
     'chai',
     'underscore',
-    'fossil/mixins/events',
+    'fossil/mixins/observable',
     'fossil/mixins/layoutable',
     'fossil/mixins/fragmentable'
 ], function (chai, _, Events, Layoutable, Fragmentable) {

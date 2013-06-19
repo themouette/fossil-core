@@ -1,6 +1,6 @@
 define([
     "fossil/core",
-    "fossil/mixins/events",
+    "fossil/mixins/observable",
     "fossil/mixins/elementable",
     "fossil/mixins/layoutable",
     "fossil/mixins/fragmentable",

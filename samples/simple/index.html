@@ -68,16 +68,14 @@
                     ].join('');
             },
             initialize: function () {
-                this.deferred();
                 var p = new $.Deferred();
-                this.registerAsync(p);
+                this.waitFor(p);
                 setTimeout(function () {
                     p.resolve();
                 }, 500);
-                this.then(_.bind(this.start, this), function (err) {
+                this.thenWith(this, this.start, function (err) {
                         console.log('err', err.message);
                 });
-                this.resolve();
             }
         });
 
@@ -95,12 +93,12 @@
                 // show route will call show function
                 'route:mail:show': 'show',
                 // call when module is selected
-                'setup': function () {
-                    console.log('setup mails');
+                'start': function () {
+                    console.log('start mails');
                 },
                 // called on module switch
-                'teardown': function () {
-                    console.log('teardown mails');
+                'standby': function () {
+                    console.log('standby mails');
                 }
             },
             template: [
@@ -132,12 +130,12 @@
                 // show route will call show function
                 'route:contact:show': 'show',
                 // call when module is selected
-                'setup': function () {
-                    console.log('setup contacts');
+                'start': function () {
+                    console.log('start contacts');
                 },
                 // called on module switch
-                'teardown': function () {
-                    console.log('teardown contacts');
+                'standby': function () {
+                    console.log('standby contacts');
                 }
             },
             // main template for contact module
@@ -162,7 +160,7 @@
                 }),
                 // this is the fragment rendered in the main placeholder
                 'main': Fossil.Fragment.extend({
-                    parentEvents: {
+                    ancestorEvents: {
                         'route:contact:index': function (id) {
                             this.$el.html(_.template([
                                 '<ul>',

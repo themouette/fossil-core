@@ -3,7 +3,7 @@ define([
     "underscore",
     "fossil/deferred",
     "fossil/core",
-    "fossil/mixins/events",
+    "fossil/mixins/observable",
     "fossil/mixins/deferrable",
     "fossil/mixins/startable",
 ], function (chai, _, Deferred, Fossil) {
@@ -15,7 +15,7 @@ define([
         var Startable = function (){};
         _.extend(
             Startable.prototype,
-            Fossil.Mixins.Events,
+            Fossil.Mixins.Observable,
             Fossil.Mixins.Deferrable,
             Fossil.Mixins.Startable, {
             _firstStart: function () {

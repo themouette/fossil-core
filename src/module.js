@@ -2,11 +2,12 @@ define([
     'fossil/core',
     'underscore',
     'backbone',
-    'fossil/mixins/events',
+    'fossil/mixins/observable',
     'fossil/mixins/layoutable',
     'fossil/mixins/elementable',
     'fossil/mixins/fragmentable',
-    'fossil/mixins/deferrable'
+    'fossil/mixins/deferrable',
+    'fossil/mixins/startable'
 ], function (Fossil, _, Backbone) {
 
     var Module = Fossil.Module = function (application, path, options) {
@@ -32,11 +33,12 @@ define([
     };
 
     _.extend(Module.prototype,
-        Fossil.Mixins.Events,
+        Fossil.Mixins.Observable,
         Fossil.Mixins.Elementable,
         Fossil.Mixins.Layoutable,
         Fossil.Mixins.Fragmentable,
-        Fossil.Mixins.Deferrable, {
+        Fossil.Mixins.Deferrable,
+        Fossil.Mixins.Startable, {
             // events bound on application PubSub
             applicationEvents: {},
             // events bound on module PubSub
@@ -45,36 +47,28 @@ define([
 
             },
             registerEvents: function (application) {
-                Fossil.Mixins.Events.registerEvents.call(this);
+                Fossil.Mixins.Observable.registerEvents.call(this);
                 this.listenTo(this, 'elementable:attach', _.bind(this.elementAttachListener, this, application));
                 this.listenTo(this, 'elementable:detach', _.bind(this.elementDetachListener, this, application));
             },
             elementAttachListener: function (application) {
-                this.setup(application);
+                this.start();
+                this.thenWith(this, this.render);
             },
             elementDetachListener: function (application) {
-                this.teardown(application);
-            },
-            // called when module is selected.
-            // this is what the setup phase is about.
-            setup: function (application) {
-                this.deferred();
-                this.trigger('setup', this, application);
-                this.then(_.bind(this.render, this, application));
-                this.resolve();
+                this.standby();
             },
             render: function (application) {
                 this.renderLayout();
                 this.renderFragments();
-                this.trigger('start', this);
             },
             // called when selected module is changing.
             // this is used to terminate current module before
             // the new one is setup.
-            teardown: function (application) {
+            _doStandby: function (application) {
+                Fossil.Mixins.Startable._doStandby.apply(this, arguments);
                 this.removeFragments();
                 this.removeLayout();
-                this.trigger('teardown', this, application);
             }
     });
 

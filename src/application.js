@@ -3,11 +3,12 @@ define([
     'jquery',
     'underscore',
     'backbone',
-    'fossil/mixins/events',
+    'fossil/mixins/observable',
     'fossil/mixins/layoutable',
     'fossil/mixins/elementable',
     'fossil/mixins/fragmentable',
-    'fossil/mixins/deferrable'
+    'fossil/mixins/deferrable',
+    'fossil/mixins/startable'
 ], function (Fossil, $, _, Backbone) {
 
     var messages = {
@@ -25,11 +26,12 @@ define([
     };
 
     _.extend(Application.prototype,
-        Fossil.Mixins.Events,
+        Fossil.Mixins.Observable,
         Fossil.Mixins.Elementable,
         Fossil.Mixins.Layoutable,
         Fossil.Mixins.Fragmentable,
-        Fossil.Mixins.Deferrable, {
+        Fossil.Mixins.Deferrable,
+        Fossil.Mixins.Startable, {
             // default selector for application to append to.
             selector: 'body',
             currentModule: null,
@@ -76,29 +78,27 @@ define([
                 return this;
             },
 
-            start: function () {
-                this.trigger('setup', this);
+            _doStart: function () {
                 this.setElement($(this.selector));
                 this.renderLayout();
                 this.renderFragments();
-                this.trigger('start', this);
+                Fossil.Mixins.Startable._doStart.apply(this, arguments);
             },
+
             switchModule: function (module) {
                 var moduleChange = (this.currentModule !== module);
                 if (moduleChange && this.currentModule) {
-                    this.trigger('module:teardown', this.currentModule);
+                    this.trigger('module:standby', this.currentModule);
                     this.currentModule.detachElement();
                 }
                 if (moduleChange) {
                     var $el = this.$('[data-fossil-placeholder=module]');
                     this.trigger('module:change', this.currentModule, module);
-                    module.deferred();
                     module.setElement($el);
-                    module.then(_.bind(function moduleReady () {
-                        this.trigger('module:setup', module);
+                    module.thenWith(this, function moduleReady () {
+                        this.trigger('module:start', module);
                         this.currentModule = module;
-                    }, this));
-                    module.resolve();
+                    });
                 }
             }
     });

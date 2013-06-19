@@ -259,7 +259,7 @@ define([
                 assert.strictEqual(application.currentModule, module2);
             });
 
-            it('setup and teardown modules on switches', function(done) {
+            it('start and standby modules on switches', function(done) {
                 this.timeout(10);
                 done = _.after(3, done);
                 function success () {
@@ -283,27 +283,27 @@ define([
 
                 var observable = _.clone(Backbone.Events);
 
-                observable.listenTo(module1, 'setup', success);
-                observable.listenTo(module1, 'teardown', failure);
-                observable.listenTo(module2, 'setup', failure);
-                observable.listenTo(module2, 'teardown', failure);
+                observable.listenTo(module1, 'start', success);
+                observable.listenTo(module1, 'standby', failure);
+                observable.listenTo(module2, 'start', failure);
+                observable.listenTo(module2, 'standby', failure);
                 // switch
                 application.switchModule(module1);
 
                 observable.stopListening();
-                observable.listenTo(module1, 'setup', failure);
-                observable.listenTo(module1, 'teardown', success);
-                observable.listenTo(module2, 'setup', success);
-                observable.listenTo(module2, 'teardown', failure);
+                observable.listenTo(module1, 'start', failure);
+                observable.listenTo(module1, 'standby', success);
+                observable.listenTo(module2, 'start', success);
+                observable.listenTo(module2, 'standby', failure);
 
                 // switch again
                 application.switchModule(module2);
 
                 observable.stopListening();
-                observable.listenTo(module1, 'setup', failure);
-                observable.listenTo(module1, 'teardown', failure);
-                observable.listenTo(module2, 'setup', failure);
-                observable.listenTo(module2, 'teardown', failure);
+                observable.listenTo(module1, 'start', failure);
+                observable.listenTo(module1, 'standby', failure);
+                observable.listenTo(module2, 'start', failure);
+                observable.listenTo(module2, 'standby', failure);
 
                 // no app switch implies no events
                 application.switchModule(module2);
