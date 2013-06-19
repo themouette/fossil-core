@@ -4,7 +4,7 @@ Fossil core components
 Fossil is yet another framework built on top of
 [Backbone.JS](http://backbonejs.org).
 
-It aims at easing and speed up development of large single page modules.
+It aims at easing and speed up development of large single page applications.
 
 For now it relies on AMD, but it should soon be possible to use it as raw
 javascript.
@@ -16,13 +16,93 @@ Install
 $ git clone https://github.com/themouette/fossil-core.git && npm install
 ```
 
+Simple example
+--------------
+
+This is a very basic example. Even if Fossil is built to scale on large
+applications, you can build small thing with no overhead.
+To have an example using all Fissil concepts, look at
+
+``` javascript
+var MyApplication = Fossil.Application.extend({
+    // services are extesion points
+    // we'll only use routing for now
+    services: {
+        'routing': Fossil.Services.Routing
+    },
+    // define route events
+    routes: {
+        // binding routes to events helps in scaling.
+        // it becomes easy to refactor and separate your code base.
+        '': 'route:index',
+        'contacts': 'route:contacts'
+    },
+    events: {
+        'route:index': function () {
+            var user = $.get('/api/user');
+            this
+                // abort any previous async process
+                .abort()
+                // wait for the user request to complete
+                .waitFor(user)
+                // when it's done, renderUser
+                .thenWith(this, this.renderUser, this.showError);
+        },
+        'route:contacts': function () {
+            // abort any previous async process
+            this.abort();
+            // load contacts if not already there
+            if (!this.contact) {
+                this.contacts = new ContactCollection();
+                this.showLoading();
+                this.waitFor(this.contacts.fetch(), {timeout: 1000});
+            }
+            // if no async is request it will be executed right now
+            // otherwise, it will be deferred until collection is loaded
+            this.thenWith(this, this.renderContactList, this.showError);
+        }
+    },
+
+    // referecne element for the application
+    selector: 'body',
+    // When template is null, the selector content is used as layout.
+    // it becomes easy to define layout in the page loaded from server.
+    template: null,
+
+    showError: funcion (error) {
+        this.$('.main').html(error.message);
+    },
+    showLoading: funcion () {
+        this.$('.main').html('loading');
+    },
+    renderUser: function () {
+        this.$('.main').html('User is ready');
+    },
+    renderContactList: function () {
+        this.$('.main').html([
+            '<ul>',
+                '<li>',
+                    this.contacts.pluck('name').join('</li><li>'),
+                '</li>',
+            '</ul>'
+        ].join(''));
+    },
+    initialize: function () {
+        this.start();
+    }
+});
+
+new MyApplication();
+```
+
 Core concepts
 -------------
 
 To build a `Application`, you connect multiple `Module`s and use several
-`Service`-s.
+`Service`s. There is also reusable pieces of UI called Fragments.
 
-Those 3 parts are what makes Fossil extensible.
+Those 4 parts are what makes Fossil flexible, but your really just need
+`Application` and `Service`s.
 
 ### Application
 
@@ -42,6 +122,12 @@ either.
 It is a piece of logic shared by all modules and the application.
 Some services are built into Fossil, such as `Session` and `Routing`. More
 should come quickly.
+
+### Fragment
+
+Every Fragment is independant piece of UI with logic. It communicates with
+ancestor (it can be the Application or a Module) through a pubsub.
+A fragment can contain fragments too.
 
 We want code !
 --------------
