@@ -216,7 +216,7 @@ define([
         });
 
         it('should be possible to define services and modules in options', function (done) {
-            this.timeout(10);
+            this.timeout(15);
             var times = 0;
             done = _.after(3, done);
             var Application1 = Application.extend({
