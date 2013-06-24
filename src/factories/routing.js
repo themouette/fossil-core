@@ -86,7 +86,7 @@ define([
             }
             this.currentModule = module;
             var args = _.tail(arguments);
-            this.application.trigger.apply(this.application, args);
+            module.trigger.apply(module, args);
         },
         routeListener: function (eventname) {
             this.application.trigger.apply(this.application, arguments);

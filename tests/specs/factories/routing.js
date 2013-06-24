@@ -64,7 +64,7 @@ define([
             it('should register module routes defined via extension', function(done) {
                 this.timeout(10);
                 done = _.after(4, done);
-                function onAppBar(id) {
+                function onModBar(id) {
                     assert.equal(id, 2);
                     done();
                 }
@@ -72,34 +72,33 @@ define([
                 // initialize application
                 var application = new Application();
                 var routing = new RoutingFactory(routingOptions);
-                application.connect('app1/', Module.extend({
+                application.connect('mod1/', Module.extend({
                     routes: {
-                        'foo': 'app:foo',
-                        'foo/bar': 'app:foo:bar'
+                        'foo': 'mod:foo',
+                        'foo/bar': 'mod:foo:bar'
                     }
                 }));
                 application.use('router', routing);
-                application.connect('app2/', Module.extend({
+                application.connect('mod2/', Module.extend({
                     routes: {
-                        'bar/:id': 'app:bar'
+                        'bar/:id': 'mod:bar'
                     }
                 }));
                 application.start();
 
-                application.on('app:foo', done);
-                application.on('app:foo:bar', done);
-                application.on('app:bar', onAppBar);
+                var module1 = application.getModule('mod1/');
+                var module2 = application.getModule('mod2/');
+                module1.on('mod:foo', done);
+                module1.on('mod:foo:bar', done);
+                module2.on('mod:bar', onModBar);
 
-                routing.navigate('app1/foo');
-                routing.navigate('app1/foo/bar');
-                routing.navigate('app2/bar/2');
+                routing.navigate('mod1/foo');
+                routing.navigate('mod1/foo/bar');
+                routing.navigate('mod2/bar/2');
 
                 // all those should not be triggered
                 routing.navigate('foo');
 
-                application.off('app:foo', done);
-                application.off('app:foo:bar', done);
-                application.off('app:bar', onAppBar);
                 done();
             });
 
@@ -123,7 +122,6 @@ define([
 
                 application.on('application:prototype', done);
                 routing.navigate('application/prototype');
-                application.off('application:prototype', done);
                 done();
             });
 
