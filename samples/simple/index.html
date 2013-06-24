@@ -55,15 +55,12 @@
                 // show route
                 '/:id': 'route:mail:show'
             },
-            // register listeners on application event dispatcher
-            applicationEvents: {
+            // some module level events
+            events: {
                 // main route will call index function
                 'route:mail:index': 'index',
                 // show route will call show function
-                'route:mail:show': 'show'
-            },
-            // some module level events
-            events: {
+                'route:mail:show': 'show',
                 // call when module is selected
                 'setup': function () {
                     console.log('setup mails');
@@ -97,15 +94,12 @@
                 // show route
                 '/:id': 'route:contact:show'
             },
-            // register listeners on application event dispatcher
-            applicationEvents: {
+            // some module level events
+            events: {
                 // main route will call index function
                 'route:contact:index': 'index',
                 // show route will call show function
-                'route:contact:show': 'show'
-            },
-            // some module level events
-            events: {
+                'route:contact:show': 'show',
                 // call when module is selected
                 'setup': function () {
                     console.log('setup contacts');
