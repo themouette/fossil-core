@@ -36,13 +36,17 @@ define([
         // this is what the setup phase is about.
         setup: function () {
             this.trigger('setup');
+            this.trigger('setup:layout');
+            this.trigger('setup:fragments');
         },
         // called when selected module is changing.
         // this is used to terminate current module before
         // the new one is setup.
         teardown: function () {
+            this.trigger('teardown:fragments');
+            this.trigger('teardown:layout');
             this.trigger('teardown');
-        },
+        }
     });
 
     function initEventListeners (module) {

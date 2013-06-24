@@ -11,15 +11,15 @@ define([
             selector: '#main'
         },
         _doActivateApplication: function (application) {
-            this.listenTo(application, 'setup', _.bind(this.setupApplication, this, application), this);
-            this.listenTo(application, 'teardown', _.bind(this.teardownApplication, this, application), this);
+            this.listenTo(application, 'setup:layout', _.bind(this.setupApplication, this, application), this);
+            this.listenTo(application, 'teardown:layout', _.bind(this.teardownApplication, this, application), this);
         },
         _doSuspendApplication: function (application) {
             this.stopListening(application);
         },
         _doActivateModule: function (module, application) {
-            this.listenTo(module, 'setup', _.bind(this.setupModule, this, module, application), this);
-            this.listenTo(module, 'teardown', _.bind(this.teardownModule, this, module, application), this);
+            this.listenTo(module, 'setup:layout', _.bind(this.setupModule, this, module, application), this);
+            this.listenTo(module, 'teardown:layout', _.bind(this.teardownModule, this, module, application), this);
         },
         _doSuspendModule: function (module, application) {
             this.stopListening(module);

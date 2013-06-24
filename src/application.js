@@ -71,6 +71,7 @@ define([
 
         start: function () {
             this.trigger('setup');
+            this.trigger('setup:layout');
             this.trigger('start');
         }
     });
