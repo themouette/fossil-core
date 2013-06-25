@@ -19,7 +19,7 @@ define([
                 if (!_.isFunction(method)) {
                     method = observable[method];
                 }
-                observable.listenTo(observable, eventid, method, observable);
+                observable.listenTo(observable, eventid, _.bind(method, observable));
             });
         },
 
@@ -45,7 +45,7 @@ define([
                 if (!_.isFunction(method)) {
                     method = observer[method];
                 }
-                observable.listenTo(observable, eventid, method, observer);
+                observable.listenTo(observable, eventid, _.bind(method, observer));
             });
 
             return pubsub;
