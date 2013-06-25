@@ -56,7 +56,7 @@ define([
                 factory.router.route(
                     prefixPath(path, prefix),
                     eventname,
-                    _.bind(factory.moduleRouteListener, factory, module, eventname)
+                    _.bind(factory.moduleRouteListener, factory, application, module, eventname)
                 );
             });
         },
@@ -73,7 +73,7 @@ define([
         startListener: function () {
             Backbone.history.start(this.options.history);
         },
-        moduleRouteListener: function (module, eventname) {
+        moduleRouteListener: function (application, module, eventname) {
             var moduleChange = (this.currentModule !== module);
             if (moduleChange && this.currentModule) {
                 this.application.trigger('module:teardown', this.currentModule);
@@ -81,11 +81,12 @@ define([
             }
             if (moduleChange) {
                 this.application.trigger('module:change', this.currentModule, module);
-                module.setup();
+                module.setup(application);
                 this.application.trigger('module:setup', module);
             }
             this.currentModule = module;
-            var args = _.tail(arguments);
+            // remove both application and module
+            var args = _.tail(_.tail(arguments));
             module.trigger.apply(module, args);
         },
         routeListener: function (eventname) {

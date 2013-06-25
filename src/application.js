@@ -1,9 +1,12 @@
 define([
     'fossil/core',
-    'fossil/mixins/events',
+    'jquery',
     'underscore',
-    'backbone'
-], function (Fossil, Events, _, Backbone) {
+    'backbone',
+    'fossil/mixins/events',
+    'fossil/mixins/layout',
+    'fossil/mixins/fragmentable'
+], function (Fossil, $, _, Backbone) {
 
     var messages = {
         unknown_module: _.template("Unknown module at \"<%- path %>\".")
@@ -13,11 +16,15 @@ define([
         this.options = options || {};
         this.registerEvents();
         initFactories(this);
+        // init fragmentable
+        this.initFragmentable();
         initModules(this);
         this.initialize.apply(this, arguments);
     };
 
-    _.extend(Application.prototype, Fossil.Mixins.Events, {
+    _.extend(Application.prototype, Fossil.Mixins.Events, Fossil.Mixins.Layout, Fossil.Mixins.Fragmentable, {
+        // default selector for application to append to.
+        selector: 'body',
         initialize: function () {
         },
 
@@ -62,7 +69,7 @@ define([
 
         start: function () {
             this.trigger('setup');
-            this.trigger('setup:layout');
+            this.renderLayout($(this.selector));
             this.trigger('start');
         }
     });
