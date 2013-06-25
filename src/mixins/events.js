@@ -4,7 +4,7 @@ define([
     'backbone'
 ], function (Fossil, _, Backbone) {
 
-    var Events = Fossil.Events = _.extend({}, Backbone.Events, {
+    var Events = Fossil.Mixins.Events = _.extend({}, Backbone.Events, {
         registerEvents: function () {
             var events = _.extend(
                 {},

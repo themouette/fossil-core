@@ -1,6 +1,6 @@
 define([
     'fossil/core',
-    'fossil/events',
+    'fossil/mixins/events',
     'underscore',
     'backbone'
 ], function (Fossil, Events, _, Backbone) {
@@ -25,7 +25,7 @@ define([
         this.initialize.call(this, application);
     };
 
-    _.extend(Module.prototype, Fossil.Events, {
+    _.extend(Module.prototype, Fossil.Mixins.Events, {
         // events bound on application PubSub
         applicationEvents: {},
         // events bound on module PubSub

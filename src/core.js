@@ -12,6 +12,7 @@
     "use strict";
 
     root.Fossil || (root.Fossil = {});
+    root.Fossil.Mixins || (root.Fossil.Mixins = {});
 
     return root.Fossil;
 }));

@@ -1,6 +1,6 @@
 define([
     'fossil/core',
-    'fossil/events',
+    'fossil/mixins/events',
     'underscore',
     'backbone'
 ], function (Fossil, Events, _, Backbone) {
@@ -17,7 +17,7 @@ define([
         this.initialize.apply(this, arguments);
     };
 
-    _.extend(Application.prototype, Fossil.Events, {
+    _.extend(Application.prototype, Fossil.Mixins.Events, {
         initialize: function () {
         },
 

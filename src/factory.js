@@ -1,6 +1,6 @@
 define([
     'fossil/core',
-    'fossil/events',
+    'fossil/mixins/events',
     'underscore',
     'backbone'
 ], function (Fossil, Events, _, Backbone) {
@@ -13,7 +13,7 @@ define([
         this.initialize.apply(this, arguments);
     };
 
-    _.extend(Factory.prototype, Fossil.Events, {
+    _.extend(Factory.prototype, Fossil.Mixins.Events, {
         // default options
         options: {
             // should the factory be exposed  to module context ?

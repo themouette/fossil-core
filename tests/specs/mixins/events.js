@@ -1,6 +1,6 @@
 define([
     'chai',
-    'fossil/events'
+    'fossil/mixins/events'
 ], function (chai, Events) {
     'use strict';
 
