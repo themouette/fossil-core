@@ -13,12 +13,14 @@ define([
                 this.detachElement();
             }
             this.$el = $(el);
+            this.trigger('elementable:attach', this);
             return this;
         },
         // up to now, nothing is done here.
         // when element is changed or detached, this method is and must be called.
         detachElement: function () {
             this.$el = null;
+            this.trigger('elementable:detach', this);
         },
         $: function () {
             if (!this.$el) {
