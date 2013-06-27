@@ -20,14 +20,9 @@ define([
         });
 
         describe('options management', function () {
-            it('should read options fragments property', function () {
-                var f = new Fragment();
-
-            });
-            it('should read prototype fragments property', function () {
-            });
-            it('options should override fragments property', function () {
-            });
+            it('should read options fragments property');
+            it('should read prototype fragments property');
+            it('options should override fragments property');
         });
 
         describe('Fragments management', function () {
