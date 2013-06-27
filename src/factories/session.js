@@ -29,7 +29,7 @@ define([
 
     var Session = Fossil.Factories.Session = Factory.extend({
         options: {
-            exposeToModule: true,
+            expose: true,
             defaults: {}
         },
         _doActivateApplication: function(application, id) {

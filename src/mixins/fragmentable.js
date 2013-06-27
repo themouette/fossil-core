@@ -31,6 +31,7 @@ define([
             }
             // instanciate fragment
             fragment = new fragment(this.getFragmentContainer());
+            this.trigger('fragmentable:fragment:setup', fragment, id, this);
             return fragment;
         },
         // setup all the fragments.

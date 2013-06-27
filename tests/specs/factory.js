@@ -10,12 +10,20 @@ define([
     var assert = chai.assert;
 
     describe('Fossil.Factory can manage options', function () {
+        it('should extend parent options', function() {
+            var Factory1 = Factory.extend({
+                options: {foo: 'bar'}
+            });
+            var factory = new Factory1();
+            assert.propertyVal(factory.options, 'foo', "bar");
+            assert.property(factory.options, 'link');
+        });
         it('accepts default options', function() {
             var Factory1 = Factory.extend({
                 options: {foo: 'bar'}
             });
             var factory = new Factory1();
-            assert.deepEqual(factory.options, {foo: "bar"});
+            assert.property(factory.options, 'foo', "bar");
         });
 
         it('accepts an object as options', function() {
@@ -23,7 +31,7 @@ define([
                 options: {}
             });
             var factory = new Factory1({foo: 'bar'});
-            assert.deepEqual(factory.options, {foo: "bar"});
+            assert.propertyVal(factory.options, 'foo', "bar");
         });
 
         it('overrides default options with given options', function() {
@@ -37,11 +45,9 @@ define([
                 foo: 'baz',
                 baz: 2
             });
-            assert.deepEqual(factory.options, {
-                bar: 1,
-                foo: "baz",
-                baz: 2
-            });
+            assert.propertyVal(factory.options, 'bar', 1);
+            assert.propertyVal(factory.options, 'foo', "baz");
+            assert.propertyVal(factory.options, 'baz', 2);
         });
     });
 

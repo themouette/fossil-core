@@ -8,6 +8,7 @@ define([
 
     var Fragment = Fossil.Fragment = function (container, options) {
         this.options = options || {};
+        this.factories = {};
         this.path = container.path || '';
         this.registerEvents();
         this.initFragmentable();
