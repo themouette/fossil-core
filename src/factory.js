@@ -22,7 +22,7 @@ define([
             // should there be a shortlink on module
             // this would make factory available under module[factoryid]
             // to avoid conflic this MUST be set by user.
-            linkToApplcation: false
+            linkToApplication: false
         },
         // A hook to initialize factory,
         // after application and modules are initialized.
@@ -70,7 +70,7 @@ define([
             if (this.options.exposeToModule) {
                 module.factories[id] = this;
             }
-            if (this.options.linkToApplcation) {
+            if (this.options.linkToApplication) {
                 module[id] = this;
             }
             this._doActivateModule.apply(this, arguments);
