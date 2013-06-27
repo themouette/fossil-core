@@ -41,6 +41,13 @@ Built in events
 
 No events declared.
 
+### Fossil.Mixins.Elementable
+
+* `elementable:attach`: triggered when element is attached to object
+  `function(elementable)`
+* `elementable:detach`: triggered when element is detached from object
+  `function(elementable)`
+
 ### Fossil.Mixins.Layout
 
 * `layout:setup`: triggered when layout is first rendered on $el
