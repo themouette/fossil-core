@@ -20,6 +20,10 @@ define([
             expose: false,
             // default configuration for service link
             link: false,
+            // should there be a shortlink on application
+            // this would make service available under application[serviceid]
+            // to avoid conflic this MUST be set by user.
+            linkToApplication: null,
             // should the service be exposed  to module context ?
             // an exposed service will be available under module.services[serviceid]
             exposeToModule: null,
@@ -44,6 +48,9 @@ define([
         activateApplication: function (application, id) {
             var service = this;
             this.prefixEvent = _.bind(prefixEvent, this, id);
+            if (processConfig(this, 'linkToApplication', 'link')) {
+                application[id] = this;
+            }
 
             // create pubSub
             this.application = application.createPubSub(this, 'applicationEvents');
@@ -66,6 +73,9 @@ define([
             _.each(application.getModule(), function (module) {
                 service.suspendModule.call(service, module, application, id);
             });
+            if (processConfig(this, 'linkToApplication', 'link')) {
+                application[id] = null;
+            }
             // remove event handler
             this.stopListening();
             // remove pubsub reference
