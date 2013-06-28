@@ -1,9 +1,5 @@
 module.exports = function(grunt) {
 
-  console.log(grunt.file.expand({
-    cwd: './modules'
-  }, ['**/compile.js']));
-
   // Project configuration.
   grunt.initConfig({
     pkg: grunt.file.readJSON('package.json'),
