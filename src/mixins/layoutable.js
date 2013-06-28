@@ -3,7 +3,7 @@
 //
 // Define your layout in the `template` property of your object.
 // A template can either be a `Backbone.View`, a `function` or a `string`.
-// In any cse it will be transformed into a `Backbone.View` and stored into
+// In any case it will be transformed into a `Backbone.View` and stored into
 // `layout` property.
 define([
     'fossil/core',

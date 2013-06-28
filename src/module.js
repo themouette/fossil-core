@@ -19,7 +19,7 @@ define([
             this.options = options;
         }
 
-        // a PubSub object fo communication with the application
+        // a PubSub object for communication with the application
         this.application = application.createPubSub(this, 'applicationEvents');
         // init factories namespace
         this.factories = {};
