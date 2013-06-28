@@ -1,15 +1,15 @@
-// Fossil.Factories.Session helps in sharing data between every layer
-// this factory is exposed to modules as well as application.
+// Fossil.Services.Session helps in sharing data between every layer
+// this service is exposed to modules as well as application.
 //
 // ```javascript
 // new Fossil.Application({
-//   factories: {
-//     session: Fossil.Factories.Session
+//   services: {
+//     session: Fossil.Services.Session
 //   },
 //   modules: {
 //     '': Fossil.Module.extend({
 //         foo: function () {
-//             this.factories.session.get('user');
+//             this.services.session.get('user');
 //         }
 //     })
 //   }
@@ -19,33 +19,33 @@ define([
     "fossil/core",
     "underscore",
     "backbone",
-    "fossil/factory"
-], function (Fossil, _, Backbone, Factory) {
+    "fossil/service"
+], function (Fossil, _, Backbone, Service) {
 
     function requireApplicationError () {
         throw new Error();
     }
     var exposed = ['get', 'set', 'has'];
 
-    var Session = Fossil.Factories.Session = Factory.extend({
+    var Session = Fossil.Services.Session = Service.extend({
         options: {
             expose: true,
             defaults: {}
         },
         _doActivateApplication: function(application, id) {
-            var factory = this;
+            var service = this;
 
             this.model = new Backbone.Model(this.options.defaults || {});
             _.each(exposed, function (method) {
-                factory[method] = _.bind(factory.model[method], factory.model);
+                service[method] = _.bind(service.model[method], service.model);
             });
         },
         _doSuspendApplication: function(application, id) {
-            var factory = this;
+            var service = this;
 
             this.model = null;
             _.each(exposed, function (method) {
-                factory[method] = requireApplicationError;
+                service[method] = requireApplicationError;
             });
         }
     });

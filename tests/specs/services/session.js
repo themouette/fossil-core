@@ -2,7 +2,7 @@ define([
     "chai",
     "fossil/application",
     "fossil/module",
-    "fossil/factories/session"
+    "fossil/services/session"
 ], function (chai, Application, Module, Session) {
 
     var assert = chai.assert;
@@ -10,7 +10,7 @@ define([
     describe('Fossil.Facroty.Session and Module', function () {
         it('should be exposed to module', function() {
             var application = new Application({
-                factories: {
+                services: {
                     'session': Session
                 },
                 modules: {
@@ -18,7 +18,7 @@ define([
                 }
             });
 
-            assert.instanceOf(application.getModule('').factories.session, Session);
+            assert.instanceOf(application.getModule('').services.session, Session);
         });
     });
 

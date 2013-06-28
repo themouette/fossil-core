@@ -13,7 +13,7 @@ Core concepts
 -------------
 
 To build a `Application`, you connect multiple `Module`s and use several
-`Factory`-s.
+`Service`-s.
 
 Those 3 parts are what makes Fossil extensible.
 
@@ -30,10 +30,10 @@ other applications.
 It also provides an event dispatcher, and can access to the application's one
 either.
 
-### Factory
+### Service
 
 It is a piece of logic shared by all modules and the application.
-Some factories are built into Fossil, such as `Session` and `Routing`. More
+Some services are built into Fossil, such as `Session` and `Routing`. More
 should come quickly.
 
 We want code !
@@ -60,7 +60,7 @@ define([
         events: {
             'route:index': function () {
                 // forward to 'mails' url.
-                this.factories.router.navigate('mails', {replace: false})
+                this.services.router.navigate('mails', {replace: false})
             }
         }
     });
@@ -151,9 +151,9 @@ define([
 
     // create and start the application
     var application = new MyApplication({
-        factories: {
-            'session': Fossil.Factories.Session,
-            'router': new Fossil.Factories.Routing({
+        services: {
+            'session': Fossil.Services.Session,
+            'router': new Fossil.Services.Routing({
                     // create a link on modules
                     // to access router via this.router
                     linkToModule: true

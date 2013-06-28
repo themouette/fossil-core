@@ -2,10 +2,10 @@ define([
     "chai",
     "fossil/application",
     "fossil/module",
-    "fossil/factories/routing"
-], function (chai, Application, Module, RoutingFactory) {
+    "fossil/services/routing"
+], function (chai, Application, Module, RoutingService) {
 
-    describe('Fossil.Factory.Routing', function () {
+    describe('Fossil.Service.Routing', function () {
         var assert = chai.assert;
         var location, window;
         var routingOptions = {
@@ -55,11 +55,11 @@ define([
             Backbone.history.stop();
         });
 
-        // as routing cannot be unregistered in backbone, this factory cannot be
+        // as routing cannot be unregistered in backbone, this service cannot be
         // unregistered. Tests are all made on the same instance, that makes it
         // very fragile.
 
-        describe('Fossil.Factory.Routing register routes ', function () {
+        describe('Fossil.Service.Routing register routes ', function () {
 
             it('should register module routes defined via extension', function(done) {
                 this.timeout(10);
@@ -71,7 +71,7 @@ define([
 
                 // initialize application
                 var application = new Application();
-                var routing = new RoutingFactory(routingOptions);
+                var routing = new RoutingService(routingOptions);
                 application.connect('mod1/', Module.extend({
                     routes: {
                         'foo': 'mod:foo',
@@ -116,7 +116,7 @@ define([
                         'application/options': 'application:options'
                     }
                 });
-                var routing = new RoutingFactory(routingOptions);
+                var routing = new RoutingService(routingOptions);
                 application.use('router', routing);
                 application.start();
 
@@ -139,7 +139,7 @@ define([
                         'application/options': 'application:options'
                     }
                 });
-                var routing = new RoutingFactory(routingOptions);
+                var routing = new RoutingService(routingOptions);
                 application.use('router', routing);
                 application.start();
 
@@ -153,7 +153,7 @@ define([
                 this.timeout(10);
                 done = _.after(2, done);
                 var application = new Application();
-                var routing = new RoutingFactory(_.extend(
+                var routing = new RoutingService(_.extend(
                     routingOptions,
                     {
                         routes: {
@@ -171,14 +171,14 @@ define([
 
         });
 
-        describe('Fossil.Factories.Routing triggers module workflow', function () {
+        describe('Fossil.Services.Routing triggers module workflow', function () {
 
             it('should trigger application events module:{teardown,change,setup} when app is changed', function (done) {
                 this.timeout(50);
                 done = _.after(9, done);
                 // initialize application
                 var application = new Application();
-                var routing = new RoutingFactory(routingOptions);
+                var routing = new RoutingService(routingOptions);
                 application.connect('app1/', Module.extend({
                     routes: {
                         'foo': 'app:foo',
@@ -247,7 +247,7 @@ define([
                 }
                 // initialize application
                 var application = new Application();
-                var routing = new RoutingFactory(routingOptions);
+                var routing = new RoutingService(routingOptions);
                 application.connect('app1/', Module.extend({
                     routes: {
                         'foo': 'app:foo',
@@ -282,7 +282,7 @@ define([
                     assert(false);
                 }
                 var application = new Application();
-                var routing = new RoutingFactory(routingOptions);
+                var routing = new RoutingService(routingOptions);
                 application.connect('app1/', Module.extend({
                     routes: {
                         'foo': 'app:foo',

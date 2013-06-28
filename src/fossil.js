@@ -7,9 +7,9 @@ define([
     "fossil/application",
     "fossil/module",
     "fossil/fragment",
-    "fossil/factory",
-    "fossil/factories/routing",
-    "fossil/factories/session"
+    "fossil/service",
+    "fossil/services/routing",
+    "fossil/services/session"
 ], function (Fossil) {
     return Fossil;
 });

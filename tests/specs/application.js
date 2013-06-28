@@ -3,8 +3,8 @@ define([
     "underscore",
     "fossil/application",
     "fossil/module",
-    "fossil/factory",
-], function (chai, _, Application, Module, Factory) {
+    "fossil/service",
+], function (chai, _, Application, Module, Service) {
 
     var assert = chai.assert;
 
@@ -90,89 +90,89 @@ define([
             });
         });
 
-        describe('Fossil.Application can use Factory-s', function () {
-            it('should be possible to use a factory and retreive it', function () {
+        describe('Fossil.Application can use Service-s', function () {
+            it('should be possible to use a service and retreive it', function () {
                 var application = new Application();
-                application.use('foo', new Factory());
+                application.use('foo', new Service());
 
-                assert.instanceOf(application.factories.foo, Factory);
+                assert.instanceOf(application.services.foo, Service);
             });
 
-            it('should be possible to use multiple factories and retreive it', function () {
+            it('should be possible to use multiple services and retreive it', function () {
                 var application = new Application();
-                var Factory1 = Factory.extend({});
-                var Factory2 = Factory.extend({});
+                var Service1 = Service.extend({});
+                var Service2 = Service.extend({});
 
-                application.use('foo', new Factory1());
-                application.use('bar', new Factory2());
+                application.use('foo', new Service1());
+                application.use('bar', new Service2());
 
-                assert.instanceOf(application.factories.foo, Factory1);
-                assert.instanceOf(application.factories.bar, Factory2);
+                assert.instanceOf(application.services.foo, Service1);
+                assert.instanceOf(application.services.bar, Service2);
             });
 
-            it('should be possible to use an uninstanciated factory', function () {
+            it('should be possible to use an uninstanciated service', function () {
                 var application = new Application();
-                application.use('foo', Factory);
+                application.use('foo', Service);
 
-                assert.instanceOf(application.factories.foo, Factory);
+                assert.instanceOf(application.services.foo, Service);
             });
 
-            it('should be possible to define factories in options', function () {
+            it('should be possible to define services in options', function () {
                 var application = new Application({
-                    factories: {
-                        'foo': Factory
+                    services: {
+                        'foo': Service
                     }
                 });
 
-                assert.instanceOf(application.factories.foo, Factory);
+                assert.instanceOf(application.services.foo, Service);
             });
 
-            it('should activate factory for application when in use', function (done) {
+            it('should activate service for application when in use', function (done) {
                 this.timeout(10);
                 var application = new Application();
-                var Factory1 = Factory.extend({
+                var Service1 = Service.extend({
                     _doActivateApplication: function (_application) {
                         assert.strictEqual(application, _application);
                         done();
                     }
                 });
 
-                application.use('factory1', Factory1);
+                application.use('service1', Service1);
             });
 
-            it('should suspend previous factory for application when in use', function (done) {
+            it('should suspend previous service for application when in use', function (done) {
                 this.timeout(10);
                 done = _.after(3, done);
                 var application = new Application();
-                var Factory1 = Factory.extend({
+                var Service1 = Service.extend({
                     _doSuspendApplication: function (_application) {
                         assert.strictEqual(application, _application);
                         done();
                     }
                 });
-                var Factory2 = Factory.extend({
+                var Service2 = Service.extend({
                     _doActivateApplication: function (_application) {
                         assert.strictEqual(application, _application);
                         done();
                     }
                 });
 
-                application.use('factory1', Factory1);
-                application.use('factory1', Factory2);
-                assert.instanceOf(application.factories.factory1, Factory2);
+                application.use('service1', Service1);
+                application.use('service1', Service2);
+                assert.instanceOf(application.services.service1, Service2);
                 done();
             });
 
-            it('should trigger a factory:use event when new factory is used', function (done) {
+            it('should trigger a service:use event when new service is used', function (done) {
                 this.timeout(10);
                 var application = new Application();
-                var factory = new Factory();
-                application.on('factory:use', function (_factory, id, application) {
-                    assert.strictEqual(_factory, factory);
-                    assert.equal(id, 'factory1');
+                var service = new Service();
+                application.on('service:use', function (_service, id, application) {
+                    assert.strictEqual(_service, service);
+                    assert.equal(id, 'service1');
                     done();
                 });
-                application.use('factory1', factory);
+                application.use('service1', service);
             });
         });
 

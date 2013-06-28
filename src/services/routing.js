@@ -5,10 +5,10 @@ define([
     "fossil/core",
     "underscore",
     "backbone",
-    "fossil/factory"
-], function (Fossil, _, Backbone, Factory) {
+    "fossil/service"
+], function (Fossil, _, Backbone, Service) {
 
-    var Routing = Fossil.Factories.Routing = Factory.extend({
+    var Routing = Fossil.Services.Routing = Service.extend({
         options: {
             // prefix to use for every route
             prefix: '',
@@ -24,17 +24,17 @@ define([
         },
 
         registerRoutesFor: function (element, prefix) {
-            var factory = this;
+            var service = this;
             var routes = _.extend(
                 element.routes || {},
                 element.options.routes || {}
             );
             prefix = prefixPath(prefix, this.options.prefix);
             _.each(routes, function (eventname, path) {
-                factory.router.route(
+                service.router.route(
                     prefixPath(path, prefix),
                     eventname,
-                    _.bind(factory.routeListener, factory, eventname)
+                    _.bind(service.routeListener, service, eventname)
                 );
             });
         },
@@ -49,13 +49,13 @@ define([
         },
         _doActivateModule: function (module, application) {
             // add all module routes
-            var factory = this;
+            var service = this;
             var prefix = prefixPath(module.path, this.options.prefix);
             _.each(module.routes || {}, function (eventname, path) {
-                factory.router.route(
+                service.router.route(
                     prefixPath(path, prefix),
                     eventname,
-                    _.bind(factory.moduleRouteListener, factory, application, module, eventname)
+                    _.bind(service.moduleRouteListener, service, application, module, eventname)
                 );
             });
         },
