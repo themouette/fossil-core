@@ -9,6 +9,13 @@ It aims at easing and speed up development of large single page modules.
 For now it relies on AMD, but it should soon be possible to use it as raw
 javascript.
 
+Install
+-------
+
+```
+$ git clone https://github.com/themouette/fossil-core.git && npm install
+```
+
 Core concepts
 -------------
 
@@ -173,4 +180,28 @@ define([
     // finaly, start application.
     application.start();
 });
+```
+
+Commands
+--------
+
+### Testing
+
+```
+$ npm test
+```
+
+### Dev mode
+
+It launches a local server and watcher to build project automaticaly.
+
+```
+$ npm start
+```
+project is available under `http://localhost:8000`
+
+### Tests
+
+```
+$ npm test
 ```

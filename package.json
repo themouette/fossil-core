@@ -6,8 +6,7 @@
   "scripts": {
     "install": "./node_modules/bower/bin/bower install",
     "update": "./node_modules/bower/bin/bower install",
-    "start": "./node_modules/grunt-cli/bin/grunt connect:server:keepalive",
-    "dev": "./node_modules/grunt-cli/bin/grunt dev",
+    "start": "./node_modules/grunt-cli/bin/grunt dev",
     "test": "./node_modules/grunt-cli/bin/grunt test"
   },
   "repository": "",
