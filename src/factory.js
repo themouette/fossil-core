@@ -20,14 +20,14 @@ define([
             expose: false,
             // default configuration for service link
             link: false,
-            // should the factory be exposed  to module context ?
+            // should the factory be exposed to module context?
             // an exposed factory will be available under module.factories[factoryid]
             exposeToModule: null,
             // should there be a shortlink on module
             // this would make factory available under module[factoryid]
             // to avoid conflic this MUST be set by user.
             linkToModule: null,
-            // should the factory be exposed  to fragement context ?
+            // should the factory be exposed to fragement context?
             // an exposed factory will be available under fragement.factories[factoryid]
             exposeToFragment: null,
             // should there be a shortlink on fragement

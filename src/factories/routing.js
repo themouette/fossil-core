@@ -90,7 +90,7 @@ define([
             var o = _.extend(
                 {},
                 this.options.navigate || {},
-                options || {}
+                options || {}
             );
             this.router.navigate.call(this.router, fragment, o);
         }
