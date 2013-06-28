@@ -2,77 +2,77 @@ define([
     "chai",
     "sinon",
     "underscore",
-    "fossil/factory",
+    "fossil/service",
     "fossil/application",
     "fossil/module"
-], function (chai, sinon, _, Factory, Application, Module) {
+], function (chai, sinon, _, Service, Application, Module) {
 
     var assert = chai.assert;
 
-    describe('Fossil.Factory can manage options', function () {
+    describe('Fossil.Service can manage options', function () {
         it('should extend parent options', function() {
-            var Factory1 = Factory.extend({
+            var Service1 = Service.extend({
                 options: {foo: 'bar'}
             });
-            var factory = new Factory1();
-            assert.propertyVal(factory.options, 'foo', "bar");
-            assert.property(factory.options, 'link');
+            var service = new Service1();
+            assert.propertyVal(service.options, 'foo', "bar");
+            assert.property(service.options, 'link');
         });
         it('accepts default options', function() {
-            var Factory1 = Factory.extend({
+            var Service1 = Service.extend({
                 options: {foo: 'bar'}
             });
-            var factory = new Factory1();
-            assert.property(factory.options, 'foo', "bar");
+            var service = new Service1();
+            assert.property(service.options, 'foo', "bar");
         });
 
         it('accepts an object as options', function() {
-            var Factory1 = Factory.extend({
+            var Service1 = Service.extend({
                 options: {}
             });
-            var factory = new Factory1({foo: 'bar'});
-            assert.propertyVal(factory.options, 'foo', "bar");
+            var service = new Service1({foo: 'bar'});
+            assert.propertyVal(service.options, 'foo', "bar");
         });
 
         it('overrides default options with given options', function() {
-            var Factory1 = Factory.extend({
+            var Service1 = Service.extend({
                 options: {
                     foo: 'bar',
                     bar: 1
                 }
             });
-            var factory = new Factory1({
+            var service = new Service1({
                 foo: 'baz',
                 baz: 2
             });
-            assert.propertyVal(factory.options, 'bar', 1);
-            assert.propertyVal(factory.options, 'foo', "baz");
-            assert.propertyVal(factory.options, 'baz', 2);
+            assert.propertyVal(service.options, 'bar', 1);
+            assert.propertyVal(service.options, 'foo', "baz");
+            assert.propertyVal(service.options, 'baz', 2);
         });
     });
 
-    describe('Fossil.Factory applies on application', function () {
+    describe('Fossil.Service applies on application', function () {
         it('provides a way to communicate with application via PubSub', function(done) {
             this.timeout(10);
             var application = new Application();
-            var factory = new Factory();
-            factory.activateApplication(application);
+            var service = new Service();
+            service.activateApplication(application);
 
-            factory.application.on('foo', done);
-            factory.application.trigger('foo');
+            service.application.on('foo', done);
+            service.application.trigger('foo');
         });
 
         it('activates application on instanciation', function(done) {
             this.timeout(10);
             var application = new Application();
-            var Factory1 = Factory.extend({
+            var Service1 = Service.extend({
                 _doActivateApplication: function (_application) {
                     assert.strictEqual(application, _application);
                     done();
                 }
             });
-            var factory = new Factory1();
-            factory.activateApplication(application);
+            var service = new Service1();
+            service.activateApplication(application);
         });
 
         it('can be suspended', function(done) {
@@ -80,31 +80,31 @@ define([
             done = _.after(2, done);
 
             var application = new Application();
-            var Factory1 = Factory.extend({
+            var Service1 = Service.extend({
                 _doSuspendApplication: function (_application) {
                     assert.strictEqual(application, _application);
                     done();
                 }
             });
-            var factory = new Factory1();
-            factory.activateApplication(application);
-            factory.suspendApplication(application);
+            var service = new Service1();
+            service.activateApplication(application);
+            service.suspendApplication(application);
 
-            assert.isNull(factory.application, 'pubsub is removed');
+            assert.isNull(service.application, 'pubsub is removed');
             done();
         });
     });
 
-    describe('Fossil.Factory applies on module', function () {
+    describe('Fossil.Service applies on module', function () {
         it('activate any module registered later', function(done) {
             this.timeout(10);
-            var module, factory, application;
+            var module, service, application;
 
             application = new Application();
             module = new Module(application);
 
-            // create a stub factory to monitor module activation
-            var Factory1 = Factory.extend({
+            // create a stub service to monitor module activation
+            var Service1 = Service.extend({
                 _doActivateModule: function (_module, _application) {
                     assert.strictEqual(module, _module);
                     assert.strictEqual(application, _application);
@@ -112,20 +112,20 @@ define([
                 }
             });
 
-            factory = new Factory1();
-            factory.activateApplication(application);
+            service = new Service1();
+            service.activateApplication(application);
             application.connect('', module);
         });
 
         it('activate any module registered before', function(done) {
             this.timeout(10);
-            var module, factory, application;
+            var module, service, application;
 
             application = new Application();
             module = new Module(application);
 
-            // create a stub factory to monitor module activation
-            var Factory1 = Factory.extend({
+            // create a stub service to monitor module activation
+            var Service1 = Service.extend({
                 _doActivateModule: function (_module, _application) {
                     assert.strictEqual(module, _module);
                     assert.strictEqual(application, _application);
@@ -134,35 +134,35 @@ define([
             });
 
             application.connect('', module);
-            factory = new Factory1();
-            factory.activateApplication(application);
+            service = new Service1();
+            service.activateApplication(application);
         });
 
         it('does not affect module when suspended', function() {
 
             var application = new Application();
             var module = new Module(application);
-            var Factory1 = Factory.extend({
+            var Service1 = Service.extend({
                 _doActivateModule: function (_module, _application) {
                     assert.fail('It should be desactivated');
                 }
             });
-            var factory = new Factory1();
-            factory.activateApplication(application);
-            factory.suspendApplication(application);
+            var service = new Service1();
+            service.activateApplication(application);
+            service.suspendApplication(application);
 
             application.connect('', module);
         });
 
         it('suspend any module registered before', function(done) {
             this.timeout(10);
-            var module, factory, application;
+            var module, service, application;
 
             application = new Application();
             module = new Module(application);
 
-            // create a stub factory to monitor module activation
-            var Factory1 = Factory.extend({
+            // create a stub service to monitor module activation
+            var Service1 = Service.extend({
                 _doSuspendModule: function (_module, _application) {
                     assert.strictEqual(module, _module);
                     assert.strictEqual(application, _application);
@@ -171,57 +171,57 @@ define([
             });
 
             application.connect('', module);
-            factory = new Factory1();
-            factory.activateApplication(application);
-            factory.suspendApplication(application);
+            service = new Service1();
+            service.activateApplication(application);
+            service.suspendApplication(application);
         });
     });
 
-    describe('Fossil.Factory exposition to module', function () {
+    describe('Fossil.Service exposition to module', function () {
         it('should not be exposed as default', function() {
-            var factory, application;
+            var service, application;
 
-            factory = new Factory();
+            service = new Service();
             application = new Application({
-                factories: {
-                    'foo': factory
+                services: {
+                    'foo': service
                 },
                 modules: {
                     '': Module
                 }
             });
 
-            assert.isUndefined(application.getModule('').factories.foo);
+            assert.isUndefined(application.getModule('').services.foo);
         });
 
         it('should be exposed', function () {
-            var factory, application;
+            var service, application;
 
-            // create a stub factory to monitor module activation
-            var Factory1 = Factory.extend({
+            // create a stub service to monitor module activation
+            var Service1 = Service.extend({
                 options: {
                     exposeToModule: true
                 }
             });
 
             application = new Application();
-            factory = new Factory1();
+            service = new Service1();
 
             application.connect('', Module);
-            application.use('foo', factory);
+            application.use('foo', service);
             application.connect('bar', Module);
 
-            assert.strictEqual(application.getModule('').factories.foo, factory);
-            assert.strictEqual(application.getModule('bar').factories.foo, factory);
+            assert.strictEqual(application.getModule('').services.foo, service);
+            assert.strictEqual(application.getModule('bar').services.foo, service);
         });
 
-        it('should be possible to define factories and modules in options', function (done) {
+        it('should be possible to define services and modules in options', function (done) {
             this.timeout(10);
             var times = 0;
             done = _.after(3, done);
             var Application1 = Application.extend({
-                factories: {
-                    'factory1': new (Factory.extend({
+                services: {
+                    'service1': new (Service.extend({
                         options: {exposeToModule: true},
                         // this should be called only once
                         _doActivateModule: function (app) {
@@ -244,22 +244,22 @@ define([
         });
     });
 
-    describe('Fossil.Factory events', function () {
+    describe('Fossil.Service events', function () {
 
-        it('should trigger a factory:%id%:ready on module when module is activated', function (done) {
+        it('should trigger a service:%id%:ready on module when module is activated', function (done) {
             this.timeout(10);
             done = _.after(2, done);
             function eventTriggered() {
                 done();
             }
             var application = new Application({
-                factories: {
-                    my_factory: Factory
+                services: {
+                    my_service: Service
                 },
                 modules: {
                     '': Module.extend({
                         events: {
-                            'factory:my_factory:ready': eventTriggered
+                            'service:my_service:ready': eventTriggered
                         }
                     })
                 }
@@ -267,20 +267,20 @@ define([
 
             application.connect('app/', Module.extend({
                 events: {
-                    'factory:my_factory:ready': eventTriggered
+                    'service:my_service:ready': eventTriggered
                 }
             }));
         });
 
-        it('should trigger a factory:%id%:ready on application when application is activated', function(done) {
+        it('should trigger a service:%id%:ready on application when application is activated', function(done) {
             this.timeout(10);
             var application = new Application({
-                factories: {
-                    my_factory: Factory
+                services: {
+                    my_service: Service
                 },
                 events: {
-                    'factory:my_factory:ready': function (factory) {
-                        assert.instanceOf(factory, Factory);
+                    'service:my_service:ready': function (service) {
+                        assert.instanceOf(service, Service);
                         done();
                     }
                 }
@@ -288,12 +288,12 @@ define([
         });
 
         it('should offer a prefixEvent method when application is active', function() {
-            var factory = new Factory();
-            assert.ok(!factory.prefixEvent);
+            var service = new Service();
+            assert.ok(!service.prefixEvent);
             var application = new Application();
-            application.use('factory', factory);
-            assert.ok(factory.prefixEvent);
-            assert.equal(factory.prefixEvent('foo'), 'factory:factory:foo');
+            application.use('service', service);
+            assert.ok(service.prefixEvent);
+            assert.equal(service.prefixEvent('foo'), 'service:service:foo');
         });
     });
 });

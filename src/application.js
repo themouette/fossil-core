@@ -17,7 +17,7 @@ define([
     var Application = Fossil.Application = function (options) {
         this.options = options || {};
         this.registerEvents();
-        initFactories(this);
+        initServices(this);
         // init fragmentable
         this.initFragmentable();
         initModules(this);
@@ -60,18 +60,18 @@ define([
                 throw new Error(messages.unknown_module({path: path}));
             },
 
-            // use a factory
-            use: function (id, factory) {
-                if (_.isFunction(factory)) {
-                    factory = new factory();
+            // use a service
+            use: function (id, service) {
+                if (_.isFunction(service)) {
+                    service = new service();
                 }
-                // suspend previously registered factory with this name
-                if (this.factories[id]) {
-                    this.factories[id].suspendApplication(this, id);
+                // suspend previously registered service with this name
+                if (this.services[id]) {
+                    this.services[id].suspendApplication(this, id);
                 }
-                factory.activateApplication(this, id);
-                this.factories[id] = factory;
-                this.trigger('factory:use', factory, id, this);
+                service.activateApplication(this, id);
+                this.services[id] = service;
+                this.trigger('service:use', service, id, this);
 
                 return this;
             },
@@ -103,15 +103,15 @@ define([
             }
     });
 
-    function initFactories (application) {
-        var factories = _.extend(
+    function initServices (application) {
+        var services = _.extend(
             {},
-            application.factories || {},
-            application.options.factories || {}
+            application.services || {},
+            application.options.services || {}
         );
-        application.factories = {};
-        _.each(factories, function (factory, id) {
-            application.use(id, factory);
+        application.services = {};
+        _.each(services, function (service, id) {
+            application.use(id, service);
         });
     }
 

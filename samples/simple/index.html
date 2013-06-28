@@ -45,7 +45,7 @@
             events: {
                 'route:index': function () {
                     // forward to 'mail' url.
-                    this.factories.router.navigate('mails', {replace: false})
+                    this.services.router.navigate('mails', {replace: false})
                 },
                 'layout:setup': function (application, $el) {
                     this.$el.empty();
@@ -190,9 +190,9 @@
 
         // create and start the application
         var application = new MyApplication({
-            factories: {
-                'session': Fossil.Factories.Session,
-                'router': new Fossil.Factories.Routing({
+            services: {
+                'session': Fossil.Services.Session,
+                'router': new Fossil.Services.Routing({
                         // create a link on modules
                         // to access router via this.router
                         link: true

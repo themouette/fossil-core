@@ -21,8 +21,8 @@ define([
 
         // a PubSub object for communication with the application
         this.application = application.createPubSub(this, 'applicationEvents');
-        // init factories namespace
-        this.factories = {};
+        // init services namespace
+        this.services = {};
         // init event listeners
         this.registerEvents(application);
         // init fragmentable

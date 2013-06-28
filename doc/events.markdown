@@ -76,7 +76,7 @@ Following events are triggered by `Fossil.Application`.
 
 * `module:connect`: a new module is connected `function(module, path,
   application)`
-* `factory:use`: a new factory is used `function(factory, factory_id,
+* `service:use`: a new service is used `function(service, service_id,
   application)`
 * `setup`: triggered when application setup begins  `function(application)`
 * `start`: triggered when application initialization is over

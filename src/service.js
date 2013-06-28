@@ -5,44 +5,44 @@ define([
     'backbone'
 ], function (Fossil, Events, _, Backbone) {
 
-    Fossil.Factories = {};
+    Fossil.Services = {};
 
-    var Factory = Fossil.Factory = function (options) {
+    var Service = Fossil.Service = function (options) {
         this.options = _.extend({}, this.options, options || {});
         this.registerEvents();
         this.initialize.apply(this, arguments);
     };
 
-    _.extend(Factory.prototype, Fossil.Mixins.Events, {
+    _.extend(Service.prototype, Fossil.Mixins.Events, {
         // default options
         options: {
             // default configuration for service exposure
             expose: false,
             // default configuration for service link
             link: false,
-            // should the factory be exposed to module context?
-            // an exposed factory will be available under module.factories[factoryid]
+            // should the service be exposed  to module context ?
+            // an exposed service will be available under module.services[serviceid]
             exposeToModule: null,
             // should there be a shortlink on module
-            // this would make factory available under module[factoryid]
+            // this would make service available under module[serviceid]
             // to avoid conflic this MUST be set by user.
             linkToModule: null,
-            // should the factory be exposed to fragement context?
-            // an exposed factory will be available under fragement.factories[factoryid]
+            // should the service be exposed  to fragement context ?
+            // an exposed service will be available under fragement.services[serviceid]
             exposeToFragment: null,
             // should there be a shortlink on fragement
-            // this would make factory available under fragement[factoryid]
+            // this would make service available under fragement[serviceid]
             // to avoid conflic this MUST be set by user.
             linkToFragment: null
         },
-        // A hook to initialize factory,
+        // A hook to initialize service,
         // after application and modules are initialized.
         initialize: function (options) {
         },
 
-        // activate Factory for application
+        // activate Service for application
         activateApplication: function (application, id) {
-            var factory = this;
+            var service = this;
             this.prefixEvent = _.bind(prefixEvent, this, id);
 
             // create pubSub
@@ -51,7 +51,7 @@ define([
             this._doActivateApplication(application);
             // activate all modules
             _.each(application.getModule(), function (module) {
-                factory.activateModule.call(factory, module, application, id);
+                service.activateModule.call(service, module, application, id);
             });
             // register on new module connection
             this.listenTo(application, 'module:connect', _.bind(this.activateModuleListener, this, id));
@@ -61,10 +61,10 @@ define([
         },
         // unplug for application
         suspendApplication: function (application, id) {
-            var factory = this;
+            var service = this;
             // suspend for every application modules
             _.each(application.getModule(), function (module) {
-                factory.suspendModule.call(factory, module, application, id);
+                service.suspendModule.call(service, module, application, id);
             });
             // remove event handler
             this.stopListening();
@@ -75,12 +75,12 @@ define([
         },
 
         activateModule: function (module, application, id) {
-            if (!module.factories) {
+            if (!module.services) {
                 // module isn't booted yet.
                 return ;
             }
             if (processConfig(this, 'exposeToModule', 'expose')) {
-                module.factories[id] = this;
+                module.services[id] = this;
             }
             if (processConfig(this, 'linkToModule', 'link')) {
                 module[id] = this;
@@ -91,7 +91,7 @@ define([
         },
         suspendModule: function (module, application, id) {
             if (processConfig(this, 'exposeToModule', 'expose')) {
-                module.factories[id] = null;
+                module.services[id] = null;
             }
             if (processConfig(this, 'linkToModule', 'link')) {
                 module[id] = null;
@@ -103,12 +103,12 @@ define([
         },
 
         activateFragment: function (fragment, parent, id) {
-            if (!fragment.factories) {
+            if (!fragment.services) {
                 // fragment isn't booted yet.
                 return ;
             }
             if (processConfig(this, 'exposeToFragment', 'expose')) {
-                fragment.factories[id] = this;
+                fragment.services[id] = this;
             }
             if (processConfig(this, 'linkToFragment', 'link')) {
                 fragment[id] = this;
@@ -119,7 +119,7 @@ define([
         },
         suspendFragment: function (fragment, parent, id) {
             if (processConfig(this, 'exposeToFragment', 'expose')) {
-                fragment.factories[id] = null;
+                fragment.services[id] = null;
             }
             if (processConfig(this, 'linkToFragment', 'link')) {
                 fragment[id] = null;
@@ -130,34 +130,34 @@ define([
             this.activateFragment(fragment, parent, id);
         },
 
-        // activate factory on application.
-        // this method has to be overriden with the factory logic.
+        // activate service on application.
+        // this method has to be overriden with the service logic.
         _doActivateApplication: function (application) {
         },
-        // activate factory on module.
-        // this method has to be overriden with the factory logic.
+        // activate service on module.
+        // this method has to be overriden with the service logic.
         _doActivateModule: function (module, application) {
         },
-        // activate factory on fragment.
-        // this method has to be overriden with the factory logic.
+        // activate service on fragment.
+        // this method has to be overriden with the service logic.
         _doActivateFragment: function (fragment, parent) {
         },
-        // suspend factory on application.
-        // this method has to be overriden with the factory logic.
+        // suspend service on application.
+        // this method has to be overriden with the service logic.
         _doSuspendApplication: function (application) {
         },
-        // suspend factory on module.
-        // this method has to be overriden with the factory logic.
+        // suspend service on module.
+        // this method has to be overriden with the service logic.
         _doSuspendModule: function (module, application) {
         },
-        // suspend factory on fragment.
-        // this method has to be overriden with the factory logic.
+        // suspend service on fragment.
+        // this method has to be overriden with the service logic.
         _doSuspendFragment: function (fragment, parent) {
         }
     });
 
     function prefixEvent (id, event) {
-        return ['factory', id, event].join(':');
+        return ['service', id, event].join(':');
     }
 
     function processConfig(service, prop, defaultProp) {
@@ -169,12 +169,12 @@ define([
         return _.result(service.options, defaultProp);
     }
 
-    Factory.extend = function () {
+    Service.extend = function () {
         var options = this.prototype.options;
         var child = Backbone.Model.extend.apply(this, arguments);
         child.prototype.options = _.extend({}, this.prototype.options, child.prototype.options ||{});
         return child;
     };
 
-    return Factory;
+    return Service;
 });
