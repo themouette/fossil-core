@@ -102,6 +102,32 @@ define([
                 done();
             });
 
+            it('should accept methods and function as route', function(done) {
+                this.timeout(10);
+                done = _.after(2, done);
+
+                var Application1 = Application.extend({
+                    routes: {
+                        'first/:id': 'first',
+                        'second/:id': function (id) {
+                            assert.equal(id, 2);
+                            done();
+                        }
+
+                    },
+                    first: function (id) {
+                        assert.equal(id, 1);
+                        done();
+                    }
+                });
+                var application = new Application1();
+                var routing = new RoutingService(routingOptions);
+                application.use('router', routing);
+                application.start();
+                routing.navigate('first/1');
+                routing.navigate('second/2');
+            });
+
             it('should register application routes defined via prototype', function(done) {
                 this.timeout(10);
                 done = _.after(2, done);
