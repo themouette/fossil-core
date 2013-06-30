@@ -44,8 +44,8 @@ define([
 
             // add event handler on router:navigate
             // to trigger navigation
-            this.listenTo(application, 'router:navigate', this.navigate, this);
-            this.listenTo(application, 'start', this.startListener, this);
+            this.listenTo(application, 'router:navigate', _.bind(this.navigate, this));
+            this.listenTo(application, 'start', _.bind(this.startListener, this));
         },
         _doActivateModule: function (module, application) {
             // add all module routes
