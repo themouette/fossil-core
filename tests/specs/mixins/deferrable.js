@@ -263,6 +263,10 @@ define([
 
                 q.abort();
             });
+            it('should be possible to abort whe not waiting', function() {
+                var q = new Queue();
+                q.abort();
+            });
             it('When aborted, deferred resolution does not trigger callbacks', function (done) {
                 this.timeout(10);
                 done = _.after(2, done);

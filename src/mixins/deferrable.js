@@ -43,7 +43,9 @@ define([
             );
         },
         abort: function () {
-            this.async.abort();
+            if (this.isWaiting()) {
+                this.async.abort();
+            }
             return this;
         },
         isWaiting: function () {
