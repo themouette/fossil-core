@@ -69,10 +69,10 @@ var MyApplication = Fossil.Application.extend({
     // it becomes easy to define layout in the page loaded from server.
     template: null,
 
-    showError: funcion (error) {
+    showError: function (error) {
         this.$('.main').html(error.message);
     },
-    showLoading: funcion () {
+    showLoading: function () {
         this.$('.main').html('loading');
     },
     renderUser: function () {
