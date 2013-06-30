@@ -28,13 +28,34 @@ module.exports = function(grunt) {
             }
         }
     },
+    requirejs: {
+        release: {
+            options: {
+                baseUrl: './',
+                optimize: "none",
+                paths: {
+                    "fossil": "src",
+                    "jquery": "components/jquery/jquery",
+                    "underscore": "components/underscore/underscore",
+                    "backbone": "components/backbone/backbone"
+                },
+                shim: {
+                    'underscore': {exports: '_'},
+                    'backbone': { deps: ['underscore', 'jquery'], exports: 'Backbone'}
+                },
+                name: "fossil/fossil",
+                exclude: ["jquery", "underscore", "backbone"],
+                out: "<%= pkg.name %>.js"
+            }
+        }
+    },
     uglify: {
       options: {
         banner: '/*! <%= pkg.name %> <%= grunt.template.today("yyyy-mm-dd") %> */\n'
       },
       build: {
-        src: 'src/<%= pkg.name %>.js',
-        dest: 'build/<%= pkg.name %>.min.js'
+        src: '<%= pkg.name %>.js',
+        dest: '<%= pkg.name %>.min.js'
       }
     }
   });
@@ -43,13 +64,14 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-connect');
   grunt.loadNpmTasks('grunt-contrib-uglify');
   grunt.loadNpmTasks('grunt-contrib-watch');
+  grunt.loadNpmTasks('grunt-contrib-requirejs');
   grunt.loadNpmTasks('grunt-concurrent');
   grunt.loadNpmTasks('grunt-mocha');
 
   // Default task(s).
   grunt.registerTask('test', ['mocha']);
   grunt.registerTask('dev', ['concurrent:dev']);
-  grunt.registerTask('release', ['test', 'uglify']);
+  grunt.registerTask('release', ['test', 'requirejs', 'uglify']);
   grunt.registerTask('default', ['release']);
 
 };
