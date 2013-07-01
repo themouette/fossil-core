@@ -9,12 +9,31 @@ It aims at easing and speed up development of large single page applications.
 For now it relies on AMD, but it should soon be possible to use it as raw
 javascript.
 
+[![Build
+Status](https://travis-ci.org/themouette/fossil-core.png?branch=master)](https://travis-ci.org/themouette/fossil-core)
+
 Install
 -------
 
 ```
 $ git clone https://github.com/themouette/fossil-core.git && npm install
 ```
+
+Usage
+-----
+
+[Slides](http://themouette.github.io/slides-fossil/#/) introducing Fossil.
+
+Some documentation is available in the
+[doc](https://github.com/themouette/fossil-core/tree/master/doc) directory.
+
+More documentation coming soon.
+
+License
+-------
+
+Fossil is an open source project licensed under the MIT license. See
+`LICENSE` file for more informations.
 
 Simple example
 --------------
@@ -284,10 +303,6 @@ It launches a local server and watcher to build project automaticaly.
 ```
 $ npm start
 ```
+
 project is available under `http://localhost:8000`
 
-### Tests
-
-```
-$ npm test
-```
