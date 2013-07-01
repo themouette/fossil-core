@@ -15,6 +15,12 @@ Status](https://travis-ci.org/themouette/fossil-core.png?branch=master)](https:/
 Install
 -------
 
+If you use bower:
+
+`bower install fossil-core --save`
+
+Git install:
+
 ```
 $ git clone https://github.com/themouette/fossil-core.git && npm install
 ```
