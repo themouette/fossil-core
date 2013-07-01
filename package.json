@@ -1,6 +1,6 @@
 {
   "name": "fossil-core",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "core library for fossil",
   "main": "index.js",
   "scripts": {
@@ -9,8 +9,8 @@
     "start": "./node_modules/grunt-cli/bin/grunt dev",
     "test": "./node_modules/grunt-cli/bin/grunt test"
   },
-  "repository": "",
-  "author": "",
+  "repository": "https://github.com/themouette/fossil-core.git",
+  "author": "Julien Muetton",
   "license": "MIT",
   "dependencies": {},
   "devDependencies": {

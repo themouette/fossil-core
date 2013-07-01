@@ -1,6 +1,16 @@
 {
   "name": "fossil-core",
-  "version": "0.0.0",
+  "version": "0.0.1",
+    "licenses": [
+    {
+      "type": "MIT",
+      "url": "https://github.com/themouette/fossil-core/blob/master/LICENSE"
+    }
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/themouette/fossil-core"
+  },
   "ignore": [
     "**/.*",
     "node_modules",
