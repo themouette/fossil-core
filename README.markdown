@@ -21,7 +21,7 @@ Simple example
 
 This is a very basic example. Even if Fossil is built to scale on large
 applications, you can build small thing with no overhead.
-To have an example using all Fissil concepts, look at
+To have an example using all Fossil concepts, look at
 
 ``` javascript
 var MyApplication = Fossil.Application.extend({
