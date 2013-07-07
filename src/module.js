@@ -1,16 +1,7 @@
-define([
-    'fossil/core',
-    'underscore',
-    'backbone',
-    'fossil/mixins/observable',
-    'fossil/mixins/layoutable',
-    'fossil/mixins/elementable',
-    'fossil/mixins/fragmentable',
-    'fossil/mixins/deferrable',
-    'fossil/mixins/startable'
-], function (Fossil, _, Backbone) {
+Fossil.Module = (function (Fossil, _, Backbone) {
+    'use strict';
 
-    var Module = Fossil.Module = function (application, path, options) {
+    var Module = function (application, path, options) {
         if (typeof path === "string") {
             this.path = path;
             this.options = options || {};
@@ -75,4 +66,4 @@ define([
     Module.extend = Backbone.Model.extend;
 
     return Module;
-});
+})(Fossil, _, Backbone);

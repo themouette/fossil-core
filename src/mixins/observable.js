@@ -1,12 +1,9 @@
-define([
-    'fossil/core',
-    'underscore',
-    'backbone'
-], function (Fossil, _, Backbone) {
+Fossil.Mixins.Observable = (function (Fossil, _, Backbone) {
+    'use strict';
 
     var exposedPubsubProperties = ['_listenerId', 'createPubSub'].concat(_.keys(Backbone.Events));
 
-    var Eventable = Fossil.Mixins.Observable = _.extend({}, Backbone.Events, {
+    var Eventable = _.extend({}, Backbone.Events, {
         registerEvents: function () {
             var events = _.extend(
                 {},
@@ -59,4 +56,4 @@ define([
     });
 
     return Eventable;
-});
+})(Fossil, _, Backbone);

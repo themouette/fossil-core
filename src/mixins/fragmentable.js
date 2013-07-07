@@ -1,13 +1,12 @@
 // fragmentable mixin allow to define fragments in a layout object.
-define([
-    'fossil/core',
-    'underscore',
-    'backbone'
-], function (Fossil, _, Backbone) {
+Fossil.Mixins.Fragmentable = (function (Fossil, _, Backbone) {
+    'use strict';
+
     var messages = {
         unknown_fragment: _.template('No fragment available for "<%= id %>".')
     };
-    var Fragmentable = Fossil.Mixins.Fragmentable = {
+
+    var Fragmentable = {
         // list all fragments
         fragments: {},
         initFragmentable: function () {
@@ -73,4 +72,4 @@ define([
     };
 
     return Fragmentable;
-});
+})(Fossil, _, Backbone);

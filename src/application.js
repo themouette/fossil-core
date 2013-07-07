@@ -1,21 +1,11 @@
-define([
-    'fossil/core',
-    'jquery',
-    'underscore',
-    'backbone',
-    'fossil/mixins/observable',
-    'fossil/mixins/layoutable',
-    'fossil/mixins/elementable',
-    'fossil/mixins/fragmentable',
-    'fossil/mixins/deferrable',
-    'fossil/mixins/startable'
-], function (Fossil, $, _, Backbone) {
+Fossil.Application = (function (Fossil, $, _, Backbone) {
+    'use strict';
 
     var messages = {
         unknown_module: _.template("Unknown module at \"<%- path %>\".")
     };
 
-    var Application = Fossil.Application = function (options) {
+    var Application = function (options) {
         this.options = options || {};
         this.registerEvents();
         initServices(this);
@@ -130,4 +120,4 @@ define([
     Application.extend = Backbone.Model.extend;
 
     return Application;
-});
+})(Fossil, $, _, Backbone);

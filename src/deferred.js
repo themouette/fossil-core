@@ -1,5 +1,3 @@
-define([
-    'jquery'
-], function ($) {
+Fossil.Deferred = (function ($) {
     return $.Deferred;
-});
+})(jQuery);

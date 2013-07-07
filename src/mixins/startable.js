@@ -1,6 +1,4 @@
-define([
-    'fossil/core'
-], function (Fossil) {
+Fossil.Mixins.Startable = (function (Fossil) {
     'use strict';
 
     var messages = {
@@ -8,7 +6,7 @@ define([
 
     // This mixin requires Fossil.Mixins.Deferrable
     // It gives an object the ability to start, standby and stop.
-    var Startable = Fossil.Mixins.Startable = {
+    var Startable = {
         run: false,
         start: function () {
             if (this.run) {
@@ -67,4 +65,4 @@ define([
     };
 
     return Startable;
-});
+})(Fossil);

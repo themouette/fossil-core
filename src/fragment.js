@@ -1,14 +1,6 @@
-define([
-    'fossil/core',
-    'fossil/mixins/observable',
-    'fossil/mixins/layoutable',
-    'fossil/mixins/elementable',
-    'fossil/mixins/fragmentable',
-    'fossil/mixins/deferrable',
-    'fossil/mixins/startable'
-], function (Fossil) {
+Fossil.Fragment = (function (Fossil) {
 
-    var Fragment = Fossil.Fragment = function (ancestor, options) {
+    var Fragment = function (ancestor, options) {
         this.options = options || {};
         this.services = {};
         this.path = ancestor.path || '';
@@ -58,4 +50,4 @@ define([
     Fragment.extend = Backbone.Model.extend;
 
     return Fragment;
-});
+})(Fossil);

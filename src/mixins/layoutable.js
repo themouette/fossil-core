@@ -5,12 +5,7 @@
 // A template can either be a `Backbone.View`, a `function` or a `string`.
 // In any case it will be transformed into a `Backbone.View` and stored into
 // `layout` property.
-define([
-    'fossil/core',
-    'underscore',
-    'backbone'
-], function (Fossil, _, Backbone) {
-
+Fossil.Mixins.Layoutable = (function (Fossil, _, Backbone) {
     'use strict';
 
     var LayoutView = Backbone.View.extend({
@@ -23,7 +18,7 @@ define([
         }
     });
 
-    var Layoutable = Fossil.Mixins.Layoutable = {
+    var Layoutable = {
         // use the template property to specify template.
         template: null,
         setupLayout: function () {
@@ -74,4 +69,4 @@ define([
     };
 
     return Layoutable;
-});
+})(Fossil, _, Backbone);

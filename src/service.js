@@ -1,13 +1,9 @@
-define([
-    'fossil/core',
-    'fossil/mixins/observable',
-    'underscore',
-    'backbone'
-], function (Fossil, Events, _, Backbone) {
+Fossil.Service = (function (Fossil, _, Backbone) {
+    'use strict';
 
     Fossil.Services = {};
 
-    var Service = Fossil.Service = function (options) {
+    var Service = function (options) {
         this.options = _.extend({}, this.options, options || {});
         this.registerEvents();
         this.initialize.apply(this, arguments);
@@ -187,4 +183,4 @@ define([
     };
 
     return Service;
-});
+})(Fossil, _, Backbone);

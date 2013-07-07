@@ -15,19 +15,15 @@
 //   }
 // });
 // ```
-define([
-    "fossil/core",
-    "underscore",
-    "backbone",
-    "fossil/service"
-], function (Fossil, _, Backbone, Service) {
+Fossil.Services.Session = (function (Fossil, _, Backbone) {
+    'use strict';
 
     function requireApplicationError () {
         throw new Error();
     }
     var exposed = ['get', 'set', 'has'];
 
-    var Session = Fossil.Services.Session = Service.extend({
+    var Session = Fossil.Service.extend({
         options: {
             expose: true,
             defaults: {}
@@ -55,4 +51,4 @@ define([
     });
 
     return Session;
-});
+})(Fossil, _, Backbone);

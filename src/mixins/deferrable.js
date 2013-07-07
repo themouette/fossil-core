@@ -1,9 +1,6 @@
-define([
-    'underscore',
-    'fossil/core',
-    'fossil/deferred'
-], function (_, Fossil, Deferred) {
+Fossil.Mixins.Deferrable = (function (_, Fossil, Deferred) {
     'use strict';
+
     var messages = {
         timeout: 'async process timed out',
         rejected: 'some asynchronous process failed',
@@ -13,7 +10,7 @@ define([
     };
     var uuidCounter = 0;
 
-    var Deferrable = Fossil.Mixins.Deferrable = {
+    var Deferrable = {
         waitFor: function (promise, options) {
             if (!this.isWaiting()) {
                 this.async = new Wait();
@@ -200,4 +197,4 @@ define([
     });
 
     return Deferrable;
-});
+})(_, Fossil, Fossil.Deferred);

@@ -1,14 +1,7 @@
-//
-//
-//
-define([
-    "fossil/core",
-    "underscore",
-    "backbone",
-    "fossil/service"
-], function (Fossil, _, Backbone, Service) {
+Fossil.Services.Routing = (function (Fossil, _, Backbone) {
+    'use strict';
 
-    var Routing = Fossil.Services.Routing = Service.extend({
+    var Routing = Fossil.Service.extend({
         options: {
             // prefix to use for every route
             prefix: '',
@@ -122,4 +115,4 @@ define([
     }
 
     return Routing;
-});
+})(Fossil, _, Backbone);

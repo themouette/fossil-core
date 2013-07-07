@@ -1,11 +1,10 @@
-define([
-    'jquery',
-    'fossil/core'
-], function ($, Fossil) {
+Fossil.Mixins.Elementable = (function ($, Fossil) {
+    'use strict';
+
     var messages = {
         not_initialized: 'The Elementable element is not initialized. Call setElement first.'
     };
-    var Elementable = Fossil.Mixins.Elementable = {
+    var Elementable = {
         // set the fragment root element.
         // if no template was set, then the element HTML is used.
         setElement: function (el) {
@@ -31,4 +30,4 @@ define([
     };
 
     return Elementable;
-});
+})(jQuery, Fossil);
