@@ -10,10 +10,41 @@
   <script src="../components/mocha/mocha.js"></script>
   <script src="../components/chai/chai.js"></script>
   <script src="../components/sinon/index.js"></script>
-  <script src="../../components/jquery/jquery.js" type="text/javascript" charset="utf-8"></script>
-  <script src="../../components/underscore/underscore.js" type="text/javascript" charset="utf-8"></script>
-  <script src="../../components/backbone/backbone.js" type="text/javascript" charset="utf-8"></script>
+
+  <script src="../components/jquery/jquery.js" type="text/javascript" charset="utf-8"></script>
+  <script src="../components/underscore/underscore.js" type="text/javascript" charset="utf-8"></script>
+  <script src="../components/backbone/backbone.js" type="text/javascript" charset="utf-8"></script>
+
+  <script type="text/javascript" charset="utf-8">
+      mocha.setup('bdd');
+      mocha.checkLeaks();
+  </script>
+
   <script src="../fossil-core.js"></script>
-  <script src="specs.js"></script>
+
+  <script src="specs/application.js" type="text/javascript" charset="utf-8"></script>
+  <script src="specs/fragment.js" type="text/javascript" charset="utf-8"></script>
+  <script src="specs/mixins/deferrable.js" type="text/javascript" charset="utf-8"></script>
+  <script src="specs/mixins/elementable.js" type="text/javascript" charset="utf-8"></script>
+  <script src="specs/mixins/fragmentable.js" type="text/javascript" charset="utf-8"></script>
+  <script src="specs/mixins/layoutable.js" type="text/javascript" charset="utf-8"></script>
+  <script src="specs/mixins/observable.js" type="text/javascript" charset="utf-8"></script>
+  <script src="specs/mixins/startable.js" type="text/javascript" charset="utf-8"></script>
+  <script src="specs/module.js" type="text/javascript" charset="utf-8"></script>
+  <script src="specs/service.js" type="text/javascript" charset="utf-8"></script>
+  <script src="specs/services/routing.js" type="text/javascript" charset="utf-8"></script>
+  <script src="specs/services/session.js" type="text/javascript" charset="utf-8"></script>
+
+  <!-- run mocha -->
+  <script type="text/javascript" charset="utf-8">
+      // If tests run in a real browser
+      // Can alternatively do a check on window.PHANTOMJS
+      Fossil.Application.prototype.selector = $('<div>');
+      if (navigator.userAgent.indexOf('PhantomJS') < 0) {
+          mocha
+              .run();
+      }
+  </script>
+
 </body>
 </html>

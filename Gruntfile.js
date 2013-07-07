@@ -27,16 +27,14 @@ module.exports = function(grunt) {
         src: {
             files: 'src/**/*.js',
             tasks: ['concat:library', 'contact:amd']
-        },
-        tests: {
-            files: 'tests/specs/**/*.js',
-            tasks: ['concat:tests']
         }
     },
     mocha: {
         options: {
             log: true,
-            reporter: 'Nyan'
+            ingnoreLeaks: false,
+            reporter: 'Nyan',
+            run: true
         },
         all: ['tests/test.html']
     },
@@ -50,21 +48,6 @@ module.exports = function(grunt) {
         }
     },
     concat: {
-        tests: {
-            options: {
-                banner: [
-                    "mocha.setup('bdd')",
-                    "mocha.checkLeaks();",
-                    // ensure application selector is an external element
-                    "Fossil.Application.prototype.selector = $('<div>');"
-                ].join("\n"),
-                footer: [
-                    "mocha.run();"
-                ].join("\n")
-            },
-            src: 'tests/specs/**/*.js',
-            dest: 'tests/specs.js'
-        },
         library:{
             options: {
                 banner: "var Fossil = (function (_, Backbone, jQuery) {\n",
@@ -78,7 +61,7 @@ module.exports = function(grunt) {
         },
         amd:{
             options: {
-                banner: "define('fossil', ['underscore', 'backbone', 'jquery']function (_, Backbone, jQuery) {\n",
+                banner: "define('fossil', ['underscore', 'backbone', 'jquery'], function (_, Backbone, jQuery) {\n",
                 footer: [
                     "return Fossil;",
                     "});"
@@ -100,6 +83,12 @@ module.exports = function(grunt) {
         src: '<%= pkg.name %>-amd.js',
         dest: '<%= pkg.name %>-amd.min.js'
       }
+    },
+    copy: {
+        libToSamples: {
+            src: ['<%= pkg.name %>.js', '<%= pkg.name %>-amd.js'],
+            dest: 'samples/'
+        }
     }
   });
 
@@ -109,12 +98,13 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-watch');
   grunt.loadNpmTasks('grunt-concurrent');
   grunt.loadNpmTasks('grunt-contrib-concat');
+  grunt.loadNpmTasks('grunt-contrib-copy');
   grunt.loadNpmTasks('grunt-mocha');
 
   // Default task(s).
-  grunt.registerTask('test', ['contact:tests', 'mocha']);
+  grunt.registerTask('test', ['mocha']);
   grunt.registerTask('dev', ['concurrent:dev']);
-  grunt.registerTask('release', ['test', 'concat:library', 'concat:amd', 'uglify:library', 'uglify:amd']);
+  grunt.registerTask('release', ['concat:library', 'concat:amd', 'test', 'uglify:library', 'uglify:amd', 'copy:libToSamples']);
   grunt.registerTask('default', ['release']);
 
 };
