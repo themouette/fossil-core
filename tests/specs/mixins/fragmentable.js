@@ -1,19 +1,12 @@
-define([
-    'chai',
-    'underscore',
-    'fossil/mixins/observable',
-    'fossil/mixins/layoutable',
-    'fossil/mixins/fragmentable'
-], function (chai, _, Events, Layoutable, Fragmentable) {
-
-    var assert = chai.assert;
+(function (assert, _, Observable, Layoutable, Fragmentable) {
+    'use strict';
 
     describe('Fossil.Mixins.Fragmentable', function () {
 
         var Fragment = function (options) {
             this.options = options || {};
         };
-        _.extend(Fragment.prototype, Events, Layoutable, Fragmentable, {
+        _.extend(Fragment.prototype, Observable, Layoutable, Fragmentable, {
             fagments: {
                 foo: ''
             }
@@ -29,5 +22,5 @@ define([
         });
     });
 
-});
+})(chai.assert, _, Fossil.Mixins.Observable, Fossil.Mixins.Layoutable, Fossil.Mixins.Fragmentable);
 

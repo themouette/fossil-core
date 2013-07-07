@@ -1,12 +1,5 @@
-define([
-    'chai',
-    'jquery',
-    'underscore',
-    'fossil/mixins/observable',
-    'fossil/mixins/elementable'
-], function (chai, $, _, Observable, Elementable) {
-
-    var assert = chai.assert;
+(function (assert, $, _, Observable, Elementable) {
+    'use strict';
 
     describe('Fossil.Mixins.Elementable', function () {
         var Elt = function (options) {
@@ -53,4 +46,4 @@ define([
         });
     });
 
-});
+})(chai.assert, jQuery, _, Fossil.Mixins.Observable, Fossil.Mixins.Elementable);

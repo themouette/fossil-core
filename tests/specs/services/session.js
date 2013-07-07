@@ -1,9 +1,4 @@
-define([
-    "chai",
-    "fossil/application",
-    "fossil/module",
-    "fossil/services/session"
-], function (chai, Application, Module, Session) {
+(function (chai, Application, Module, Session) {
 
     var assert = chai.assert;
 
@@ -59,4 +54,4 @@ define([
 
     });
 
-});
+})(chai, Fossil.Application, Fossil.Module, Fossil.Services.Session);

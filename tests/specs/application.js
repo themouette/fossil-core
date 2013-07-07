@@ -1,12 +1,4 @@
-define([
-    "chai",
-    "underscore",
-    "fossil/application",
-    "fossil/module",
-    "fossil/service",
-], function (chai, _, Application, Module, Service) {
-
-    var assert = chai.assert;
+(function (assert, _, Application, Module, Service) {
 
     describe('Fossil.Application', function () {
         describe('Fossil.Application configuration', function () {
@@ -310,4 +302,4 @@ define([
             });
         });
     });
-});
+})(chai.assert, _, Fossil.Application, Fossil.Module, Fossil.Service);

@@ -8,47 +8,12 @@
 <body>
   <div id="mocha"></div>
   <script src="../components/mocha/mocha.js"></script>
-  <script src="../components/requirejs/require.js"></script>
-  <script type="text/javascript" charset="utf-8">
-//    QUnit.config.autostart = false;
-    mocha.setup('bdd');
-    require.config({
-        baseUrl: '',
-        paths: {
-            'fossil': '../src',
-            'jquery': '../components/jquery/jquery',
-            'underscore': '../components/underscore/underscore',
-            'backbone': '../components/backbone/backbone',
-            'chai': '../components/chai/chai',
-            'sinon': '../components/sinon/lib/sinon'
-        },
-        shim: {
-            'underscore': {exports: '_'},
-            'backbone': { deps: ['underscore', 'jquery'], exports: 'Backbone'},
-            'sinon': { exports: 'sinon' },
-            'sinon/mock': { exports: 'sinon', deps: ['sinon'] }
-        }
-    });
-    require([
-        'fossil/application',
-        './specs/mixins/observable',
-        './specs/mixins/elementable',
-        './specs/mixins/layoutable',
-        './specs/mixins/fragmentable',
-        './specs/mixins/deferrable',
-        './specs/mixins/startable',
-        './specs/application',
-        './specs/module',
-        './specs/fragment',
-        './specs/service',
-        './specs/services/routing',
-        './specs/services/session'
-    ], function (Application) {
-        // ensure applications runs into a sandboxed dom.
-        Application.prototype.selector = $('<div>');
-        mocha.checkLeaks();
-        jQuery(mocha.run);
-    });
-  </script>
+  <script src="../components/chai/chai.js"></script>
+  <script src="../components/sinon/index.js"></script>
+  <script src="../../components/jquery/jquery.js" type="text/javascript" charset="utf-8"></script>
+  <script src="../../components/underscore/underscore.js" type="text/javascript" charset="utf-8"></script>
+  <script src="../../components/backbone/backbone.js" type="text/javascript" charset="utf-8"></script>
+  <script src="../fossil-core.js"></script>
+  <script src="specs.js"></script>
 </body>
 </html>

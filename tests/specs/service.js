@@ -1,13 +1,4 @@
-define([
-    "chai",
-    "sinon",
-    "underscore",
-    "fossil/service",
-    "fossil/application",
-    "fossil/module"
-], function (chai, sinon, _, Service, Application, Module) {
-
-    var assert = chai.assert;
+(function (assert, sinon, _, Service, Application, Module) {
 
     describe('Fossil.Service can manage options', function () {
         it('should extend parent options', function() {
@@ -296,4 +287,4 @@ define([
             assert.equal(service.prefixEvent('foo'), 'service:service:foo');
         });
     });
-});
+})(chai.assert, sinon, _, Fossil.Service, Fossil.Application, Fossil.Module);

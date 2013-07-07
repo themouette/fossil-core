@@ -1,9 +1,4 @@
-define([
-    "chai",
-    "fossil/application",
-    "fossil/module",
-    "fossil/services/routing"
-], function (chai, Application, Module, RoutingService) {
+(function (chai, Application, Module, RoutingService) {
 
     describe('Fossil.Service.Routing', function () {
         var assert = chai.assert;
@@ -349,4 +344,4 @@ define([
             });
         });
     });
-});
+})(chai, Fossil.Application, Fossil.Module, Fossil.Services.Routing);

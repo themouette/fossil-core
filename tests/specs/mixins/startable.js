@@ -1,14 +1,5 @@
-define([
-    "chai",
-    "underscore",
-    "fossil/deferred",
-    "fossil/core",
-    "fossil/mixins/observable",
-    "fossil/mixins/deferrable",
-    "fossil/mixins/startable",
-], function (chai, _, Deferred, Fossil) {
-
-    var assert = chai.assert;
+(function (assert, _, Deferred, Fossil) {
+    'use strict';
 
     describe('Fossil.Mixins.Startable', function () {
 
@@ -229,4 +220,4 @@ define([
             });
         });
     });
-});
+})(chai.assert, _, Fossil.Deferred, Fossil);

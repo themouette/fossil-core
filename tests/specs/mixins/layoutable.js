@@ -1,20 +1,12 @@
-define([
-    'chai',
-    'jquery',
-    'underscore',
-    'fossil/mixins/observable',
-    'fossil/mixins/elementable',
-    'fossil/mixins/layoutable'
-], function (chai, $, _, Events, Elementable, Layoutable) {
-
-    var assert = chai.assert;
+(function (assert, $, _, Observable, Elementable, Layoutable) {
+    'use strict';
 
     describe('Fossil.Mixins.Layoutable', function () {
         // create an object implementing Layoutable
         var Layout = function (options) {
             this.options = options || {};
         };
-        _.extend(Layout.prototype, Events, Elementable, Layoutable);
+        _.extend(Layout.prototype, Observable, Elementable, Layoutable);
 
         describe('event workflow', function () {
 
@@ -130,4 +122,4 @@ define([
         });
     });
 
-});
+})(chai.assert, jQuery, _, Fossil.Mixins.Observable, Fossil.Mixins.Elementable, Fossil.Mixins.Layoutable);

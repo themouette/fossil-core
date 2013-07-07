@@ -1,8 +1,4 @@
-define([
-    "chai",
-    "fossil/module",
-    "fossil/application"
-], function (chai, Module, Application) {
+(function (chai, Module, Application) {
 
     var assert = chai.assert;
 
@@ -103,5 +99,5 @@ define([
             });
         });
     });
-});
+})(chai, Fossil.Module, Fossil.Application);
 

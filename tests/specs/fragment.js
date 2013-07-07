@@ -1,11 +1,4 @@
-define([
-    'chai',
-    'underscore',
-    'fossil/application',
-    'fossil/fragment'
-], function (chai, _, Application, Fragment) {
-
-    var assert = chai.assert;
+(function (assert, _, Application, Fragment) {
 
     describe('Fossil.Fragment', function () {
         var parent = new Application({
@@ -52,5 +45,5 @@ define([
         });
     });
 
-});
+})(chai.assert, _, Fossil.Application, Fossil.Fragment);
 

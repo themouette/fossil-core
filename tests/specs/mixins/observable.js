@@ -1,28 +1,23 @@
-define([
-    'chai',
-    'fossil/mixins/observable'
-], function (chai, Eventable) {
+(function (assert, Observable) {
     'use strict';
-
-    var assert = chai.assert;
 
     describe('Fossil.Mixins.Observable', function () {
 
-        var Observable = function (options) {
+        var Events = function (options) {
             this.options = options;
             this.registerEvents();
         };
-        _.extend(Observable.prototype, Eventable);
+        _.extend(Events.prototype, Observable);
 
         describe('Init methods', function () {
 
             it('should accept prototype events', function (done) {
                 this.timeout(10);
                 var Obj = function (options) {
-                    Observable.call(this, options);
+                    Events.call(this, options);
                 };
 
-                _.extend(Obj.prototype, Observable.prototype, {
+                _.extend(Obj.prototype, Events.prototype, {
                     events: {
                         foo: done
                     }
@@ -36,7 +31,7 @@ define([
             it('should accept options events', function (done) {
                 this.timeout(10);
 
-                var o = new Observable({
+                var o = new Events({
                     events: {
                         foo: done
                     }
@@ -47,10 +42,10 @@ define([
             it('should override prototype events with options events', function (done) {
                 this.timeout(10);
                 var Obj = function (options) {
-                    Observable.call(this, options);
+                    Events.call(this, options);
                 };
 
-                _.extend(Obj.prototype, Observable.prototype, {
+                _.extend(Obj.prototype, Events.prototype, {
                     events: {
                         foo: function () {
                             assert.ok(false, 'This should be overriden');
@@ -73,13 +68,13 @@ define([
                 this.timeout(20);
                 done = _.after(2, done);
 
-                var parent = new Observable();
+                var parent = new Events();
                 var o;
 
                 var Obj = function (options) {
-                    Observable.call(this, options);
+                    Events.call(this, options);
                 };
-                _.extend(Obj.prototype, Observable.prototype, {
+                _.extend(Obj.prototype, Events.prototype, {
                     parentEvents: {
                         foo: 'mymethod',
                         bar: function () {
@@ -108,4 +103,4 @@ define([
             });
         });
     });
-});
+})(chai.assert, Fossil.Mixins.Observable);
