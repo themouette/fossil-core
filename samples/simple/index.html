@@ -16,10 +16,10 @@
     require.config({
         baseUrl: '',
         paths: {
-            'fossil': 'components/fossil-core/src',
-            'jquery': 'components/jquery/jquery',
-            'underscore': 'components/underscore/underscore',
-            'backbone': 'components/backbone/backbone'
+            'fossil': '../fossil-core-amd',
+            'jquery': 'components/jquery/jquery.min',
+            'underscore': 'components/underscore/underscore-min',
+            'backbone': 'components/backbone/backbone-min'
         },
         shim: {
             'underscore': {exports: '_'},
@@ -29,7 +29,7 @@
 
     require([
         "jquery",
-        "fossil/fossil",
+        "fossil",
         "underscore"
     ], function ($, Fossil, _) {
 
