@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <script src="components/jquery/jquery.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="components/underscore/underscore-min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="components/backbone/backbone-min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../fossil-core.js" type="text/javascript" charset="utf-8"></script>
+        <script type="text/javascript" charset="utf-8">
+            // define a contact collection
+            var ContactCollection = Backbone.Collection.extend({
+                url: 'contacts.json'
+            });
+            var App = Fossil.Application.extend({
+                // services are extesion points
+                // we'll only use routing for now
+                services: {
+                    'routing': new Fossil.Services.Routing()
+                },
+                // define route events
+                routes: {
+                    '': function () {
+                        this
+                            // abort any previous async process
+                            .abort()
+                            // show loading
+                            .showLoading()
+                            // wait for the user request to complete
+                            .waitFor($.get('user.json'))
+                            // when it's done, renderUser
+                            .thenWith(this, this.renderUser, this.showError);
+                    },
+                    'contacts': function () {
+                        // abort any previous async process
+                        this.abort();
+                        // load contacts if not already there
+                        if (!this.contact) {
+                            this.contacts = new ContactCollection();
+                            this.showLoading();
+                            this.waitFor(this.contacts.fetch(), {timeout: 1000});
+                        }
+                        // if no async is request it will be executed right now
+                        // otherwise, it will be deferred until collection is loaded
+                        this.thenWith(this, this.renderContactList, this.showError);
+                    }
+                },
+
+                // referecne element for the application
+                selector: 'body',
+                // When template is null, the selector content is used as layout.
+                // it becomes easy to define layout in the page loaded from server.
+                template: null,
+
+                showError: function (error) {
+                    this.$('.main').html(error.message || 'Unknown error');
+                },
+                showLoading: function () {
+                    this.$('.main').html('loading');
+                    return this;
+                },
+                renderUser: function () {
+                    this.$('.main').html('User is ready');
+                },
+                renderContactList: function () {
+                    this.$('.main').html([
+                        '<ul>',
+                            '<li>',
+                                this.contacts.pluck('name').join('</li><li>'),
+                            '</li>',
+                        '</ul>'
+                    ].join(''));
+                },
+                initialize: function () {
+                    jQuery(_.bind(this.start, this));
+                }
+            });
+
+            new App();
+        </script>
+    </head>
+    <body>
+        <!--
+            As no template is defined for Fossil.Application,
+            the selector initial content is used
+        -->
+        <h1>Fossil introduction application</h1>
+        <p><a href="#">user</a> - <a href="#contacts">contacts</a></p>
+        <div class="main">
+        </div>
+    </body>
+</html>
