@@ -6,7 +6,7 @@ Fossil is yet another framework built on top of
 
 It aims at easing and speed up development of large single page applications.
 
-It is possible to load fossil as AMD dependancy or simply to include script in
+It is possible to load fossil as AMD dependency or simply to include script in
 the page.
 
 [![Build
