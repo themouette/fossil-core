@@ -6,8 +6,8 @@ Fossil is yet another framework built on top of
 
 It aims at easing and speed up development of large single page applications.
 
-For now it relies on AMD, but it should soon be possible to use it as raw
-javascript.
+It is possible to load fossil as AMD dependancy or simply to include script in
+the page.
 
 [![Build
 Status](https://travis-ci.org/themouette/fossil-core.png?branch=master)](https://travis-ci.org/themouette/fossil-core)
