@@ -26,7 +26,7 @@ module.exports = function(grunt) {
     watch: {
         src: {
             files: 'src/**/*.js',
-            tasks: ['concat:library', 'contact:amd']
+            tasks: ['concat:library', 'concat:amd']
         }
     },
     mocha: {
