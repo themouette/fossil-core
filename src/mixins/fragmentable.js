@@ -10,6 +10,9 @@ Fossil.Mixins.Fragmentable = (function (Fossil, _, Backbone) {
         // list all fragments
         fragments: {},
         initFragmentable: function () {
+            if (this.options.fragments) {
+                this.fragments = _.extend(this.fragments, this.options.fragments);
+            }
         },
         // usually container is the Fragmentable
         // but in case of Fragment, the Module or Application
