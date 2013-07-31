@@ -16,17 +16,17 @@ Fossil.Services.Routing = (function (Fossil, _, Backbone) {
             this.registerRoutesFor(this);
         },
 
-        registerRoutesFor: function (element, prefix) {
+        registerRoutesFor: function (component, prefix) {
             var service = this;
             var routes = _.extend(
-                element.routes || {},
-                element.options.routes || {}
+                component.routes || {},
+                component.options.routes || {}
             );
             prefix = prefixPath(prefix, this.options.prefix);
             _.each(routes, function (route, path) {
                 service.router.route(
                     prefixPath(path, prefix),
-                    _.bind(service.routeListener, service, element, route)
+                    _.bind(service.routeListener, service, component, route)
                 );
             });
         },
@@ -72,15 +72,15 @@ Fossil.Services.Routing = (function (Fossil, _, Backbone) {
                 service._callRoute(module, module, route, args);
             });
         },
-        routeListener: function (element, route) {
+        routeListener: function (component, route) {
             var service = this;
             var args = _.tail(_.tail(arguments));
-            if (element.then) {
-                element.then(function () {
-                    service._callRoute(service.application, element, route, args);
+            if (component.then) {
+                component.then(function () {
+                    service._callRoute(service.application, component, route, args);
                 });
             } else {
-                service._callRoute(service.application, element, route, args);
+                service._callRoute(service.application, component, route, args);
             }
         },
 
@@ -92,18 +92,18 @@ Fossil.Services.Routing = (function (Fossil, _, Backbone) {
             );
             this.router.navigate.call(this.router, fragment, o);
         },
-        _callRoute: function (observable, element, route, args) {
+        _callRoute: function (observable, component, route, args) {
             if (_.isFunction(route)) {
                 // in case of function
-                route.apply(element, args);
+                route.apply(component, args);
 
-            } else if (_.isFunction(element[route])) {
+            } else if (_.isFunction(component[route])) {
                 // in case a method name is given
-                element[route].apply(element, args);
+                component[route].apply(component, args);
 
             } else if (_.isString(route)) {
                 // in case it's a string, use it as event name
-                observable.trigger.apply(element, [route].concat(args));
+                observable.trigger.apply(component, [route].concat(args));
             } else {
                 throw new Error('Invalid route definition');
             }
