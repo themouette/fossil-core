@@ -21,7 +21,8 @@ Fossil.Services.Session = (function (Fossil, _, Backbone) {
     function requireApplicationError () {
         throw new Error();
     }
-    var exposed = ['get', 'set', 'has'];
+    // methods of model to expose directly in the service instance.
+    var expose = ['get', 'set', 'has'];
 
     var Session = Fossil.Service.extend({
         options: {
@@ -32,7 +33,7 @@ Fossil.Services.Session = (function (Fossil, _, Backbone) {
             var service = this;
 
             this.model = new Backbone.Model(this.options.defaults || {});
-            _.each(exposed, function (method) {
+            _.each(expose, function (method) {
                 service[method] = _.bind(service.model[method], service.model);
             });
         },
@@ -40,13 +41,13 @@ Fossil.Services.Session = (function (Fossil, _, Backbone) {
             var service = this;
 
             this.model = null;
-            _.each(exposed, function (method) {
+            _.each(expose, function (method) {
                 service[method] = requireApplicationError;
             });
         }
     });
 
-    _.each(exposed, function (method) {
+    _.each(expose, function (method) {
         Session.prototype[method] = requireApplicationError;
     });
 
