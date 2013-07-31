@@ -3,40 +3,65 @@
     var assert = chai.assert;
 
     describe('Fossil.Module', function () {
-        describe('Fossil.Module constructor prototype', function () {
+        describe('when connected', function () {
 
-            it('accepts `path` as second argument', function() {
+            it('accepts module id as `path`', function() {
                 var application = new Application();
-                var app = new Module(application, 'path');
+                var mod = new Module();
+                application.connect('moduleid', mod);
 
-                assert.equal(app.path, 'path');
-                assert.isObject(app.options);
+                assert.equal(mod.path, 'moduleid');
+                assert.isObject(mod.options);
             });
 
             it('accepts `path` as an option', function() {
                 var application = new Application();
-                var app = new Module(application, {path: 'path'});
+                var mod = new Module({path: 'path'});
+                application.connect('moduleid', mod);
 
-                assert.equal(app.path, 'path');
-                assert.isObject(app.options);
+                assert.equal(mod.path, 'path');
+                assert.isObject(mod.options);
             });
 
-            it('sould be possible to give no path nor options', function() {
+            it('should override with id only if needed', function() {
                 var application = new Application();
-                var app = new Module(application);
+                var mod = new Module({ path: 'modulepath' });
+                application.connect('moduleid', mod);
 
-                assert.equal(app.path, '');
-                assert.isObject(app.options);
+                assert.equal(mod.path, 'modulepath');
+                assert.isObject(mod.options);
+            });
+
+            it('should not override with id for empty path', function() {
+                var application = new Application();
+                var mod = new Module({ path: '' });
+                application.connect('moduleid', mod);
+
+                assert.equal(mod.path, '');
+                assert.isObject(mod.options);
+            });
+
+            it('should import services', function() {
+                var application = new Application();
+                var mod = new Module({ path: '' });
+                application.use('service1', new Fossil.Service());
+                application.connect('moduleid', mod);
+                application.use('service2', new Fossil.Service());
+
+                assert.isObject(mod.services);
+                assert.strictEqual(mod.services.service1, application.services.service1);
+                assert.strictEqual(mod.services.service2, application.services.service2);
             });
         });
 
         describe('Fossil.Module can communicate with application via pubsub', function () {
             it('proveds access to application pubsub', function(done) {
                 var application = new Application();
-                var app = new Module(application);
+                var mod = new Module();
+                application.connect('moduleid', mod);
 
-                app.application.on('foo', done);
-                app.application.trigger('foo');
+                mod.application.on('foo', done);
+                mod.application.trigger('foo');
             });
         });
 
@@ -47,7 +72,7 @@
                 done = _.after(2, done);
                 var application = new Application({
                     modules: {
-                        app1: Module.extend({
+                        mod1: Module.extend({
                             events: {
                                 'foo': 'foo',
                                 'bar': function () {
@@ -66,8 +91,8 @@
                     }
                 });
 
-                application.getModule('app1').trigger('foo');
-                application.getModule('app1').trigger('bar');
+                application.getModule('mod1').trigger('foo');
+                application.getModule('mod1').trigger('bar');
             });
 
             it('should regiter applicationEvents on module pub sub', function (done) {
@@ -75,7 +100,7 @@
                 done = _.after(2, done);
                 var application = new Application({
                     modules: {
-                        app1: Module.extend({
+                        mod1: Module.extend({
                             applicationEvents: {
                                 'foo': 'foo',
                                 'bar': function () {

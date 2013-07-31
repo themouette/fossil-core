@@ -12,7 +12,7 @@
                     }
                 });
 
-                assert.equal(_.size(application.getModule()), 2, 'It is possible to access all applicaitons at once');
+                assert.equal(_.size(application.getModule()), 2, 'It is possible to access all applications at once');
                 assert.instanceOf(application.getModule(""), Module1, 'Applicaiton key can be empty');
                 assert.instanceOf(application.getModule("foo"), Module2, 'Applicaiton key can contain letters');
             });
@@ -47,7 +47,7 @@
                 var application = new Application();
                 application.connect('', Module);
 
-                assert.equal(_.size(application.getModule()), 1, 'It is possible to access all applicaitons at once');
+                assert.equal(_.size(application.getModule()), 1, 'It is possible to access all applications at once');
                 assert.instanceOf(application.getModule(""), Module, 'Registered module is accessible via path key');
             });
 
@@ -60,7 +60,7 @@
                 application.connect('foo', Module2);
                 application.connect('bar/baz', Module3);
 
-                assert.equal(_.size(application.getModule()), 3, 'It is possible to access all applicaitons at once');
+                assert.equal(_.size(application.getModule()), 3, 'It is possible to access all applications at once');
                 assert.instanceOf(application.getModule(""), Module1, 'Applicaiton key can be empty');
                 assert.instanceOf(application.getModule("foo"), Module2, 'Applicaiton key can contain letters');
                 assert.instanceOf(application.getModule("bar/baz"), Module3, 'Module key can be a path');
@@ -68,9 +68,9 @@
 
             it('should be possible to connect Module instance', function() {
                 var application = new Application();
-                application.connect('', new Module(application));
+                application.connect('', new Module());
 
-                assert.equal(_.size(application.getModule()), 1, 'It is possible to access all applicaitons at once');
+                assert.equal(_.size(application.getModule()), 1, 'It is possible to access all applications at once');
                 assert.instanceOf(application.getModule(""), Module, 'Registered module is accessible via path key');
             });
 
@@ -79,6 +79,18 @@
                 application.connect('foo', Module);
 
                 assert.equal(application.getModule('foo').path, 'foo');
+            });
+
+            it('triggers module\'s connect event', function(done) {
+                this.timeout(10);
+
+                var application = new Application();
+                var mod = new Module();
+                mod.on('connect', function () {
+                    assert.equal(this, mod);
+                    done();
+                });
+                application.connect('foo', mod);
             });
         });
 

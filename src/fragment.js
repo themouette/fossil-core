@@ -5,7 +5,10 @@ Fossil.Fragment = (function (Fossil) {
         this.services = {};
         this.path = ancestor.path || '';
         this.ancestor = ancestor.createPubSub(this, 'ancestorEvents');
+        // link services
+        this.services = ancestor.services;
         this.registerEvents();
+        this.initLayoutable();
         this.initFragmentable();
         this.initialize.apply(this, arguments);
     };

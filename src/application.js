@@ -10,6 +10,7 @@ Fossil.Application = (function (Fossil, $, _, Backbone) {
         this.registerEvents();
         initServices(this);
         // init fragmentable
+        this.initLayoutable();
         this.initFragmentable();
         initModules(this);
         this.initialize.apply(this, arguments);
@@ -30,12 +31,17 @@ Fossil.Application = (function (Fossil, $, _, Backbone) {
             },
 
             // connect an module at given subpath
-            connect: function (path, module) {
+            connect: function (id, module) {
                 if (_.isFunction(module)) {
-                    module = new module(this, path);
+                    module = new module();
                 }
-                this.modules[path] = module;
-                this.trigger('module:connect', module, path, this);
+                this.modules[id] = module;
+                // trigger connect on module
+                if (module.trigger) {
+                    module.trigger('connect', this, id);
+                }
+                // then on application
+                this.trigger('module:connect', module, id, this);
 
                 return this;
             },

@@ -81,7 +81,7 @@ No events declared.
 
 Following events are triggered by `Fossil.Application`.
 
-* `module:connect`: a new module is connected `function(module, path,
+* `module:connect`: a new module is connected `function(module, id,
   application)`
 * `service:use`: a new service is used `function(service, service_id,
   application)`
@@ -95,6 +95,10 @@ events):
 * `Startable`
 
 ### Fossil.Module
+
+Following events are triggered by `Fossil.Module`.
+
+* `connect`: module is connected `function(module, application, id)`
 
 `Fossil.Module` implements following mixins (and therefore triggers related
 events):
