@@ -104,7 +104,7 @@ module.exports = function(grunt) {
   // Default task(s).
   grunt.registerTask('test', ['mocha']);
   grunt.registerTask('dev', ['concurrent:dev']);
-  grunt.registerTask('release', ['concat:library', 'concat:amd', 'test', 'uglify:library', 'uglify:amd', 'copy:libToSamples']);
+  grunt.registerTask('release', ['test', 'concat:library', 'concat:amd', 'uglify:library', 'uglify:amd', 'copy:libToSamples']);
   grunt.registerTask('default', ['release']);
 
 };
