@@ -1,8 +1,11 @@
 (function (assert, _, Application, Fragment) {
 
     describe('Fossil.Fragment', function () {
-        var parent = new Application({
-            selector: $('<div>')
+        var parent;
+        beforeEach(function () {
+            parent = new Application({
+                selector: $('<div>')
+            });
         });
 
         describe('options management', function () {
