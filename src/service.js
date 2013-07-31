@@ -10,25 +10,33 @@ Fossil.Service = (function (Fossil, _, Backbone) {
     };
 
     _.extend(Service.prototype, Fossil.Mixins.Observable, {
+        // create a link to those methods in every element exposed
+        // to the service
+        // @array
+        exposedMethods: null,
+
         // default options
         options: {
-            // default configuration for service exposure
+            // default configuration for service methods exposure
             expose: false,
             // default configuration for service link
             link: false,
+            // should the service methods be exposed  to app context ?
+            // an exposed methods will be exposed under app[serviceMethod]
+            exposeToApplication: null,
             // should there be a shortlink on application
             // this would make service available under application[serviceid]
             // to avoid conflic this MUST be set by user.
             linkToApplication: null,
-            // should the service be exposed  to module context ?
-            // an exposed service will be available under module.services[serviceid]
+            // should the service methods be exposed  to module context ?
+            // an exposed methods will be exposed under module[serviceMethod]
             exposeToModule: null,
             // should there be a shortlink on module
             // this would make service available under module[serviceid]
             // to avoid conflic this MUST be set by user.
             linkToModule: null,
-            // should the service be exposed  to fragement context ?
-            // an exposed service will be available under fragement.services[serviceid]
+            // should the service methods be exposed to fragement context ?
+            // an exposed methoods will be available under fragement[serviceMethod]
             exposeToFragment: null,
             // should there be a shortlink on fragement
             // this would make service available under fragement[serviceid]
@@ -44,8 +52,11 @@ Fossil.Service = (function (Fossil, _, Backbone) {
         activateApplication: function (application, id) {
             var service = this;
             this.prefixEvent = _.bind(prefixEvent, this, id);
+            if (processConfig(this, 'exposeToApplication', 'expose')) {
+                this.doExpose(application, id);
+            }
             if (processConfig(this, 'linkToApplication', 'link')) {
-                application[id] = this;
+                this.undoLink(application, id);
             }
 
             // create pubSub
@@ -69,8 +80,11 @@ Fossil.Service = (function (Fossil, _, Backbone) {
             _.each(application.getModule(), function (module) {
                 service.suspendModule.call(service, module, application, id);
             });
+            if (processConfig(this, 'exposeToApplication', 'expose')) {
+                this.undoExpose(application, id);
+            }
             if (processConfig(this, 'linkToApplication', 'link')) {
-                application[id] = null;
+                this.undoLink(application, id);
             }
             // remove event handler
             this.stopListening();
@@ -86,10 +100,10 @@ Fossil.Service = (function (Fossil, _, Backbone) {
                 return ;
             }
             if (processConfig(this, 'exposeToModule', 'expose')) {
-                module.services[id] = this;
+                this.doExpose(module, id);
             }
             if (processConfig(this, 'linkToModule', 'link')) {
-                module[id] = this;
+                this.doLink(module, id);
             }
             this._doActivateModule.apply(this, arguments);
             this.listenTo(module, 'fragmentable:fragment:setup', _.bind(this.activateFragmentListener, this, id));
@@ -97,10 +111,10 @@ Fossil.Service = (function (Fossil, _, Backbone) {
         },
         suspendModule: function (module, application, id) {
             if (processConfig(this, 'exposeToModule', 'expose')) {
-                module.services[id] = null;
+                this.undoExpose(module, id);
             }
             if (processConfig(this, 'linkToModule', 'link')) {
-                module[id] = null;
+                this.undoLink(module, id);
             }
             this._doSuspendModule.apply(this, arguments);
         },
@@ -114,10 +128,10 @@ Fossil.Service = (function (Fossil, _, Backbone) {
                 return ;
             }
             if (processConfig(this, 'exposeToFragment', 'expose')) {
-                fragment.services[id] = this;
+                this.doExpose(fragment, id);
             }
             if (processConfig(this, 'linkToFragment', 'link')) {
-                fragment[id] = this;
+                this.doLink(fragment, id);
             }
             this._doActivateFragment.apply(this, arguments);
             this.listenTo(fragment, 'fragmentable:fragment:setup', _.bind(this.activateFragmentListener, this, id));
@@ -125,15 +139,33 @@ Fossil.Service = (function (Fossil, _, Backbone) {
         },
         suspendFragment: function (fragment, parent, id) {
             if (processConfig(this, 'exposeToFragment', 'expose')) {
-                fragment.services[id] = null;
+                this.undoExpose(fragment, id);
             }
             if (processConfig(this, 'linkToFragment', 'link')) {
-                fragment[id] = null;
+                this.undoLink(fragment, id);
             }
             this._doSuspendFragment.apply(this, arguments);
         },
         activateFragmentListener: function (id, fragment, parent) {
             this.activateFragment(fragment, parent, id);
+        },
+
+        doLink: function (element, serviceid) {
+            element[serviceid] = this;
+        },
+        undoLink: function (element, serviceid) {
+            element[serviceid] = null;
+        },
+        doExpose: function (element, serviceid) {
+            var service = this;
+            _.each(this.exposedMethods, function (methodname) {
+                element[methodname] = _.bind(service[methodname], service);
+            });
+        },
+        undoExpose: function (element, serviceid) {
+            _.each(this.exposedMethods, function (methodname) {
+                element[methodname] = null;
+            });
         },
 
         // activate service on application.
