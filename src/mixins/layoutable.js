@@ -21,52 +21,100 @@ Fossil.Mixins.Layoutable = (function (Fossil, _, Backbone) {
     var Layoutable = {
         // use the template property to specify template.
         template: null,
-        setupLayout: function () {
-            var layout = this.template;
-            if (this.options && this.options.template) {
-                layout = this.options.template;
+        initLayoutable: function () {
+            if (this.options && typeof(this.options.template) !== "undefined") {
+                this.template = this.options.template;
             }
+        },
+        setupLayout: function (template) {
+            var layout = layoutResult(this, template);
 
-            // place layout property in the object.
-            if (_.isFunction(layout) && !layout.prototype.render) {
-                layout = layout.call(this);
-            }
-            if (typeof layout === 'string') {
-                layout = new LayoutView({
-                    el: this.$el,
-                    template: layout
-                });
-            } else if (!layout) {
-                // use the html content
-                layout = new LayoutView({
-                    el: this.$el,
-                    template: this.$el.html()
-                });
-            } else if (layout instanceof Backbone.View) {
-                this.$el.append(layout.$el);
-            } else if (layout.prototype.render) {
-                layout = new layout({});
-                this.$el.append(layout.$el);
-            }
-            this.layout = layout;
+            this.layout = layoutAsString(this, layout) ||
+                          layoutAsDom(this, layout) ||
+                          layoutAsBackboneView(this, layout) ||
+                          layoutAsRenderable(this, layout);
+
             this.trigger('layout:setup', this);
         },
         renderLayout: function () {
             if (!this.layout) {
-                this.setupLayout();
+                this.setupLayout(this.template);
             }
             this.layout.render();
             this.trigger('layout:render', this);
         },
         removeLayout: function () {
             if (this.layout && this.layout.$el[0] !== this.$el[0]) {
+                console.log("remove");
                 this.layout.remove();
-            } else {
-                this.layout.undelegateEvents();
+            } else if(this.layout.setElement) {
+                this.layout.setElement(null);
             }
+            this.$el.empty();
             this.trigger('layout:remove', this);
+        },
+        setLayout: function(layout) {
+            if (this.layout) {
+                this.removeLayout();
+                this.layout = null;
+            }
+            this.setupLayout(layout);
+            this.renderLayout();
+            return this;
         }
     };
+
+    // preapare template property.
+    function layoutResult(layoutable, template) {
+        // this is a function, not a renderable
+        if (_.isFunction(template) && !template.prototype.render) {
+            return template.call(layoutable);
+        }
+        return template;
+    }
+
+    function layoutAsString(layoutable, template) {
+        if (typeof template !== 'string') {
+            return false;
+        }
+
+        return new LayoutView({
+            el: layoutable.$el,
+            template: template
+        });
+    }
+
+    // remember to test for string before
+    function layoutAsDom(layoutable, template) {
+        if (template) {
+            return false;
+        }
+
+        // use the html content
+        return new LayoutView({
+            el: layoutable.$el,
+            template: layoutable.$el.html()
+        });
+    }
+
+    function layoutAsBackboneView(layoutable, template) {
+        if (template instanceof Backbone.View) {
+            layoutable.$el.append(template.$el);
+            return template;
+        }
+
+        return false;
+    }
+
+    function layoutAsRenderable(layoutable, template) {
+        if (!template.prototype.render) {
+            return false;
+        }
+
+        template = new template({});
+        layoutable.$el.append(template.$el);
+        return template;
+    }
 
     return Layoutable;
 })(Fossil, _, Backbone);

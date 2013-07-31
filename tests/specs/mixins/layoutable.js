@@ -1,10 +1,11 @@
-(function (assert, $, _, Observable, Elementable, Layoutable) {
+(function (assert, sinon, $, _, Observable, Elementable, Layoutable) {
     'use strict';
 
     describe('Fossil.Mixins.Layoutable', function () {
         // create an object implementing Layoutable
         var Layout = function (options) {
             this.options = options || {};
+            this.initLayoutable();
         };
         _.extend(Layout.prototype, Observable, Elementable, Layoutable);
 
@@ -66,6 +67,16 @@
         });
 
         describe('template property', function () {
+            it('should accept _ templates', function() {
+                var l = new Layout({
+                    template: _.template('foo')
+                });
+                var $el = $('<div/>');
+                l.setElement($el);
+                l.renderLayout();
+                assert.equal($el.html(), 'foo');
+            });
+
             it('should accept string template', function () {
                 var l = new Layout({
                     template: 'foo'
@@ -120,6 +131,40 @@
                 assert.equal($el.html(), '<div class="view">foo</div>');
             });
         });
+
+        describe('layout can be replaced', function () {
+            var l, $el;
+            var template = 'foo';
+            var templateReplace = 'bar';
+
+            beforeEach(function () {
+                l = new Layout({ template: template });
+                $el = $('<div/>');
+                l.setElement($el);
+            });
+
+            it('when still off', function() {
+                l.setLayout(templateReplace);
+                l.renderLayout();
+                assert.equal($el.html(), templateReplace);
+            });
+            it('when already attached', function() {
+                l.renderLayout();
+                l.setLayout(templateReplace);
+                assert.equal($el.html(), templateReplace);
+            });
+            it('should trigger layout:setup when renders', function() {
+                var spy = sinon.spy();
+                l.on('layout:setup', spy);
+                l.renderLayout();
+                assert.ok(spy.calledOnce, "should trigger at first render");
+
+                l.setLayout(templateReplace);
+                assert.ok(spy.calledTwice, "should trigger on layout replace");
+
+                assert.equal($el.html(), templateReplace);
+            });
+        });
     });
 
-})(chai.assert, jQuery, _, Fossil.Mixins.Observable, Fossil.Mixins.Elementable, Fossil.Mixins.Layoutable);
+})(chai.assert, sinon, jQuery, _, Fossil.Mixins.Observable, Fossil.Mixins.Elementable, Fossil.Mixins.Layoutable);
