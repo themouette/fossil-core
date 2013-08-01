@@ -308,7 +308,7 @@
     describe('pass to application', function () {
 
         it('should be possible to define services and modules in options', function (done) {
-            this.timeout(15);
+            this.timeout(30);
             var times = 0;
             done = _.after(3, done);
             var Application1 = Application.extend({
