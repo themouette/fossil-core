@@ -1,6 +1,7 @@
 dev
 ---
 
+* Introduces `Fossil.View`.
 * `Fossil.Mixins.Layoutable`: Does not execute template function anymore, assume
   it is a compiled template. Method is no more evaluated in Layoutable context.
 * `Fossil.Mixins.Layoutable`: Backbone.View used as template behave like native

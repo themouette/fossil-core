@@ -8,6 +8,7 @@ module.exports = function(grunt) {
     buildsrc: [
             'src/core.js',
             'src/deferred.js',
+            'src/view.js',
             'src/mixins/*.js',
             'src/service.js',
             'src/application.js',
