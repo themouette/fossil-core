@@ -8,15 +8,7 @@
 Fossil.Mixins.Layoutable = (function (Fossil, _, Backbone) {
     'use strict';
 
-    var LayoutView = Backbone.View.extend({
-        initialize: function (options) {
-            this.template = options.template;
-        },
-        render: function () {
-            this.$el.html(_.result(this.options, 'template'));
-            return this;
-        }
-    });
+    var LayoutView = Fossil.View;
 
     var Layoutable = {
         // use the template property to specify template.
@@ -27,12 +19,12 @@ Fossil.Mixins.Layoutable = (function (Fossil, _, Backbone) {
             }
         },
         setupLayout: function (template) {
-            var layout = layoutResult(this, template);
-
-            this.layout = layoutAsString(this, layout) ||
-                          layoutAsDom(this, layout) ||
-                          layoutAsBackboneView(this, layout) ||
-                          layoutAsRenderable(this, layout);
+            this.layout = layoutAsString(this, template) ||
+                          layoutAsMethod(this, template) ||
+                          layoutAsDom(this, template) ||
+                          layoutAsBackboneView(this, template) ||
+                          layoutAsRenderable(this, template) ||
+                          template;
 
             this.trigger('layout:setup', this);
         },
@@ -40,16 +32,16 @@ Fossil.Mixins.Layoutable = (function (Fossil, _, Backbone) {
             if (!this.layout) {
                 this.setupLayout(this.template);
             }
-            this.layout.render();
+            this.layout.setElement(this.$el);
+            if (this.renderView) {
+                this.renderView(this.layout);
+            } else {
+                this.layout.render();
+            }
             this.trigger('layout:render', this);
         },
         removeLayout: function () {
-            if (this.layout && this.layout.$el[0] !== this.$el[0]) {
-                console.log("remove");
-                this.layout.remove();
-            } else if(this.layout.setElement) {
-                this.layout.setElement(null);
-            }
+            this.layout.setElement(null);
             this.$el.empty();
             this.trigger('layout:remove', this);
         },
@@ -64,22 +56,22 @@ Fossil.Mixins.Layoutable = (function (Fossil, _, Backbone) {
         }
     };
 
-    // preapare template property.
-    function layoutResult(layoutable, template) {
-        // this is a function, not a renderable
-        if (_.isFunction(template) && !template.prototype.render) {
-            return template.call(layoutable);
-        }
-        return template;
-    }
-
     function layoutAsString(layoutable, template) {
         if (typeof template !== 'string') {
             return false;
         }
 
         return new LayoutView({
-            el: layoutable.$el,
+            template: template
+        });
+    }
+
+    function layoutAsMethod(layoutable, template) {
+        if (typeof template !== 'function' || template.prototype.render) {
+            return false;
+        }
+
+        return new LayoutView({
             template: template
         });
     }
@@ -92,14 +84,12 @@ Fossil.Mixins.Layoutable = (function (Fossil, _, Backbone) {
 
         // use the html content
         return new LayoutView({
-            el: layoutable.$el,
             template: layoutable.$el.html()
         });
     }
 
     function layoutAsBackboneView(layoutable, template) {
         if (template instanceof Backbone.View) {
-            layoutable.$el.append(template.$el);
             return template;
         }
 
@@ -107,7 +97,7 @@ Fossil.Mixins.Layoutable = (function (Fossil, _, Backbone) {
     }
 
     function layoutAsRenderable(layoutable, template) {
-        if (!template.prototype.render) {
+        if (typeof template !== 'function' || !template.prototype.render) {
             return false;
         }
 

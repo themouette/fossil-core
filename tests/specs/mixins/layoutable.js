@@ -66,6 +66,26 @@
             });
         });
 
+        describe('`renderView`', function () {
+            it('should be used if available', function() {
+                var spy = sinon.spy();
+                var l = new Layout();
+                l.renderView = spy;
+
+                l.setElement($('<div>'));
+                l.renderLayout();
+                assert.ok(spy.calledOnce);
+                assert.ok(spy.calledWith(l.layout));
+            });
+            it('is not mandatory', function() {
+                var l = new Layout();
+                l.renderView = null;
+
+                l.setElement($('<div>'));
+                l.renderLayout();
+            });
+        });
+
         describe('template property', function () {
             it('should accept _ templates', function() {
                 var l = new Layout({
@@ -87,15 +107,19 @@
                 assert.equal($el.html(), 'foo');
             });
             it('should accept function template', function () {
+                var spy = sinon.spy();
                 var l = new Layout({
                     template: function () {
-                        assert.strictEqual(this, l, 'context is the layout object');
+                        spy();
                         return 'foo';
                     }
                 });
                 var $el = $('<div/>');
                 l.setElement($el);
+                l.setupLayout(l.template);
+                assert.ok(!spy.callCount, 'function is not executed first.');
                 l.renderLayout();
+                assert.ok(spy.calledOnce);
                 assert.equal($el.html(), 'foo');
             });
 
@@ -112,7 +136,7 @@
                 var $el = $('<div/>');
                 l.setElement($el);
                 l.renderLayout();
-                assert.equal($el.html(), '<div class="view">foo</div>');
+                assert.equal($el.html(), 'foo');
             });
 
             it('should accept instanciated view template', function () {
@@ -128,7 +152,7 @@
                 var $el = $('<div/>');
                 l.setElement($el);
                 l.renderLayout();
-                assert.equal($el.html(), '<div class="view">foo</div>');
+                assert.equal($el.html(), 'foo');
             });
         });
 
@@ -145,7 +169,6 @@
 
             it('when still off', function() {
                 l.setLayout(templateReplace);
-                l.renderLayout();
                 assert.equal($el.html(), templateReplace);
             });
             it('when already attached', function() {

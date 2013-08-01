@@ -19,7 +19,7 @@ var Layoutable = function Layoutable(options) {
     this.initLayoutable();
 }
 _.extend(
-    Startable.prototype,
+    Layoutable.prototype,
     Fossil.Mixins.Observable,
     Fossil.Mixins.Elementable,
     Fossil.Mixins.Layoutable, {
@@ -45,3 +45,41 @@ To render template in the root element, all you need is to call `renderLayout`.
 ### Clean ayout
 
 To clean element, just use `removeLayout`.
+
+Template types
+--------------
+
+Template can be of several types. In every case, the template is converted to a
+Fossil.View, and Layoutable element is used as view element (using `setElement`).
+THis view is rendered using Layoutable's `renderView` method if available. If
+not, a basic `render` is called on the view.
+
+Here is the process to convert template to Fossil.View, depending on template
+type.
+
+### string
+
+A new Fossil.View is created, using the string as template.
+
+### function
+
+A new Fossil.View is created, using the function as template.
+
+### Null
+
+The current dom is used as a template.
+
+### Backbone.View / Fossil.View
+
+The view is used as is (setElement is called directly on it)
+
+### Render object
+
+The object is instanciated and render method is used a template.
+
+Render process
+--------------
+
+If a `renderView` method is provided, it will be used to render template view.
+It enable the template engine and helpers in the rendering process.
+
