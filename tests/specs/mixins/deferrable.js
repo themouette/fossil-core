@@ -1,5 +1,6 @@
 (function (assert, _, Deferrable, Deferred) {
     'use strict';
+    var TIMEOUT = 20;
 
     describe('Fossil.Mixins.Deferrable', function () {
         var Queue = function () {};
@@ -16,7 +17,7 @@
 
         describe('waitFor method', function () {
             it('should be possible to give no options', function(done) {
-                this.timeout(10);
+                this.timeout(TIMEOUT);
                 var q = new Queue();
                 var d = new Deferred();
                 q.waitFor(d);
@@ -28,7 +29,7 @@
                 d.resolve();
             });
             it('should be possible to add parallel promises', function(done) {
-                this.timeout(10);
+                this.timeout(TIMEOUT);
                 var q = new Queue();
                 var d1 = new Deferred();
                 var d2 = new Deferred();
@@ -48,7 +49,7 @@
                 d2.resolve();
             });
             it('accepts failFast=true', function (done) {
-                this.timeout(10);
+                this.timeout(TIMEOUT);
                 var q = new Queue();
                 var d1 = new Deferred();
                 var d2 = new Deferred();
@@ -92,7 +93,7 @@
                 d2.resolve();
             });
             it('accepts timeout', function (done) {
-                this.timeout(10);
+                this.timeout(TIMEOUT);
                 var q = new Queue();
                 var d1 = new Deferred();
                 q.waitFor(d1, {timeout: 2});
@@ -241,7 +242,7 @@
 
         describe('abort method', function () {
             it('should be possible to abort', function (done) {
-                this.timeout(10);
+                this.timeout(TIMEOUT);
                 var q = new Queue();
                 var d1 = new Deferred();
                 var d2 = new Deferred();
@@ -262,7 +263,7 @@
                 q.abort();
             });
             it('When aborted, deferred resolution does not trigger callbacks', function (done) {
-                this.timeout(10);
+                this.timeout(TIMEOUT);
                 done = _.after(2, done);
                 var q = new Queue();
                 var d1 = new Deferred();
@@ -283,7 +284,7 @@
                 done();
             });
             it('calls deferred abort method if any.', function(done) {
-                this.timeout(10);
+                this.timeout(TIMEOUT);
                 var q = new Queue();
                 var d1 = new Deferred();
                 var d2 = new Deferred();
@@ -301,7 +302,7 @@
 
         describe('multiple queues', function () {
             it('should be possible to create a new async after first one is aborted', function (done) {
-                this.timeout(10);
+                this.timeout(TIMEOUT);
                 var q = new Queue();
                 var d1 = new Deferred();
                 var d2 = new Deferred();
@@ -319,7 +320,7 @@
                 d2.resolve();
             });
             it('should be possible to create a new async after first one is complete', function (done) {
-                this.timeout(10);
+                this.timeout(TIMEOUT);
                 done = _.after(2, done);
                 var q = new Queue();
                 var d1 = new Deferred();
