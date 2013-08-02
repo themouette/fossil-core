@@ -34,7 +34,7 @@ module.exports = function(grunt) {
         options: {
             log: true,
             ingnoreLeaks: false,
-            reporter: 'Nyan',
+            reporter: 'Dot',
             run: true
         },
         all: ['tests/test.html']
