@@ -32,6 +32,7 @@ Fossil.Mixins.Layoutable = (function (Fossil, _, Backbone) {
             if (!this.layout) {
                 this.setLayout(this.template, true);
             }
+            this.attachLayout();
             if (this.renderView) {
                 this.renderView(this.layout);
             } else {
@@ -54,8 +55,9 @@ Fossil.Mixins.Layoutable = (function (Fossil, _, Backbone) {
                 this.layout = null;
             }
             this.setupLayout(layout);
-            this.attachLayout();
-            if (!recycle) {
+            if (recycle) {
+                this.attachLayout();
+            } else {
                 this.renderLayout();
             }
             return this;

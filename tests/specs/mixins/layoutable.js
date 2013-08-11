@@ -187,6 +187,12 @@
 
                 assert.equal($el.html(), templateReplace);
             });
+            it('and should reattach if reselected', function() {
+                l.renderLayout();
+                l.removeLayout();
+                l.renderLayout();
+                assert.equal($el.html(), template);
+            });
         });
     });
 
