@@ -30,9 +30,8 @@ Fossil.Mixins.Layoutable = (function (Fossil, _, Backbone) {
         },
         renderLayout: function () {
             if (!this.layout) {
-                this.setupLayout(this.template);
+                this.setLayout(this.template, true);
             }
-            this.layout.setElement(this.$el);
             if (this.renderView) {
                 this.renderView(this.layout);
             } else {
@@ -40,18 +39,25 @@ Fossil.Mixins.Layoutable = (function (Fossil, _, Backbone) {
             }
             this.trigger('layout:render', this);
         },
+        attachLayout: function () {
+            this.layout.setElement(this.$el);
+        },
         removeLayout: function () {
             this.layout.setElement(null);
             this.$el.empty();
             this.trigger('layout:remove', this);
         },
-        setLayout: function(layout) {
+        // recycle means no rerender.
+        setLayout: function(layout, recycle) {
             if (this.layout) {
                 this.removeLayout();
                 this.layout = null;
             }
             this.setupLayout(layout);
-            this.renderLayout();
+            this.attachLayout();
+            if (!recycle) {
+                this.renderLayout();
+            }
             return this;
         }
     };

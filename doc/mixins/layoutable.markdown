@@ -38,6 +38,11 @@ var myLayout = new Layoutable({
 Use method `setLayout`.
 Layout will be automaticaly rendered.
 
+``` !javascript
+Layoutable.setLayout(template);
+Layoutable.setLayout(myView, true); // to recycle view (ie do not rerender)
+```
+
 ### Render template
 
 To render template in the root element, all you need is to call `renderLayout`.

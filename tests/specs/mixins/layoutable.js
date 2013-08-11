@@ -116,7 +116,7 @@
                 });
                 var $el = $('<div/>');
                 l.setElement($el);
-                l.setupLayout(l.template);
+                l.setLayout(l.template, /* recycle */true);
                 assert.ok(!spy.callCount, 'function is not executed first.');
                 l.renderLayout();
                 assert.ok(spy.calledOnce);
