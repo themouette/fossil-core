@@ -22,7 +22,7 @@ If you use bower:
 Git install:
 
 ```
-$ git clone https://github.com/themouette/fossil-core.git && npm install
+$ git clone https://github.com/themouette/fossil-core.git && cd ./fossil-core && npm install
 ```
 
 Usage
