@@ -14,6 +14,35 @@ Fossil.Deferred = (function ($) {
     return $.Deferred;
 })(jQuery);
 
+Fossil.View = (function (_, Backbone, Fossil) {
+    var View = Backbone.View.extend({
+        constructor: function (options) {
+            Backbone.View.apply(this, arguments);
+            if (options && typeof options.template !== "undefined") {
+                this.template = options.template;
+            }
+        },
+        render: function (helpers) {
+            var data, renderedHtml, args = _.toArray(arguments);
+            if (this.precompile) {
+                this.template = this.precompile(this.template);
+            }
+            data = {};
+            if (this.getViewData) {
+                data = this.getViewData();
+            }
+            renderedHtml = this.template;
+            if (this.renderHtml) {
+                renderedHtml = this.renderHtml.apply(this, [data].concat(args));
+            }
+            this.$el.html(renderedHtml);
+            return this;
+        }
+    });
+
+    return View;
+})(_, Backbone, Fossil);
+
 Fossil.Mixins.Deferrable = (function (_, Fossil, Deferred) {
     'use strict';
 
@@ -261,6 +290,9 @@ Fossil.Mixins.Fragmentable = (function (Fossil, _, Backbone) {
         // list all fragments
         fragments: {},
         initFragmentable: function () {
+            if (this.options.fragments) {
+                this.fragments = _.extend(this.fragments, this.options.fragments);
+            }
         },
         // usually container is the Fragmentable
         // but in case of Fragment, the Module or Application
@@ -335,65 +367,111 @@ Fossil.Mixins.Fragmentable = (function (Fossil, _, Backbone) {
 Fossil.Mixins.Layoutable = (function (Fossil, _, Backbone) {
     'use strict';
 
-    var LayoutView = Backbone.View.extend({
-        initialize: function (options) {
-            this.template = options.template;
-        },
-        render: function () {
-            this.$el.html(_.result(this.options, 'template'));
-            return this;
-        }
-    });
+    var LayoutView = Fossil.View;
 
     var Layoutable = {
         // use the template property to specify template.
         template: null,
-        setupLayout: function () {
-            var layout = this.template;
-            if (this.options && this.options.template) {
-                layout = this.options.template;
+        initLayoutable: function () {
+            if (this.options && typeof(this.options.template) !== "undefined") {
+                this.template = this.options.template;
             }
+        },
+        setupLayout: function (template) {
+            this.layout = layoutAsString(this, template) ||
+                          layoutAsMethod(this, template) ||
+                          layoutAsDom(this, template) ||
+                          layoutAsBackboneView(this, template) ||
+                          layoutAsRenderable(this, template) ||
+                          template;
 
-            // place layout property in the object.
-            if (_.isFunction(layout) && !layout.prototype.render) {
-                layout = layout.call(this);
-            }
-            if (typeof layout === 'string') {
-                layout = new LayoutView({
-                    el: this.$el,
-                    template: layout
-                });
-            } else if (!layout) {
-                // use the html content
-                layout = new LayoutView({
-                    el: this.$el,
-                    template: this.$el.html()
-                });
-            } else if (layout instanceof Backbone.View) {
-                this.$el.append(layout.$el);
-            } else if (layout.prototype.render) {
-                layout = new layout({});
-                this.$el.append(layout.$el);
-            }
-            this.layout = layout;
             this.trigger('layout:setup', this);
         },
         renderLayout: function () {
             if (!this.layout) {
-                this.setupLayout();
+                this.setLayout(this.template, true);
             }
-            this.layout.render();
+            this.attachLayout();
+            if (this.renderView) {
+                this.renderView(this.layout);
+            } else {
+                this.layout.render();
+            }
             this.trigger('layout:render', this);
         },
+        attachLayout: function () {
+            this.layout.setElement(this.$el);
+        },
         removeLayout: function () {
-            if (this.layout && this.layout.$el[0] !== this.$el[0]) {
-                this.layout.remove();
-            } else {
-                this.layout.undelegateEvents();
-            }
+            this.layout.setElement(null);
+            this.$el.empty();
             this.trigger('layout:remove', this);
+        },
+        // recycle means no rerender.
+        setLayout: function(layout, recycle) {
+            if (this.layout) {
+                this.removeLayout();
+                this.layout = null;
+            }
+            this.setupLayout(layout);
+            if (recycle) {
+                this.attachLayout();
+            } else {
+                this.renderLayout();
+            }
+            return this;
         }
     };
+
+    function layoutAsString(layoutable, template) {
+        if (typeof template !== 'string') {
+            return false;
+        }
+
+        return new LayoutView({
+            template: template
+        });
+    }
+
+    function layoutAsMethod(layoutable, template) {
+        if (typeof template !== 'function' || template.prototype.render) {
+            return false;
+        }
+
+        return new LayoutView({
+            template: template
+        });
+    }
+
+    // remember to test for string before
+    function layoutAsDom(layoutable, template) {
+        if (template) {
+            return false;
+        }
+
+        // use the html content
+        return new LayoutView({
+            template: layoutable.$el.html()
+        });
+    }
+
+    function layoutAsBackboneView(layoutable, template) {
+        if (template instanceof Backbone.View) {
+            return template;
+        }
+
+        return false;
+    }
+
+    function layoutAsRenderable(layoutable, template) {
+        if (typeof template !== 'function' || !template.prototype.render) {
+            return false;
+        }
+
+        template = new template({});
+        layoutable.$el.append(template.$el);
+        return template;
+    }
 
     return Layoutable;
 })(Fossil, _, Backbone);
@@ -539,25 +617,33 @@ Fossil.Service = (function (Fossil, _, Backbone) {
     };
 
     _.extend(Service.prototype, Fossil.Mixins.Observable, {
+        // create a link to those methods in every element exposed
+        // to the service
+        // @array
+        exposedMethods: null,
+
         // default options
         options: {
-            // default configuration for service exposure
+            // default configuration for service methods exposure
             expose: false,
             // default configuration for service link
             link: false,
+            // should the service methods be exposed  to app context ?
+            // an exposed methods will be exposed under app[serviceMethod]
+            exposeToApplication: null,
             // should there be a shortlink on application
             // this would make service available under application[serviceid]
             // to avoid conflic this MUST be set by user.
             linkToApplication: null,
-            // should the service be exposed  to module context ?
-            // an exposed service will be available under module.services[serviceid]
+            // should the service methods be exposed  to module context ?
+            // an exposed methods will be exposed under module[serviceMethod]
             exposeToModule: null,
             // should there be a shortlink on module
             // this would make service available under module[serviceid]
             // to avoid conflic this MUST be set by user.
             linkToModule: null,
-            // should the service be exposed  to fragement context ?
-            // an exposed service will be available under fragement.services[serviceid]
+            // should the service methods be exposed to fragement context ?
+            // an exposed methoods will be available under fragement[serviceMethod]
             exposeToFragment: null,
             // should there be a shortlink on fragement
             // this would make service available under fragement[serviceid]
@@ -573,8 +659,11 @@ Fossil.Service = (function (Fossil, _, Backbone) {
         activateApplication: function (application, id) {
             var service = this;
             this.prefixEvent = _.bind(prefixEvent, this, id);
+            if (processConfig(this, 'exposeToApplication', 'expose')) {
+                this.doExpose(application, id);
+            }
             if (processConfig(this, 'linkToApplication', 'link')) {
-                application[id] = this;
+                this.undoLink(application, id);
             }
 
             // create pubSub
@@ -598,8 +687,11 @@ Fossil.Service = (function (Fossil, _, Backbone) {
             _.each(application.getModule(), function (module) {
                 service.suspendModule.call(service, module, application, id);
             });
+            if (processConfig(this, 'exposeToApplication', 'expose')) {
+                this.undoExpose(application, id);
+            }
             if (processConfig(this, 'linkToApplication', 'link')) {
-                application[id] = null;
+                this.undoLink(application, id);
             }
             // remove event handler
             this.stopListening();
@@ -615,10 +707,10 @@ Fossil.Service = (function (Fossil, _, Backbone) {
                 return ;
             }
             if (processConfig(this, 'exposeToModule', 'expose')) {
-                module.services[id] = this;
+                this.doExpose(module, id);
             }
             if (processConfig(this, 'linkToModule', 'link')) {
-                module[id] = this;
+                this.doLink(module, id);
             }
             this._doActivateModule.apply(this, arguments);
             this.listenTo(module, 'fragmentable:fragment:setup', _.bind(this.activateFragmentListener, this, id));
@@ -626,10 +718,10 @@ Fossil.Service = (function (Fossil, _, Backbone) {
         },
         suspendModule: function (module, application, id) {
             if (processConfig(this, 'exposeToModule', 'expose')) {
-                module.services[id] = null;
+                this.undoExpose(module, id);
             }
             if (processConfig(this, 'linkToModule', 'link')) {
-                module[id] = null;
+                this.undoLink(module, id);
             }
             this._doSuspendModule.apply(this, arguments);
         },
@@ -643,10 +735,10 @@ Fossil.Service = (function (Fossil, _, Backbone) {
                 return ;
             }
             if (processConfig(this, 'exposeToFragment', 'expose')) {
-                fragment.services[id] = this;
+                this.doExpose(fragment, id);
             }
             if (processConfig(this, 'linkToFragment', 'link')) {
-                fragment[id] = this;
+                this.doLink(fragment, id);
             }
             this._doActivateFragment.apply(this, arguments);
             this.listenTo(fragment, 'fragmentable:fragment:setup', _.bind(this.activateFragmentListener, this, id));
@@ -654,15 +746,33 @@ Fossil.Service = (function (Fossil, _, Backbone) {
         },
         suspendFragment: function (fragment, parent, id) {
             if (processConfig(this, 'exposeToFragment', 'expose')) {
-                fragment.services[id] = null;
+                this.undoExpose(fragment, id);
             }
             if (processConfig(this, 'linkToFragment', 'link')) {
-                fragment[id] = null;
+                this.undoLink(fragment, id);
             }
             this._doSuspendFragment.apply(this, arguments);
         },
         activateFragmentListener: function (id, fragment, parent) {
             this.activateFragment(fragment, parent, id);
+        },
+
+        doLink: function (element, serviceid) {
+            element[serviceid] = this;
+        },
+        undoLink: function (element, serviceid) {
+            element[serviceid] = null;
+        },
+        doExpose: function (element, serviceid) {
+            var service = this;
+            _.each(this.exposedMethods, function (methodname) {
+                element[methodname] = _.bind(service[methodname], service);
+            });
+        },
+        undoExpose: function (element, serviceid) {
+            _.each(this.exposedMethods, function (methodname) {
+                element[methodname] = null;
+            });
         },
 
         // activate service on application.
@@ -726,6 +836,7 @@ Fossil.Application = (function (Fossil, $, _, Backbone) {
         this.registerEvents();
         initServices(this);
         // init fragmentable
+        this.initLayoutable();
         this.initFragmentable();
         initModules(this);
         this.initialize.apply(this, arguments);
@@ -746,12 +857,17 @@ Fossil.Application = (function (Fossil, $, _, Backbone) {
             },
 
             // connect an module at given subpath
-            connect: function (path, module) {
+            connect: function (id, module) {
                 if (_.isFunction(module)) {
-                    module = new module(this, path);
+                    module = new module();
                 }
-                this.modules[path] = module;
-                this.trigger('module:connect', module, path, this);
+                this.modules[id] = module;
+                // trigger connect on module
+                if (module.trigger) {
+                    module.trigger('connect', this, id);
+                }
+                // then on application
+                this.trigger('module:connect', module, id, this);
 
                 return this;
             },
@@ -841,26 +957,20 @@ Fossil.Application = (function (Fossil, $, _, Backbone) {
 Fossil.Module = (function (Fossil, _, Backbone) {
     'use strict';
 
-    var Module = function (application, path, options) {
-        if (typeof path === "string") {
-            this.path = path;
-            this.options = options || {};
-        } else {
-            options = path || {};
-            this.path = options.path || '';
-            this.options = options;
+    var Module = function (options) {
+        this.options = options || {};
+        if (typeof this.options.path === "string") {
+            this.path = _.result(this.options, 'path');
         }
 
-        // a PubSub object for communication with the application
-        this.application = application.createPubSub(this, 'applicationEvents');
-        // init services namespace
-        this.services = {};
         // init event listeners
-        this.registerEvents(application);
+        this.registerEvents();
+        // init layoutable
+        this.initLayoutable();
         // init fragmentable
         this.initFragmentable();
         // finally call initialize method
-        this.initialize.call(this, application);
+        this.initialize.call(this);
     };
 
     _.extend(Module.prototype,
@@ -874,11 +984,21 @@ Fossil.Module = (function (Fossil, _, Backbone) {
             applicationEvents: {},
             // events bound on module PubSub
             events: {},
-            initialize: function (application) {
-
-            },
-            registerEvents: function (application) {
+            initialize: function () {},
+            registerEvents: function () {
                 Fossil.Mixins.Observable.registerEvents.call(this);
+                this.listenTo(this, 'connect', _.bind(this.connectListener, this));
+            },
+            connectListener: function (application, id) {
+                // a PubSub object to communicate with the application
+                this.application = application.createPubSub(this, 'applicationEvents');
+                // if not already defined
+                if (typeof this.path !== "string") {
+                    this.path = id;
+                }
+                // link services
+                this.services = application.services;
+                // start and stop when element is set or unset
                 this.listenTo(this, 'elementable:attach', _.bind(this.elementAttachListener, this, application));
                 this.listenTo(this, 'elementable:detach', _.bind(this.elementDetachListener, this, application));
             },
@@ -889,7 +1009,7 @@ Fossil.Module = (function (Fossil, _, Backbone) {
             elementDetachListener: function (application) {
                 this.standby();
             },
-            render: function (application) {
+            render: function () {
                 this.renderLayout();
                 this.renderFragments();
             },
@@ -915,7 +1035,10 @@ Fossil.Fragment = (function (Fossil) {
         this.services = {};
         this.path = ancestor.path || '';
         this.ancestor = ancestor.createPubSub(this, 'ancestorEvents');
+        // link services
+        this.services = ancestor.services;
         this.registerEvents();
+        this.initLayoutable();
         this.initFragmentable();
         this.initialize.apply(this, arguments);
     };
@@ -980,17 +1103,17 @@ Fossil.Services.Routing = (function (Fossil, _, Backbone) {
             this.registerRoutesFor(this);
         },
 
-        registerRoutesFor: function (element, prefix) {
+        registerRoutesFor: function (component, prefix) {
             var service = this;
             var routes = _.extend(
-                element.routes || {},
-                element.options.routes || {}
+                component.routes || {},
+                component.options.routes || {}
             );
             prefix = prefixPath(prefix, this.options.prefix);
             _.each(routes, function (route, path) {
                 service.router.route(
                     prefixPath(path, prefix),
-                    _.bind(service.routeListener, service, element, route)
+                    _.bind(service.routeListener, service, component, route)
                 );
             });
         },
@@ -1036,15 +1159,15 @@ Fossil.Services.Routing = (function (Fossil, _, Backbone) {
                 service._callRoute(module, module, route, args);
             });
         },
-        routeListener: function (element, route) {
+        routeListener: function (component, route) {
             var service = this;
             var args = _.tail(_.tail(arguments));
-            if (element.then) {
-                element.then(function () {
-                    service._callRoute(service.application, element, route, args);
+            if (component.then) {
+                component.then(function () {
+                    service._callRoute(service.application, component, route, args);
                 });
             } else {
-                service._callRoute(service.application, element, route, args);
+                service._callRoute(service.application, component, route, args);
             }
         },
 
@@ -1056,18 +1179,18 @@ Fossil.Services.Routing = (function (Fossil, _, Backbone) {
             );
             this.router.navigate.call(this.router, fragment, o);
         },
-        _callRoute: function (observable, element, route, args) {
+        _callRoute: function (observable, component, route, args) {
             if (_.isFunction(route)) {
                 // in case of function
-                route.apply(element, args);
+                route.apply(component, args);
 
-            } else if (_.isFunction(element[route])) {
+            } else if (_.isFunction(component[route])) {
                 // in case a method name is given
-                element[route].apply(element, args);
+                component[route].apply(component, args);
 
             } else if (_.isString(route)) {
                 // in case it's a string, use it as event name
-                observable.trigger.apply(element, [route].concat(args));
+                observable.trigger.apply(component, [route].concat(args));
             } else {
                 throw new Error('Invalid route definition');
             }
@@ -1104,7 +1227,8 @@ Fossil.Services.Session = (function (Fossil, _, Backbone) {
     function requireApplicationError () {
         throw new Error();
     }
-    var exposed = ['get', 'set', 'has'];
+    // methods of model to expose directly in the service instance.
+    var expose = ['get', 'set', 'has'];
 
     var Session = Fossil.Service.extend({
         options: {
@@ -1115,7 +1239,7 @@ Fossil.Services.Session = (function (Fossil, _, Backbone) {
             var service = this;
 
             this.model = new Backbone.Model(this.options.defaults || {});
-            _.each(exposed, function (method) {
+            _.each(expose, function (method) {
                 service[method] = _.bind(service.model[method], service.model);
             });
         },
@@ -1123,13 +1247,13 @@ Fossil.Services.Session = (function (Fossil, _, Backbone) {
             var service = this;
 
             this.model = null;
-            _.each(exposed, function (method) {
+            _.each(expose, function (method) {
                 service[method] = requireApplicationError;
             });
         }
     });
 
-    _.each(exposed, function (method) {
+    _.each(expose, function (method) {
         Session.prototype[method] = requireApplicationError;
     });
 

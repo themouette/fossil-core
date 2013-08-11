@@ -1,6 +1,9 @@
 dev
 ---
 
+2013-08-12 version 0.0.3
+------------------------
+
 * Introduces Handlebars adapter.
 * Introduces `Fossil.View`.
 * `Fossil.Mixins.Layoutable`: Does not execute template function anymore, assume
