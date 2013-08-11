@@ -1,6 +1,7 @@
 dev
 ---
 
+* Introduces Handlebars adapter.
 * Introduces `Fossil.View`.
 * `Fossil.Mixins.Layoutable`: Does not execute template function anymore, assume
   it is a compiled template. Method is no more evaluated in Layoutable context.
