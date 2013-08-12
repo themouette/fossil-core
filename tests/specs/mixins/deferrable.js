@@ -16,6 +16,16 @@
         });
 
         describe('waitFor method', function () {
+            it('accepts raw values', function(done) {
+                this.timeout(TIMEOUT);
+                var q = new Queue();
+                var value = 10;
+                q.waitFor(value);
+
+                q.then(function (promise) {
+                    done();
+                });
+            });
             it('should be possible to give no options', function(done) {
                 this.timeout(TIMEOUT);
                 var q = new Queue();

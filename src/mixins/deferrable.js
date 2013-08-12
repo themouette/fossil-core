@@ -69,6 +69,7 @@ Fossil.Mixins.Deferrable = (function (_, Fossil, Deferred) {
 
     _.extend(Wait.prototype, {
         enqueue: function (promise, options) {
+            promise = this.ensurePromise(promise);
             options = this.ensureOptions(options);
             // tatoo the promise
             promise.deferrableUuid = this.uuid;
@@ -100,6 +101,16 @@ Fossil.Mixins.Deferrable = (function (_, Fossil, Deferred) {
                 failFast: true,
                 timeout: false
             }, options || {});
+        },
+        ensurePromise: function (promise) {
+            if (promise && (promise.then || promise.done)) {
+                return promise;
+            }
+            var d = new Deferred();
+            setTimeout(function () {
+                d.resolve(promise);
+            }, 0);
+            return d;
         },
         addTimeout: function (promise, timeout) {
             if (!promise.always) {
@@ -152,7 +163,7 @@ Fossil.Mixins.Deferrable = (function (_, Fossil, Deferred) {
             this.deferred.reject.apply(this.deferred, [error].concat(this.promises));
             this.stop();
         },
-        processAsyncReturn: function () {
+        processAsyncReturn: function (promise) {
             // are all the promises processed ?
             var processed = _.every(this.promises, function (p) {
                 return "pending" !== p.state();

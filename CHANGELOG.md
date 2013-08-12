@@ -5,6 +5,7 @@ Dev
 ---
 
 * Bugfix: service link to application error.
+* `Fossil.Mixins.Deferrable` can wait for non promise values.
 
 2013-08-12 version 0.0.3
 ------------------------
