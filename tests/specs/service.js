@@ -168,6 +168,82 @@
         });
     });
 
+    describe('link on application', function () {
+        var application;
+        beforeEach(function () {
+            application = new Application();
+            application.start();
+        });
+        afterEach(function () {
+            application.stop();
+            application = null;
+        });
+
+        it('with link', function () {
+            application.use('service_id', new Service({
+                link: true
+            }));
+            assert.equal(application.service_id, application.services.service_id);
+        });
+        it('with linkToApplication', function () {
+            application.use('service_id', new Service({
+                linkToApplication: true
+            }));
+            assert.equal(application.service_id, application.services.service_id);
+        });
+        it('is prevented with link', function () {
+            application.use('service_id', new Service({
+                link: false
+            }));
+            assert.isUndefined(application.service_id);
+        });
+        it('is prevented with linkToApplication', function () {
+            application.use('service_id', new Service({
+                linkToApplication: false
+            }));
+            assert.isUndefined(application.service_id);
+        });
+    });
+
+    describe('link on module', function () {
+        var application, module;
+        beforeEach(function () {
+            application = new Application();
+            module = new Module();
+            application.connect('module_id', module);
+            application.start();
+        });
+        afterEach(function () {
+            application.stop();
+            application = null;
+        });
+
+        it('with link', function () {
+            application.use('service_id', new Service({
+                link: true
+            }));
+            assert.equal(module.service_id, application.services.service_id);
+        });
+        it('with linkToApplication', function () {
+            application.use('service_id', new Service({
+                linkToModule: true
+            }));
+            assert.equal(module.service_id, application.services.service_id);
+        });
+        it('is prevented with link', function () {
+            application.use('service_id', new Service({
+                link: false
+            }));
+            assert.isUndefined(module.service_id);
+        });
+        it('is prevented with linkToApplication', function () {
+            application.use('service_id', new Service({
+                linkToModule: false
+            }));
+            assert.isUndefined(module.service_id);
+        });
+    });
+
     describe('exposed methods', function () {
         it('are not required', function() {
             var service, application, module;

@@ -56,7 +56,7 @@ Fossil.Service = (function (Fossil, _, Backbone) {
                 this.doExpose(application, id);
             }
             if (processConfig(this, 'linkToApplication', 'link')) {
-                this.undoLink(application, id);
+                this.doLink(application, id);
             }
 
             // create pubSub
