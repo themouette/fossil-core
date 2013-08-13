@@ -4,6 +4,8 @@ dev
 Dev
 ---
 
+* Handlebars adapter url helper accepts several parameters.
+* `grunt dev` build dev environment first.
 * Bugfix: service link to application error.
 * `Fossil.Mixins.Deferrable` can wait for non promise values.
 
