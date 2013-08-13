@@ -114,12 +114,13 @@ Fossil.Services.Handlebars = (function (Fossil, _, Backbone, Handlebars, Helpers
         createHelpersFor: function (component) {
             var helpers = {
                 // generate URL
-                url: function (url, extra) {
-                    var parts = ['#'];
+                url: function () {
+                    var parts = _.initial(arguments) || [];
+                    var extra = _.tail(arguments);
                     if (component.path) {
-                        parts.push(component.path);
+                        parts.unshift(component.path);
                     }
-                    parts.push(url);
+                    parts.unshift('#');
                     return parts.join('');
                 }
             };
