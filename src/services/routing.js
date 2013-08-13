@@ -10,6 +10,7 @@ Fossil.Services.Routing = (function (Fossil, _, Backbone) {
                 trigger: true
             }
         },
+        exposedMethods: ['navigate'],
         initialize: function () {
             // create router
             this.router = new Backbone.Router();

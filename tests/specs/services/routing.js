@@ -192,6 +192,17 @@
 
         });
 
+        describe('Fossil.Services.Routing exposes', function () {
+            it('navigate method', function () {
+                var application = new Application();
+                var routing = new RoutingService({expose: true});
+                application
+                    .use('routing', routing)
+                    .start();
+                assert.ok(application.navigate);
+            });
+        });
+
         describe('Fossil.Services.Routing triggers module workflow', function () {
 
             it('should trigger application events module:{standby,change,start} when app is changed', function (done) {
