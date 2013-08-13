@@ -51,6 +51,7 @@ Parameters are:
 
 Call all the enqueued failure callback. Use this function when you are sure you
 start a new process.
+The deferrables with an `abort` method will be aborted too.
 
 > Unterminated calls will still be processed, but it does not interfere with
 > deferrable execution and current queue is cleared.
@@ -58,10 +59,11 @@ start a new process.
 Error handling
 --------------
 
-It is possible to handle errors automatically only if the asynchronous call has
-the (default) option `failFast`.
+If the asynchronous call has the (default) option `failFast`, the first argument
+given to the fail callback is the error.
 
-The first argument given to
+Otherwise promise is rejected with a generic error as there is no way to know
+what failed.
 
 Examples
 --------
