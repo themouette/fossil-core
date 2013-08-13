@@ -13,7 +13,7 @@ Usage
 
 Give template option or set template on prototype:
 
-``` !javascript
+``` javascript
 var Layoutable = function Layoutable(options) {
     this.options = options || {};
     this.initLayoutable();
@@ -38,7 +38,7 @@ var myLayout = new Layoutable({
 Use method `setLayout`.
 Layout will be automaticaly rendered.
 
-``` !javascript
+``` javascript
 Layoutable.setLayout(template);
 Layoutable.setLayout(myView, true); // to recycle view (ie do not rerender)
 ```

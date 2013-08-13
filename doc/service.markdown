@@ -12,7 +12,7 @@ Usage
 
 In this example, is shown the different way to access services methods.
 
-``` !javascript
+``` javascript
 var MyService = Fossil.Service.extend({
     options: {
         // extends application with service methods
@@ -41,7 +41,7 @@ var fragment = application.ensureFragment('frag1')
 For every element, it is possible to access service and call `greet` method
 directly.
 
-``` !javascript
+``` javascript
 application.services.service1.greet();
 module.services.service1.greet();
 fragment.services.service1.greet();
@@ -51,20 +51,20 @@ As service is `exposed` to application, `greet` is directly accessible on
 itself. You can specify `expose`, `exposeToApplication`, `exposeToModule` and
 `exposeToFragment` options.
 
-``` !javascript
+``` javascript
 application.greet();
 ```
 
 A linked service can be access on the element directly. You can specify
 `link`, `linkToApplication`, `linkToModule` and `linkToFragment` options.
 
-``` !javascript
+``` javascript
 fragment.service1.greet();
 ```
 
 ### Add listeners
 
-``` !javascript
+``` javascript
 var MyService = Fossil.Service.extend({
     // activate service on application.
     _doActivateApplication: function (application) {

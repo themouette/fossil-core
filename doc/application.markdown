@@ -9,7 +9,7 @@ Use services
 
 `Fossil.Service`s can easily be plugged int application withe the `use` method:
 
-``` !javascript
+``` javascript
 var app = new Fossil.App();
 app
     .use('session', new Fossil.Services.Session());
@@ -18,7 +18,7 @@ app
 
 It is even possible to use services after start:
 
-``` !javascript
+``` javascript
 var app = new Fossil.App();
 app
     .use('session', new Fossil.Services.Session());
@@ -28,7 +28,7 @@ app
 Finaly, if yoou feel more like configuring, it is possible to declare services
 through the `services` property:
 
-``` !javascript
+``` javascript
 // extend with configuration
 var myApp = Fossil.App.extend({
     services: {
@@ -56,7 +56,7 @@ associate a **routing prefix** for all the module routes, it can be overriden by
 
 Modules are connected through the `connect` method:
 
-``` !javascript
+``` javascript
 var app = new Fossil.App();
 app
     .connect('clients', new Fossil.Module());
@@ -72,7 +72,7 @@ If one prefer the configuration style, `modules` property can be set through
 prototype or options:
 
 
-``` !javascript
+``` javascript
 // extend with configuration
 var myApp = Fossil.App.extend({
     modules: {
@@ -112,7 +112,7 @@ Routes can either be:
 * The name of a **method** of application to execute;
 * The name of an **event** to trigger.
 
-``` !javascript
+``` javascript
 // extend with configuration
 var myApp = Fossil.App.extend({
     routes: {
@@ -143,7 +143,7 @@ Events
 Application is a `Fossil.Mixins.Observable`. events can be attached using the
 `events` property or the `Backbone.Events` methods.
 
-``` !javascript
+``` javascript
 // extend with configuration
 var myApp = Fossil.App.extend({
     events: {
