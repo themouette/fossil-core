@@ -1,6 +1,11 @@
 dev
 ---
 
+Dev
+---
+
+* Bugfix: service link to application error.
+
 2013-08-12 version 0.0.3
 ------------------------
 

@@ -23,7 +23,7 @@ Fossil.View = (function (_, Backbone, Fossil) {
             }
         },
         render: function (helpers) {
-            var data, renderedHtml, args = _.toArray(arguments);
+            var data, renderedHtml;
             if (this.precompile) {
                 this.template = this.precompile(this.template);
             }
@@ -33,7 +33,7 @@ Fossil.View = (function (_, Backbone, Fossil) {
             }
             renderedHtml = this.template;
             if (this.renderHtml) {
-                renderedHtml = this.renderHtml.apply(this, [data].concat(args));
+                renderedHtml = this.renderHtml.apply(this, [data].concat(_.toArray(arguments)));
             }
             this.$el.html(renderedHtml);
             return this;
@@ -663,7 +663,7 @@ Fossil.Service = (function (Fossil, _, Backbone) {
                 this.doExpose(application, id);
             }
             if (processConfig(this, 'linkToApplication', 'link')) {
-                this.undoLink(application, id);
+                this.doLink(application, id);
             }
 
             // create pubSub
