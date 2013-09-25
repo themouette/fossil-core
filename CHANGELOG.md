@@ -1,9 +1,9 @@
-dev
----
-
 Dev
 ---
 
+* add the ability to register own helpers and helperFactories.
+* Document Handlebars service.
+* Handlebars service relies on router (to register `url` helpers). Maybe not definitive.
 * Handlebars adapter url helper accepts several parameters.
 * `grunt dev` build dev environment first.
 * Bugfix: service link to application error.
