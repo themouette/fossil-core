@@ -114,6 +114,7 @@ Fossil.Mixins.Deferrable = (function (_, Fossil, Deferred) {
 
     _.extend(Wait.prototype, {
         enqueue: function (promise, options) {
+            promise = this.ensurePromise(promise);
             options = this.ensureOptions(options);
             // tatoo the promise
             promise.deferrableUuid = this.uuid;
@@ -145,6 +146,16 @@ Fossil.Mixins.Deferrable = (function (_, Fossil, Deferred) {
                 failFast: true,
                 timeout: false
             }, options || {});
+        },
+        ensurePromise: function (promise) {
+            if (promise && (promise.then || promise.done)) {
+                return promise;
+            }
+            var d = new Deferred();
+            setTimeout(function () {
+                d.resolve(promise);
+            }, 0);
+            return d;
         },
         addTimeout: function (promise, timeout) {
             if (!promise.always) {
@@ -197,7 +208,7 @@ Fossil.Mixins.Deferrable = (function (_, Fossil, Deferred) {
             this.deferred.reject.apply(this.deferred, [error].concat(this.promises));
             this.stop();
         },
-        processAsyncReturn: function () {
+        processAsyncReturn: function (promise) {
             // are all the promises processed ?
             var processed = _.every(this.promises, function (p) {
                 return "pending" !== p.state();
@@ -670,12 +681,14 @@ Fossil.Service = (function (Fossil, _, Backbone) {
             this.application = application.createPubSub(this, 'applicationEvents');
             // activate application
             this._doActivateApplication(application);
+
             // activate all modules
             _.each(application.getModule(), function (module) {
                 service.activateModule.call(service, module, application, id);
             });
             // register on new module connection
             this.listenTo(application, 'module:connect', _.bind(this.activateModuleListener, this, id));
+
             this.listenTo(application, 'fragmentable:fragment:setup', _.bind(this.activateFragmentListener, this, id));
             // tell the world we're ready
             application.trigger(this.prefixEvent('ready'), this);
@@ -1097,6 +1110,7 @@ Fossil.Services.Routing = (function (Fossil, _, Backbone) {
                 trigger: true
             }
         },
+        exposedMethods: ['navigate'],
         initialize: function () {
             // create router
             this.router = new Backbone.Router();

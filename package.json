@@ -1,6 +1,6 @@
 {
   "name": "fossil-core",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "core library for fossil",
   "main": "index.js",
   "scripts": {
