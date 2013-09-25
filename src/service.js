@@ -63,12 +63,14 @@ Fossil.Service = (function (Fossil, _, Backbone) {
             this.application = application.createPubSub(this, 'applicationEvents');
             // activate application
             this._doActivateApplication(application);
+
             // activate all modules
             _.each(application.getModule(), function (module) {
                 service.activateModule.call(service, module, application, id);
             });
             // register on new module connection
             this.listenTo(application, 'module:connect', _.bind(this.activateModuleListener, this, id));
+
             this.listenTo(application, 'fragmentable:fragment:setup', _.bind(this.activateFragmentListener, this, id));
             // tell the world we're ready
             application.trigger(this.prefixEvent('ready'), this);
