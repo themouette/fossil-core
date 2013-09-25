@@ -20,11 +20,18 @@
 Fossil.Services.Handlebars = (function (Fossil, _, Backbone, Handlebars, Helpers) {
     'use strict';
 
+    var messages = {
+        'router_required': 'router option is required'
+    };
+
     // patch Fossil.View
     _.extend(Fossil.View.prototype, {
+        // default view behavior is to render `template` property.
         renderHtml: function (data, helpers) {
             return this.template(data, helpers);
         },
+        // if `template` is a string, it will be processed through Handlebars.
+        // otherwise it leaces it untouched.
         precompile: function (template) {
             if (typeof template === "string") {
                 return Handlebars.compile(template);
@@ -33,13 +40,25 @@ Fossil.Services.Handlebars = (function (Fossil, _, Backbone, Handlebars, Helpers
         }
     });
 
+
     // list of view manager methods to expose
     var managerMethods = [];
     // service methods to expose, component is the first argument
     var serviceMethods = ['setView', 'renderView'];
     var _super = Fossil.Service.prototype;
     var ViewHandler = Fossil.Service.extend({
-        // expose view manager methods
+        // identify the ViewHandler uses Handlebars engine.
+        // it can be useful to register helpers
+        engine: 'handlebars',
+        initialize: function (options) {
+            // router option is required
+            // as it is used for `url` helper.
+            if (!options.router) { throw new Error(messages.router_required); }
+        },
+        // expose view manager methods to components
+        //
+        // every component will access method as `component.methodName(viewManager)`
+        // For instance `setView` and `renderView`
         doExpose: function (component, id) {
             var service = this;
 
@@ -59,16 +78,26 @@ Fossil.Services.Handlebars = (function (Fossil, _, Backbone, Handlebars, Helpers
 
             _super.undoExpose.apply(this, arguments);
         },
-        // exposed to the component
-        // set the component current view.
-        // * recycle view is not rerendered
+        // **exposed to the component**
+        //
+        // set the component's current view and renders it, unless it is told to `recycle`.
         setView: function (component, view, recycle) {
-            if (component.selectView) {
-                component.selectView(view);
+            this.attachView(component, view);
+            if (!recycle) {
+                component.renderView(view);
             }
-            component.setLayout(view, recycle);
+        },
+        attachView: function (component, view) {
+            component.removeLayout();
+            if (this.currentView) {
+                this.currentView.$el.detach();
+            }
+            this.currentView = view;
+            component.$el.append(view.$el);
         },
         // render a view
+        // It provides handlebars `extra` to view render method.
+        // This is the way helpers and global data are injected.
         renderView: function (component, view) {
             var extra = {
                 helpers: this.getHelpers(component),
@@ -76,9 +105,11 @@ Fossil.Services.Handlebars = (function (Fossil, _, Backbone, Handlebars, Helpers
             };
             view.render(extra);
         },
+        // Component helpers are stored in it's `helpers` property.
         getHelpers: function (component) {
             return component.helpers || {};
         },
+        // some data to inject to handlebars
         getExtraData: function (component, view) {
             return {
                 view: view,
@@ -114,6 +145,8 @@ Fossil.Services.Handlebars = (function (Fossil, _, Backbone, Handlebars, Helpers
         createHelpersFor: function (component) {
             var helpers = {
                 // generate URL
+                // it should rely on routing implementation
+                // but for now it does the job.
                 url: function () {
                     var parts = _.initial(arguments) || [];
                     var extra = _.tail(arguments);
