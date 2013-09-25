@@ -28,6 +28,9 @@ Fossil.Services.Handlebars = (function (Fossil, _, Backbone, Handlebars, Helpers
     _.extend(Fossil.View.prototype, {
         // default view behavior is to render `template` property.
         renderHtml: function (data, helpers) {
+            if (!this.template) {
+                return '';
+            }
             return this.template(data, helpers);
         },
         // if `template` is a string, it will be processed through Handlebars.
@@ -51,10 +54,29 @@ Fossil.Services.Handlebars = (function (Fossil, _, Backbone, Handlebars, Helpers
         // it can be useful to register helpers
         engine: 'handlebars',
         initialize: function (options) {
+            options || (options = {});
+            this.helpers = _.clone(this.helpers || {});
+            this.helperFactories = _.clone(this.helperFactories || []);
             // router option is required
             // as it is used for `url` helper.
             if (!options.router) { throw new Error(messages.router_required); }
+            this.registerHelperFactory(_.bind(routeHelperFactory, this, options.router));
         },
+
+        // register a new helper factory that will receive component as parameter
+        // and should return an object of helpers to register.
+        registerHelperFactory: function (factory) {
+            this.helperFactories.push(factory);
+            return this;
+        },
+
+        // register a new helper factory that will receive component as parameter
+        // and should return an object of helpers to register.
+        registerHelper: function (key, value) {
+            this.helpers[key] = value;
+            return this;
+        },
+
         // expose view manager methods to components
         //
         // every component will access method as `component.methodName(viewManager)`
@@ -143,23 +165,31 @@ Fossil.Services.Handlebars = (function (Fossil, _, Backbone, Handlebars, Helpers
         },
         // creates the helpers for components
         createHelpersFor: function (component) {
-            var helpers = {
-                // generate URL
-                // it should rely on routing implementation
-                // but for now it does the job.
-                url: function () {
-                    var parts = _.initial(arguments) || [];
-                    var extra = _.tail(arguments);
-                    if (component.path) {
-                        parts.unshift(component.path);
-                    }
-                    parts.unshift('#');
-                    return parts.join('');
-                }
-            };
+            var helpers = _.clone(this.helpers || {});
+            helpers = _.reduce(this.helperFactories, function (accumulator, factory) {
+                return _.extend(accumulator, factory(component));
+            }, helpers);
+
             return helpers;
         }
     });
+
+    function routeHelperFactory(router, component) {
+        return {
+            // generate URL
+            // it should rely on routing implementation
+            // but for now it does the job.
+            url: function () {
+                var parts = _.initial(arguments) || [];
+                var extra = _.tail(arguments);
+                if (component.path) {
+                    parts.unshift(component.path);
+                }
+                parts.unshift('#');
+                return parts.join('');
+            }
+        };
+    }
 
     return ViewHandler;
 })(Fossil, _, Backbone, Handlebars);
