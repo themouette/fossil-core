@@ -1,7 +1,7 @@
 {
   "name": "fossil-core",
   "version": "0.0.4",
-    "licenses": [
+  "licenses": [
     {
       "type": "MIT",
       "url": "https://github.com/themouette/fossil-core/blob/master/LICENSE"
@@ -21,9 +21,12 @@
     "requirejs-tpl": "latest",
     "backbone": "~1.0.0",
     "jquery": "~2.0.2",
-    "underscore": "~1.4.4",
+    "underscore": "~1.4.4"
+  },
+  "devDependencies": {
     "chai": "~1.6.1",
     "mocha": "~1.11.0",
-    "sinon": "http://sinonjs.org/releases/sinon-1.7.3.js"
+    "sinon": "http://sinonjs.org/releases/sinon-1.7.3.js",
+    "handlebars": "~1.0.0"
   }
 }
