@@ -1,4 +1,4 @@
-Fossil.Mixins.Deferrable = (function (_, Fossil, Deferred) {
+define(['underscore', '../deferred'], function (_, Deferred) {
     'use strict';
 
     var messages = {
@@ -208,4 +208,4 @@ Fossil.Mixins.Deferrable = (function (_, Fossil, Deferred) {
     });
 
     return Deferrable;
-})(_, Fossil, Fossil.Deferred);
+});
