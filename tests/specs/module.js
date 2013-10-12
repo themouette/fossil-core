@@ -1,128 +1,346 @@
-(function (chai, Module, Application) {
+define(['assert', 'sinon', 'fossil/module', 'backbone'], function (assert, sinon, Module, Backbone) {
 
-    var assert = chai.assert;
+    suite('Module', function () {
 
-    describe('Fossil.Module', function () {
-        describe('when connected', function () {
+        suite('Routing', function () {
 
-            it('accepts module id as `path`', function() {
-                var application = new Application();
-                var mod = new Module();
-                application.connect('moduleid', mod);
+            suite('#navigate', callEventAndForwardExtraParams('do:route:navigate', 'navigate'));
+            suite('#route', callEventAndForwardExtraParams('do:route:register', 'route'));
 
-                assert.equal(mod.path, 'moduleid');
-                assert.isObject(mod.options);
+        }); // end of Routing suite
+
+        suite('View', function () {
+
+            suite('#render', callEventAndForwardExtraParams('do:view:render', 'render'));
+            suite('#attach', callEventAndForwardExtraParams('do:view:attach', 'attach'));
+            suite('#useView', function () {
+                var render, attach, module, view;
+                setup(function () {
+                    render = sinon.spy();
+                    attach = sinon.spy();
+                    module = new Module();
+                    module.on('do:view:render', render);
+                    module.on('do:view:attach', attach);
+                    view = new Backbone.View();
+                });
+                test('should render view', function () {
+                    module.useView(view);
+
+                    assert.ok(render.calledOnce);
+                    assert.ok(attach.calledOnce);
+                });
+                test('should render rendered view', function () {
+                    view._rendered = true;
+                    module.useView(view);
+
+                    assert.ok(render.calledOnce);
+                    assert.ok(attach.calledOnce);
+                });
+                test('should render unrendered recycle view', function () {
+                    view._rendered = false;
+                    view.recycle = true;
+                    module.useView(view);
+
+                    assert.ok(render.calledOnce);
+                    assert.ok(attach.calledOnce);
+                });
+                test('should not render rendered recycle view', function () {
+                    view._rendered = true;
+                    view.recycle = true;
+                    module.useView(view);
+
+                    assert.ok(!render.called);
+                    assert.ok(attach.calledOnce);
+                });
             });
 
-            it('accepts `path` as an option', function() {
-                var application = new Application();
-                var mod = new Module({path: 'path'});
-                application.connect('moduleid', mod);
+        }); // end of View suite
 
-                assert.equal(mod.path, 'path');
-                assert.isObject(mod.options);
-            });
+        suite('Module', function () {
 
-            it('should override with id only if needed', function() {
-                var application = new Application();
-                var mod = new Module({ path: 'modulepath' });
-                application.connect('moduleid', mod);
+            suite('#connect', function () {
+                suite('should trigger parent `on:child:connect` and child `do:connect:to:parent`', function () {
+                    var parentSpy, childSpy, parent, child;
+                    setup(function () {
+                        parentSpy = sinon.spy();
+                        childSpy = sinon.spy();
+                        parent = new Module();
+                        parent.on('on:child:connect', parentSpy);
 
-                assert.equal(mod.path, 'modulepath');
-                assert.isObject(mod.options);
-            });
+                        child = new Module();
+                        child.on('do:connect:to:parent', childSpy);
+                    });
 
-            it('should not override with id for empty path', function() {
-                var application = new Application();
-                var mod = new Module({ path: '' });
-                application.connect('moduleid', mod);
+                    test('', function () {
+                        parent.connect('foo', child);
 
-                assert.equal(mod.path, '');
-                assert.isObject(mod.options);
-            });
+                        assert.ok(parentSpy.calledOnce);
+                        assert.ok(parentSpy.calledWith(child, 'foo', parent));
 
-            it('should import services', function() {
-                var application = new Application();
-                var mod = new Module({ path: '' });
-                application.use('service1', new Fossil.Service());
-                application.connect('moduleid', mod);
-                application.use('service2', new Fossil.Service());
+                        assert.ok(childSpy.calledOnce);
+                        assert.ok(childSpy.calledWith(parent, 'foo', child));
+                    });
+                    test('and forward extra parameters', function () {
+                        parent.connect('foo', child, 'bar', 'baz');
 
-                assert.isObject(mod.services);
-                assert.strictEqual(mod.services.service1, application.services.service1);
-                assert.strictEqual(mod.services.service2, application.services.service2);
-            });
-        });
+                        assert.ok(parentSpy.calledOnce);
+                        assert.ok(parentSpy.calledWith(child, 'foo', parent, 'bar', 'baz'));
 
-        describe('Fossil.Module can communicate with application via pubsub', function () {
-            it('proveds access to application pubsub', function(done) {
-                var application = new Application();
-                var mod = new Module();
-                application.connect('moduleid', mod);
-
-                mod.application.on('foo', done);
-                mod.application.trigger('foo');
-            });
-        });
-
-        describe('Fossil.Module events registration', function () {
-
-            it('should regiter events on module pub sub', function (done) {
-                this.timeout(10);
-                done = _.after(2, done);
-                var application = new Application({
-                    modules: {
-                        mod1: Module.extend({
-                            events: {
-                                'foo': 'foo',
-                                'bar': function () {
-                                    done();
-                                }
-                            },
-                            applicationEvents: {
-                                'foo': function () {
-                                    assert.ok(false, 'It should not register applicationEvents in app pubSub');
-                                }
-                            },
-                            foo: function () {
-                                done();
-                            }
-                        })
-                    }
+                        assert.ok(childSpy.calledOnce);
+                        assert.ok(childSpy.calledWith(parent, 'foo', child, 'bar', 'baz'));
+                    });
                 });
 
-                application.getModule('mod1').trigger('foo');
-                application.getModule('mod1').trigger('bar');
-            });
+                suite('with existing module', function () {
+                    test('should disconnect it', function () {
+                        var spy = sinon.spy();
+                        var module = new Module();
+                        var child = new Module();
+                        module.disconnect = spy;
 
-            it('should regiter applicationEvents on module pub sub', function (done) {
-                this.timeout(10);
-                done = _.after(2, done);
-                var application = new Application({
-                    modules: {
-                        mod1: Module.extend({
-                            applicationEvents: {
-                                'foo': 'foo',
-                                'bar': function () {
-                                    done();
-                                }
-                            },
-                            events: {
-                                'foo': function () {
-                                    assert.ok(false, 'It should not register events in application pubSub');
-                                }
-                            },
-                            foo: function () {
-                                done();
-                            }
-                        })
-                    }
+                        module.connect('foo', child);
+
+                        assert.ok(!spy.called, 'should not be called when no module is registered');
+
+                        module.connect('foo', child);
+                        assert.ok(spy.called, 'should be called when a module is prensent');
+                    });
+                });
+            }); // end of #connect
+
+            suite('#disconnect', function () {
+                suite('should trigger parent `on:child:disconnect` and child `do:disconnect:from:parent`', function () {
+                    var parentSpy, childSpy, parent, child;
+                    setup(function () {
+                        parentSpy = sinon.spy();
+                        childSpy = sinon.spy();
+                        parent = new Module();
+                        parent.on('on:child:disconnect', parentSpy);
+
+                        child = new Module();
+                        child.on('do:disconnect:from:parent', childSpy);
+
+                        parent.connect('foo', child);
+                    });
+
+                    test('', function () {
+                        parent.disconnect('foo');
+
+                        assert.ok(parentSpy.calledOnce);
+                        assert.ok(parentSpy.calledWith(child, 'foo', parent));
+
+                        assert.ok(childSpy.calledOnce);
+                        assert.ok(childSpy.calledWith(parent, 'foo', child));
+                    });
+                    test('and forward extra parameters', function () {
+                        parent.disconnect('foo', 'bar', 'baz');
+
+                        assert.ok(parentSpy.calledOnce, 'should call parent event');
+                        assert.ok(parentSpy.calledWith(child, 'foo', parent, 'bar', 'baz'), 'should foward to parents');
+
+                        assert.ok(childSpy.calledOnce, 'should call child event');
+                        assert.ok(childSpy.calledWith(parent, 'foo', child, 'bar', 'baz'), 'should forward to child');
+                    });
+                });
+            }); // end of #disconnect
+
+        }); // end of Module suite
+
+        suite('Service', function () {
+
+            suite('#use', function () {
+                suite('should trigger module `on:service:use` and service `do:use:module`', function () {
+                    var moduleSpy, serviceSpy, module, service;
+                    setup(function () {
+                        moduleSpy = sinon.spy();
+                        serviceSpy = sinon.spy();
+                        module = new Module();
+                        module.on('on:service:use', moduleSpy);
+
+                        service = new Module();
+                        service.on('do:use:module', serviceSpy);
+                    });
+
+                    test('', function () {
+                        module.use('foo', service);
+
+                        assert.ok(moduleSpy.calledOnce);
+                        assert.ok(moduleSpy.calledWith(service, 'foo', module));
+
+                        assert.ok(serviceSpy.calledOnce);
+                        assert.ok(serviceSpy.calledWith(module, 'foo', service));
+                    });
+                    test('and forward extra parameters', function () {
+                        module.use('foo', service, 'bar', 'baz');
+
+                        assert.ok(moduleSpy.calledOnce);
+                        assert.ok(moduleSpy.calledWith(service, 'foo', module, 'bar', 'baz'));
+
+                        assert.ok(serviceSpy.calledOnce);
+                        assert.ok(serviceSpy.calledWith(module, 'foo', service, 'bar', 'baz'));
+                    });
                 });
 
-                application.trigger('foo');
-                application.trigger('bar');
-            });
-        });
+                suite('with existing module', function () {
+                    test('should dispose it', function () {
+                        var spy = sinon.spy();
+                        var module = new Module();
+                        var service = new Module();
+                        module.dispose = spy;
+
+                        module.use('foo', service);
+
+                        assert.ok(!spy.called, 'should not be called when no module is registered');
+
+                        module.use('foo', service);
+                        assert.ok(spy.called, 'should be called when a module is prensent');
+                    });
+                });
+            }); // end of #use
+
+            suite('#dispose', function () {
+                suite('should trigger module `on:dispose:service` and service `on:dispose:from:module`', function () {
+                    var moduleSpy, serviceSpy, module, service;
+                    setup(function () {
+                        moduleSpy = sinon.spy();
+                        serviceSpy = sinon.spy();
+                        module = new Module();
+                        module.on('on:service:dispose', moduleSpy);
+
+                        service = new Module();
+                        service.on('do:dispose:module', serviceSpy);
+
+                        module.use('foo', service);
+                    });
+
+                    test('', function () {
+                        module.dispose('foo');
+
+                        assert.ok(moduleSpy.calledOnce);
+                        assert.ok(moduleSpy.calledWith(service, 'foo', module));
+
+                        assert.ok(serviceSpy.calledOnce);
+                        assert.ok(serviceSpy.calledWith(module, 'foo', service));
+                    });
+                    test('and forward extra parameters', function () {
+                        module.dispose('foo', 'bar', 'baz');
+
+                        assert.ok(moduleSpy.calledOnce, 'should call module event');
+                        assert.ok(moduleSpy.calledWith(service, 'foo', module, 'bar', 'baz'), 'should foward to modules');
+
+                        assert.ok(serviceSpy.calledOnce, 'should call service event');
+                        assert.ok(serviceSpy.calledWith(module, 'foo', service, 'bar', 'baz'), 'should forward to service');
+                    });
+                });
+            }); // end of #dispose
+
+        }); // end of suite Service
+
+        suite('Options', function () {
+
+            suite('#startWithParent', function () {
+
+                test('should copy option', function () {
+                    var module = new Module({
+                        startWithParent: 'foo'
+                    });
+
+                    assert.equal(module.startWithParent, 'foo');
+                });
+
+                suite('is started with parent', function () {
+                    var parent, module, sibling, child;
+                    var parentSpy, moduleSpy, siblingSpy, childSpy;
+                    setup(function () {
+                        parentSpy = sinon.spy();
+                        moduleSpy = sinon.spy();
+                        siblingSpy = sinon.spy();
+                        childSpy = sinon.spy();
+
+                        parent = new Module({ events: { start: parentSpy } });
+                        module = new Module({ events: { start: moduleSpy } });
+                        sibling = new Module({ events: { start: siblingSpy } });
+                        child = new Module({ events: { start: childSpy } });
+                    });
+
+                    test('should start submodules on start', function () {
+                        sibling.startWithParent = true;
+                        child.startWithParent = true;
+                        parent
+                            .connect('module', module)
+                            .connect('sibling', sibling);
+                        module
+                            .connect('child', child);
+
+                        module.start();
+
+                        assert.ok(moduleSpy.calledOnce, 'should start module');
+                        assert.ok(childSpy.calledOnce, 'should start child');
+                    }); // end of suite is started with parent
+
+                    test('should not start submodules or sibling on start', function () {
+                        sibling.startWithParent = true;
+                        child.startWithParent = true;
+                        parent
+                            .connect('module', module)
+                            .connect('sibling', sibling);
+                        module
+                            .connect('child', child);
+
+                        module.start();
+
+                        assert.ok(!parentSpy.calledOnce, 'should not start parent');
+                        assert.ok(moduleSpy.calledOnce, 'should start module');
+                        assert.ok(!siblingSpy.calledOnce, 'should start sibling');
+                        assert.ok(childSpy.calledOnce, 'should not start sibling');
+                    }); // end of suite is started with parent
+
+                    test('should start all submodules on start', function () {
+                        sibling.startWithParent = true;
+                        child.startWithParent = true;
+                        parent
+                            .connect('module', module);
+                        module
+                            .connect('child', child)
+                            .connect('sibling', sibling);
+
+                        module.start();
+
+                        assert.ok(!parentSpy.calledOnce, 'should not start parent');
+                        assert.ok(moduleSpy.calledOnce, 'should start module');
+                        assert.ok(siblingSpy.calledOnce, 'should start sibling');
+                        assert.ok(childSpy.calledOnce, 'should start sibling');
+                    }); // end of suite is started with parent
+                });
+
+            }); // enf of suite #startWithParent
+
+        }); // End of suite Options
+
     });
-})(chai, Fossil.Module, Fossil.Application);
 
+    function callEventAndForwardExtraParams(event, method) {
+        return function () {
+            var spy, module;
+            setup(function () {
+                spy = sinon.spy();
+                module = new Module();
+                module.on(event, spy);
+            });
+
+            test('triggers `'+event+'` with module', function () {
+                module[method]();
+
+                assert.ok(spy.calledOnce);
+                assert.ok(spy.calledWith(module));
+            });
+
+            test('forwards parameters', function () {
+                module[method]('foo', 'bar', 'baz');
+
+                assert.ok(spy.calledOnce);
+                assert.ok(spy.calledWith(module, 'foo', 'bar', 'baz'));
+            });
+        };
+    }
+});

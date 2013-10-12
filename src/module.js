@@ -1,73 +1,313 @@
-Fossil.Module = (function (Fossil, _, Backbone) {
+define([
+    'underscore', 'backbone', './utils', './mixin',
+    './mixins/observable', './mixins/deferrable', './mixins/startable'
+], function (_, Backbone, utils, Mixin, Observable, Deferrable, Startable) {
     'use strict';
 
-    var Module = function (options) {
-        this.options = options || {};
-        if (typeof this.options.path === "string") {
-            this.path = _.result(this.options, 'path');
-        }
+    var Module = Mixin.extend({
+        // should the module start when it's parent starts ?
+        //
+        // if true, then module will be auto started whenever the parent will
+        // start.
+        startWithParent: false,
 
-        // init event listeners
-        this.registerEvents();
-        // init layoutable
-        this.initLayoutable();
-        // init fragmentable
-        this.initFragmentable();
-        // finally call initialize method
-        this.initialize.call(this);
-    };
+        constructor: function (options) {
+            this.modules = {};
+            this.services = [];
 
-    _.extend(Module.prototype,
-        Fossil.Mixins.Observable,
-        Fossil.Mixins.Elementable,
-        Fossil.Mixins.Layoutable,
-        Fossil.Mixins.Fragmentable,
-        Fossil.Mixins.Deferrable,
-        Fossil.Mixins.Startable, {
-            // events bound on application PubSub
-            applicationEvents: {},
-            // events bound on module PubSub
-            events: {},
-            initialize: function () {},
-            registerEvents: function () {
-                Fossil.Mixins.Observable.registerEvents.call(this);
-                this.listenTo(this, 'connect', _.bind(this.connectListener, this));
-            },
-            connectListener: function (application, id) {
-                // a PubSub object to communicate with the application
-                this.application = application.createPubSub(this, 'applicationEvents');
-                // if not already defined
-                if (typeof this.path !== "string") {
-                    this.path = id;
-                }
-                // link services
-                this.services = application.services;
-                // start and stop when element is set or unset
-                this.listenTo(this, 'elementable:attach', _.bind(this.elementAttachListener, this, application));
-                this.listenTo(this, 'elementable:detach', _.bind(this.elementDetachListener, this, application));
-            },
-            elementAttachListener: function (application) {
-                this.start();
-                this.thenWith(this, this.render);
-            },
-            elementDetachListener: function (application) {
-                this.standby();
-            },
-            render: function () {
-                this.renderLayout();
-                this.renderFragments();
-            },
-            // called when selected module is changing.
-            // this is used to terminate current module before
-            // the new one is setup.
-            _doStandby: function (application) {
-                Fossil.Mixins.Startable._doStandby.apply(this, arguments);
-                this.removeFragments();
-                this.removeLayout();
+            // call parent constructor
+            Mixin.apply(this, arguments);
+
+            // copy options to main object
+            utils.copyOption(['startWithParent'], this, options);
+
+            // initialize some events
+            this.on('start', this.startListener, this);
+
+            // call initialize
+            if (typeof(this.initialize) === "function") {
+                this.initialize.apply(this, arguments);
             }
+        },
+        // Use this to navigate to a url.
+        // An event is triggered and should be handled by
+        // a dedicated service.
+        // It forwards extra arguments and prepend the module.
+        //
+        // ``` js
+        // module.navigate(); // will pass `(module)` to handlers.
+        // module.navigate('foo'); // will pass `(module, 'foo')` to handlers.
+        // ```
+        //
+        // @triggers 'do:route:navigate'
+        navigate: function () {
+            var args = _.toArray(arguments);
+            this.trigger.apply(this, ['do:route:navigate', this].concat(args));
+
+            return this;
+        },
+        // Use this to register a new route.
+        // An event is triggered and should be handled by
+        // a dedicated service.
+        // It forwards extra arguments and prepend the module.
+        //
+        // ``` js
+        // module.route(); // will pass `(module)` to handlers.
+        // module.route('foo'); // will pass `(module, 'foo')` to handlers.
+        // ```
+        //
+        // @triggers 'do:route:register'
+        route: function () {
+            var args = _.toArray(arguments);
+            this.trigger.apply(this, ['do:route:register', this].concat(args));
+
+            return this;
+        },
+
+        // Use this to render given view.
+        // An event is triggered and should be handled by
+        // a dedicated service.
+        // It forwards extra arguments and prepend the module.
+        //
+        // ``` js
+        // module.render(view); // will pass `(module, view)` to handlers.
+        // module.render(view, extra); // will pass `(module, view, extra)` to handlers.
+        // ```
+        //
+        // @triggers 'do:view:render'
+        render: function () {
+            var args = _.toArray(arguments);
+            this.trigger.apply(this, ['do:view:render', this].concat(args));
+
+            return this;
+        },
+        // Use this to attach given view to DOM.
+        // An event is triggered and should be handled by
+        // a dedicated service.
+        // It forwards extra arguments and prepend the module.
+        //
+        // ``` js
+        // module.attach(view); // will pass `(module, view)` to handlers.
+        // module.attach(view, extra); // will pass `(module, view, extra)` to handlers.
+        // ```
+        //
+        // @triggers 'do:view:attach'
+        attach: function () {
+            var args = _.toArray(arguments);
+            this.trigger.apply(this, ['do:view:attach', this].concat(args));
+
+            return this;
+        },
+        // Use this to replace current view.
+        // If view is not marked as `recycle` and `_rendered`
+        // wiew will first be rendered using the `render` method.
+        // View is then attached using `attach` method.
+        //
+        // It forwards extra arguments and prepend the module.
+        //
+        // ``` js
+        // module.useView(view); // will render and attach view
+        // ```
+        //
+        // @see Module#render
+        // @see Module#attach
+        useView: function (view) {
+            var args = _.toArray(arguments);
+            if (view && !(view.recycle && view._rendered)) {
+                this.render.apply(this, args);
+            }
+            this.attach.apply(this, args);
+
+            return this;
+        },
+
+        // Replaces current view once all deferred are processed.
+        // If all promises went right, then `viewOk` will be used
+        // and otherwise `viewKo` will be used.
+        thenUseView: function (viewOk, viewKo) {
+            this.then(
+                _.bind(this.useView, this, viewOk),
+                _.bind(this.useView, this, viewKo)
+            );
+
+            return this;
+        },
+
+        // Connect a new submodule.
+        //
+        // Child module will trigger 'do:connect:to:parent' event.
+        // It accepts `function (parent, id, child) {}` and receive extra
+        // parameters as well.
+        //
+        // Note that if a module is previously connected under the same id,
+        // then it will first be disconnected.
+        //
+        // ``` js
+        // var module = new Module();
+        // var child = new Module();
+        //
+        // child.on('do:connect:to:parent', function (parent, id, child) {});
+        // module.on('on:child:connect', function (child, id, parent) {});
+        //
+        // module.connect('child', child);
+        // ```
+        //
+        // @triggers 'on:child:connect'
+        connect: utils.keyValueOrObject(function (id, module) {
+            var extra = _.tail(arguments, 2);
+
+            if (this.modules[id]) {
+                this.disconnect(id);
+            }
+
+            // register a reference of the module
+            this.modules[id] = module;
+
+            // trigger connect on child
+            if (module.trigger) {
+                module.trigger.apply(module, ['do:connect:to:parent', this, id, module].concat(extra));
+            }
+
+            // then on parent module
+            this.trigger.apply(this, ['on:child:connect', module, id, this].concat(extra));
+
+            return this;
+        }),
+
+        // Disconnects a module by it's id.
+        //
+        // Child module will trigger 'do:disconnect:from:parent' event.
+        // It accepts `function (parent, id, child) {}` and receive extra
+        // parameters as well.
+        //
+        // ``` js
+        // var module = new Module();
+        // var child = new Module();
+        //
+        // child.on('do:disconnect:from:parent', function (parent, id, child) {});
+        // module.on('on:child:disconnect', function (child, id, parent) {});
+        //
+        // module.connect('child', child);
+        // module.disconnect('child', child);
+        // ```
+        //
+        // @triggers 'on:child:disconnect'
+        disconnect: utils.scalarOrArray(function (id) {
+            var extra = _.tail(arguments);
+            var child = this.modules[id];
+            // nothing to disconnect ?
+            if (!child) {
+                return this;
+            }
+
+            // nothing more to do yet, but
+            // here come the module switch off code.
+
+            // trigger disconnect on child
+            if (child.trigger) {
+                child.trigger.apply(child, ['do:disconnect:from:parent', this, id, child].concat(extra));
+            }
+
+            // then on parent
+            this.trigger.apply(this, ['on:child:disconnect', child, id, this].concat(extra));
+
+            return this;
+        }),
+
+        // Declare a service for `id`.
+        //
+        // This new service hooks into this module only.
+        // to hook into all submodules registered ot to be registered, you must
+        // handle this at the service level.
+        //
+        // It is advised for services to offer a single option `deepUse` to
+        // turn on and off the ability to register deeply.
+        //
+        // 'do:use:module' command is triggered on service as long as it
+        // provides a `trigger` method.
+        // This command accepts callbacks `function (module, id, service) {}`
+        // and forwards extra arguments.
+        //
+        // In case a service with the same id is already in use, it will be
+        // disposed.
+        //
+        // ``` js
+        // module.use('foo', new Service());
+        // ```
+        //
+        // @triggers 'on:service:use'
+        use: utils.keyValueOrObject(function (id, service) {
+            var extra = _.tail(arguments, 2);
+            // suspend previously registered service with this name
+            if (this.services[id]) {
+                this.dispose(id);
+            }
+
+            // register a reference of the service
+            this.services[id] = service;
+
+            // trigger connect on child
+            if (service.trigger) {
+                service.trigger.apply(service, ['do:use:module', this, id, service].concat(extra));
+            }
+
+            // then on parent service
+            this.trigger.apply(this, ['on:service:use', service, id, this].concat(extra));
+
+            return this;
+        }),
+
+        // Unregister service `id`
+        //
+        // This service hooks should be removed by the service.
+        //
+        // It is advised for services to offer a single option `deepUse` to
+        // turn on and off the ability to register deeply.
+        //
+        // 'do:dispose:module' command is triggered on service as long as it
+        // provides a `trigger` method.
+        // This command accepts callbacks `function (module, id, service) {}`
+        // and forwards extra arguments.
+        //
+        // ``` js
+        // module.use('foo', new Service());
+        // module.dispose('foo');
+        // ```
+        //
+        // @triggers 'on:service:dispose'
+        dispose: utils.scalarOrArray(function (id) {
+            var extra = _.tail(arguments);
+            var service = this.services[id];
+            // nothing to disconnect ?
+            if (!service) {
+                return this;
+            }
+
+            // nothing more to do yet, but
+            // here come the service switch off code.
+
+            // trigger disconnect on service
+            if (service.trigger) {
+                service.trigger.apply(service, ['do:dispose:module', this, id, service].concat(extra));
+            }
+
+            // then on parent
+            this.trigger.apply(this, ['on:service:dispose', service, id, this].concat(extra));
+
+            return this;
+        }),
+
+        // for every module that should start with parent
+        startListener: function () {
+            _.each(this.modules, function (module) {
+                if (module.startWithParent) {
+                    module.start();
+                }
+            }, this);
+        }
     });
 
-    Module.extend = Backbone.Model.extend;
+    Module.mix([Observable, Deferrable, Startable]);
 
     return Module;
-})(Fossil, _, Backbone);
+});
