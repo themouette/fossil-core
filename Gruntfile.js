@@ -37,7 +37,12 @@ module.exports = function(grunt) {
             reporter: 'Dot',
             run: true
         },
-        all: ['tests/test.html']
+        all: ['tests/test.html'],
+
+        require: {
+          options: {run: false},
+          src: ['tests/index.html']
+        }
     },
     connect: {
         server: {
