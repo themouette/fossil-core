@@ -68,24 +68,25 @@ fragment.service1.greet();
 var MyService = Fossil.Service.extend({
     // activate service on application.
     _doActivateApplication: function (application) {
-        this.listenTo(application, 'start', _bind(this.applicationStartListener, this, application));
+        this.listenTo(application, 'start', _.bind(this.applicationStartListener, this, application));
     },
-    // activate service on module.
-    _doActivateModule: function (module, application, id) {
+    // suspend service on application.
+    _doSuspendApplication: function (application) {
         this.stopListening(application);
     },
+    // create region manager
     applicationStartListener: function (application) {
-        // do something great !
+
     },
 
     // Following hooks are also available
 
-    // activate service on fragment.
-    _doActivateFragment: function (fragment, parent, id) { },
-    // suspend service on application.
-    _doSuspendApplication: function (application) { },
+    // activate service on module.
+    _doActivateModule: function (module, application, id) { },
     // suspend service on module.
     _doSuspendModule: function (module, application, id) { },
+    // activate service on fragment.
+    _doActivateFragment: function (fragment, parent, id) { },
     // suspend service on fragment.
     _doSuspendFragment: function (fragment, parent, id) { }
 });
