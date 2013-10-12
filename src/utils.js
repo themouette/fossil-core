@@ -12,7 +12,7 @@ define(['underscore'], function (_) {
             if (_.isArray(arg)) {
                 return _.map(arg, function (arg) {
                     return method.apply(this, [arg].concat(extra));
-                });
+                }, this);
             }
             return method.apply(this, arguments);
         };
@@ -25,7 +25,7 @@ define(['underscore'], function (_) {
                 extra = _.rest(arguments, 1);
                 return _.map(key, function (value, key) {
                     return method.apply(this, [key, value].concat(extra));
-                });
+                }, this);
             }
             extra = _.rest(arguments, 2);
             return method.apply(this, arguments);

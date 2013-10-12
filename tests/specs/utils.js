@@ -25,6 +25,16 @@ define(['assert', 'sinon', 'fossil/utils'], function (assert, sinon, utils) {
                 assert.ok(spy.calledOnce);
                 assert.ok(spy.calledWith('foo', 'extra'));
             });
+
+            test('should preserve this argument', function () {
+                var obj = {
+                    bar: utils.scalarOrArray(function () {
+                        assert.strictEqual(this, obj);
+                    })
+                };
+
+                obj.bar([1, 2]);
+            });
         });
 
         suite('#keyValueOrObject', function () {
@@ -53,6 +63,16 @@ define(['assert', 'sinon', 'fossil/utils'], function (assert, sinon, utils) {
 
                 assert.ok(spy.calledOnce);
                 assert.ok(spy.calledWith('foo', 1, 'extra'));
+            });
+
+            test('should preserve this argument', function () {
+                var obj = {
+                    bar: utils.keyValueOrObject(function () {
+                        assert.strictEqual(this, obj);
+                    })
+                };
+
+                obj.bar({a: 1, b: 2});
             });
         });
 
