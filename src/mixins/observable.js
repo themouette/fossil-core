@@ -1,14 +1,16 @@
-Fossil.Mixins.Observable = (function (Fossil, _, Backbone) {
+define([
+    'underscore', 'backbone'
+], function (_, Backbone) {
     'use strict';
 
     var exposedPubsubProperties = ['_listenerId', 'createPubSub'].concat(_.keys(Backbone.Events));
 
-    var Eventable = _.extend({}, Backbone.Events, {
-        registerEvents: function () {
+    var Observable = _.extend({}, Backbone.Events, {
+        initialize: function (options) {
             var events = _.extend(
                 {},
                 _.result(this, 'events'),
-                _.result(this.options || {}, 'events')
+                _.result(options || {}, 'events')
             );
             var observable = this;
 
@@ -55,5 +57,5 @@ Fossil.Mixins.Observable = (function (Fossil, _, Backbone) {
         }
     });
 
-    return Eventable;
-})(Fossil, _, Backbone);
+    return Observable;
+});
