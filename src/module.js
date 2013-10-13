@@ -162,9 +162,6 @@ define([
         // @triggers 'on:child:connect'
         connect: utils.keyValueOrObject(function (id, module) {
             var extra = _.tail(arguments, 2);
-            if (typeof(id) !== 'string' || !module) {
-                throw new Error(messages.invalid_arguments);
-            }
 
             if (this.modules[id]) {
                 this.disconnect(id);
