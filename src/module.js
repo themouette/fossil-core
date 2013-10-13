@@ -30,6 +30,8 @@ define([
 
             // initialize some events
             this.on('start', this.startListener, this);
+            this.on('standby', this.standbyListener, this);
+            this.on('stop', this.stopListener, this);
 
             // call initialize
             if (typeof(this.initialize) === "function") {
@@ -314,6 +316,20 @@ define([
                 if (module.startWithParent) {
                     module.start();
                 }
+            }, this);
+        },
+
+        // standby all submodules
+        standbyListener: function () {
+            _.each(this.modules, function (module) {
+                module.standby();
+            }, this);
+        },
+
+        // stop all submodules
+        stopListener: function () {
+            _.each(this.modules, function (module) {
+                module.stop();
             }, this);
         }
     });

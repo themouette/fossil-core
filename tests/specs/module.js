@@ -431,6 +431,24 @@ define(['assert', 'sinon', 'fossil/module', 'backbone'], function (assert, sinon
 
         }); // End of suite Options
 
+        _.each(['stop', 'standby'], function (method) {
+            suite('#'+method+'()', function () {
+                test('should trigger submodules method', function () {
+                    var module = new Module();
+                    var child = new Module();
+                    var spy = sinon.stub(child, method);
+
+                    module.start();
+                    module.connect('foo', child);
+                    child.start();
+
+                    module[method]();
+
+                    assert.ok(spy.calledOnce);
+                });
+            });
+        }); // end of suite stop/standby
+
     });
 
     function callEventAndForwardExtraParams(event, method) {
