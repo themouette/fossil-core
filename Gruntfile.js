@@ -37,7 +37,6 @@ module.exports = function(grunt) {
             reporter: 'Dot',
             run: true
         },
-        all: ['tests/test.html'],
 
         require: {
           options: {run: false},
