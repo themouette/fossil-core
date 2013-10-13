@@ -23,6 +23,13 @@ define(['./mixin'], function (Mixin) {
                             on[method].apply(on, args.slice(0,2).concat([on]).concat(args.slice(3)));
                             break;
                         }
+                    case 'stopListening':
+                    case 'listenToOnce':
+                    case 'listenTo':
+                        if (args && this === args[1]) {
+                            on[method].apply(on, args.slice(0,1).concat([on]).concat(args.slice(2)));
+                            break;
+                        }
                     default:
                         on[method].apply(on, args);
                 }
