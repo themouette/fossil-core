@@ -1,8 +1,12 @@
 define([
     'underscore', 'backbone', './utils', './mixin',
-    './mixins/observable', './mixins/deferrable', './mixins/startable'
-], function (_, Backbone, utils, Mixin, Observable, Deferrable, Startable) {
+    './mixins/observable', './mixins/deferrable', './mixins/startable', './observableBuffer'
+], function (_, Backbone, utils, Mixin, Observable, Deferrable, Startable, ObservableBuffer) {
     'use strict';
+
+    var messages = {
+        invalid_arguments: 'You must provide `id` and `module` arguments.'
+    };
 
     var Module = Mixin.extend({
         // should the module start when it's parent starts ?
@@ -14,6 +18,9 @@ define([
         constructor: function (options) {
             this.modules = {};
             this.services = [];
+
+            // create a stub observable for parent.
+            this.parent = new ObservableBuffer();
 
             // call parent constructor
             Mixin.apply(this, arguments);
@@ -155,6 +162,9 @@ define([
         // @triggers 'on:child:connect'
         connect: utils.keyValueOrObject(function (id, module) {
             var extra = _.tail(arguments, 2);
+            if (typeof(id) !== 'string' || !module) {
+                throw new Error(messages.invalid_arguments);
+            }
 
             if (this.modules[id]) {
                 this.disconnect(id);
@@ -162,6 +172,10 @@ define([
 
             // register a reference of the module
             this.modules[id] = module;
+            // replace and replay observable
+            var pubsub = this.createPubSub();
+            module.parent.replay(pubsub);
+            module.parent = pubsub;
 
             // trigger connect on child
             if (module.trigger) {
@@ -200,8 +214,8 @@ define([
                 return this;
             }
 
-            // nothing more to do yet, but
-            // here come the module switch off code.
+            // stub the module's parent observable
+            child.parent = new ObservableBuffer();
 
             // trigger disconnect on child
             if (child.trigger) {
@@ -306,6 +320,35 @@ define([
             }, this);
         }
     });
+
+    // Wrap observable callback to handle `parent!` event modifier.
+    //
+    // To manipulate parent events, it is possible to use traditional
+    // observable method, just prefix the event with `parent!`.
+    //
+    // ``` js
+    // module.on('parent!do:execute:command', function () {}, this);
+    // ```
+    var parentMatcher = /^parent!(.*)$/i;
+    _.each(['on', 'off', 'once', 'trigger'], function (method) {
+        Module.prototype[method] = function wrapEventMethod(eventname) {
+            var extra;
+
+            if (eventname && parentMatcher.test(eventname)) {
+                eventname = eventname.match(parentMatcher)[1];
+                extra = _.rest(arguments);
+                this.parent[method].apply(this.parent, [eventname].concat(extra));
+
+                return this;
+            }
+
+            Observable[method].apply(this, arguments);
+
+            return this;
+        };
+    });
+    // note that listenTo, listenToOnce and stopListening relies on other
+    // methods so there is no need to extend them.
 
     Module.mix([Observable, Deferrable, Startable]);
 

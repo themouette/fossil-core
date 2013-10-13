@@ -96,7 +96,12 @@ define(['assert', 'sinon', 'fossil/module', 'backbone'], function (assert, sinon
                         var spy = sinon.spy();
                         var module = new Module();
                         var child = new Module();
-                        module.disconnect = spy;
+                        var disconnect = module.disconnect;
+
+                        module.disconnect = function () {
+                            spy.apply(this, arguments);
+                            disconnect.apply(this, arguments);
+                        };
 
                         module.connect('foo', child);
 
@@ -236,8 +241,117 @@ define(['assert', 'sinon', 'fossil/module', 'backbone'], function (assert, sinon
 
         }); // end of suite Service
 
+        suite('Event', function () {
+
+            suite('#events property', function () {
+                test('should register function', function () {
+                    var spy = sinon.spy();
+                    var module = new Module({
+                        events: {
+                            'foo': spy
+                        }
+                    });
+
+                    module.trigger('foo', 1, 2, 3);
+
+                    assert.ok(spy.calledOnce);
+                    assert.ok(spy.calledOn(module));
+                    assert.ok(spy.calledWith(1,2,3));
+                });
+                test('should register method name', function () {
+                    var spy = sinon.spy();
+                    var module = new (Module.extend({
+                        events: {
+                            'foo': 'foo'
+                        },
+                        foo: spy
+                    }))();
+
+                    module.trigger('foo', 1, 2, 3);
+
+                    assert.ok(spy.calledOnce);
+                    assert.ok(spy.calledOn(module));
+                    assert.ok(spy.calledWith(1,2,3));
+                });
+            }); // end of suite #events property
+
+            suite('#parent', function () {
+                test('should replay events when connected', function () {
+                    var spy = sinon.spy();
+                    var module = new Module();
+                    var child = new Module();
+
+                    child.parent.on('foo', spy);
+                    module.connect('child', child);
+                    module.trigger('foo');
+
+                    assert.ok(spy.calledOnce);
+                });
+                test('should replay events disconnection when connected', function () {
+                    var spy = sinon.spy();
+                    var module = new Module();
+                    var child = new Module();
+
+                    child.parent.on('foo', spy);
+                    child.parent.off('foo', spy);
+                    module.connect('child', child);
+                    module.trigger('foo');
+
+                    assert.equal(spy.callCount, 0);
+                });
+            });
+            suite('observable methods', function () {
+                test('should forward parent! prefix (first arg)', function () {
+                    var spy = sinon.spy();
+                    var module = new Module();
+                    var child = new Module();
+
+                    child.on('parent!foo', spy, child);
+                    module.connect('child', child);
+                    module.trigger('foo');
+
+                    assert.ok(spy.calledOnce);
+                    assert.ok(spy.calledOn(child));
+                });
+                test('should forward parent! prefix (listenTo)', function () {
+                    var spy = sinon.spy();
+                    var module = new Module();
+                    var child = new Module();
+
+                    child.listenTo(child, 'parent!foo', spy);
+                    module.connect('child', child);
+                    child.stopListening(child, 'parent!foo');
+                    module.trigger('foo');
+
+                    assert.equal(spy.callCount, 0);
+                });
+                test('should forward parent! prefix (stopListening)', function () {
+                    var spy = sinon.spy();
+                    var module = new Module();
+                    var child = new Module();
+
+                    child.listenTo(child, 'parent!foo', spy);
+                    module.connect('child', child);
+                    module.trigger('foo');
+
+                    assert.ok(spy.calledOnce);
+                });
+            }); // end of suite observable methods
+        }); // end of suite Event
+
         suite('Options', function () {
 
+            suite('#events', function () {
+                test('should copy option', function () {
+                    var emptyfn = function () {};
+                    var e = {a: emptyfn, b: emptyfn};
+                    var module = new Module({
+                        events: e
+                    });
+
+                    assert.deepEqual(module.events, e);
+                });
+            });
             suite('#startWithParent', function () {
 
                 test('should copy option', function () {

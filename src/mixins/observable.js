@@ -14,6 +14,8 @@ define([
             );
             var observable = this;
 
+            this.events = events;
+
             _.each(events, function (method, eventid) {
                 // create callback from method
                 // if it is not a function already, it should be a method
