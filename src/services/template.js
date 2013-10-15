@@ -88,4 +88,6 @@ define(['underscore', '../utils', '../service'], function (_, utils, Service) {
         }
 
     });
+
+    return Template;
 });
