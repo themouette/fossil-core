@@ -1,4 +1,4 @@
-define(['underscore', 'backbone', 'fossil/utils', 'service'], function (_, Backbone, utils, Service) {
+define(['underscore', 'backbone', '../utils', 'service'], function (_, Backbone, utils, Service) {
     'use strict';
 
     var Routing = Service.extend({
