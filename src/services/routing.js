@@ -1,119 +1,166 @@
-Fossil.Services.Routing = (function (Fossil, _, Backbone) {
+define(['underscore', 'backbone', 'fossil/utils', 'service'], function (_, Backbone, utils, Service) {
     'use strict';
 
-    var Routing = Fossil.Service.extend({
-        options: {
-            // prefix to use for every route
-            prefix: '',
-            // default options for navigate method
-            navigate: {
-                trigger: true
-            }
-        },
-        exposedMethods: ['navigate'],
-        initialize: function () {
-            // create router
-            this.router = new Backbone.Router();
-            this.registerRoutesFor(this);
-        },
+    var Routing = Service.extend({
+        // prefix to apply for every URL
+        prefix: '',
+        // router to use
+        router: null,
+        // [Backbone.history.start](http://backbonejs.org/#History-start) options
+        history: null,
 
-        registerRoutesFor: function (component, prefix) {
-            var service = this;
-            var routes = _.extend(
-                component.routes || {},
-                component.options.routes || {}
-            );
-            prefix = prefixPath(prefix, this.options.prefix);
-            _.each(routes, function (route, path) {
-                service.router.route(
-                    prefixPath(path, prefix),
-                    _.bind(service.routeListener, service, component, route)
-                );
-            });
-        },
-        _doActivateApplication: function (application) {
-            // add all application routes
-            this.registerRoutesFor(application);
+        useDeep: true,
 
-            // add event handler on router:navigate
-            // to trigger navigation
-            this.listenTo(application, 'router:navigate', _.bind(this.navigate, this));
-            this.listenTo(application, 'start', _.bind(this.startListener, this));
-        },
-        _doActivateModule: function (module, application) {
-            // add all module routes
-            var service = this;
-            var prefix = prefixPath(module.path, this.options.prefix);
-            _.each(module.routes || {}, function (eventname, path) {
-                service.router.route(
-                    prefixPath(path, prefix),
-                    eventname,
-                    _.bind(service.moduleRouteListener, service, application, module, eventname)
-                );
-            });
-        },
-        _doSuspendApplication: function (application) {
-            // remove all application routes
-            Backbone.history.stop();
-            // remove event handler for navigation
-            this.stopListening();
-        },
-        _doSuspendModule: function (module, application) {
-            // remove all module routes
-        },
-
-        startListener: function () {
-            Backbone.history.start(this.options.history);
-        },
-        moduleRouteListener: function (application, module, route) {
-            var service = this;
-            var args = _.tail(_.tail(_.tail(arguments)));
-            application.switchModule(module);
-            module.then(function () {
-                service._callRoute(module, module, route, args);
-            });
-        },
-        routeListener: function (component, route) {
-            var service = this;
-            var args = _.tail(_.tail(arguments));
-            if (component.then) {
-                component.then(function () {
-                    service._callRoute(service.application, component, route, args);
-                });
-            } else {
-                service._callRoute(service.application, component, route, args);
+        initialize: function (options) {
+            utils.copyOption(['router', 'prefix', 'history'], this, options);
+            _.bindAll(this, 'startHistory', 'stopHistory', 'navigate', 'route');
+            if (!this.router) {
+                this.router = new Backbone.Router();
             }
         },
 
-        navigate: function (fragment, options) {
-            var o = _.extend(
-                {},
-                this.options.navigate || {},
-                options || {}
-            );
-            this.router.navigate.call(this.router, fragment, o);
-        },
-        _callRoute: function (observable, component, route, args) {
-            if (_.isFunction(route)) {
-                // in case of function
-                route.apply(component, args);
-
-            } else if (_.isFunction(component[route])) {
-                // in case a method name is given
-                component[route].apply(component, args);
-
-            } else if (_.isString(route)) {
-                // in case it's a string, use it as event name
-                observable.trigger.apply(component, [route].concat(args));
-            } else {
-                throw new Error('Invalid route definition');
+        use: function (module, parent) {
+            if (!parent) {
+                this.listenTo(module, 'start:first', this.startHistory);
+                this.listenTo(module, 'stop', this.stopHistory);
             }
+
+            this.listenTo(module, 'do:route:navigate', this.navigate);
+            this.listenTo(module, 'do:route:register', this.route);
+
+            this
+                .setModuleUrl(module, parent)
+                .registerModuleRoutes(module);
+        },
+
+        dispose: function (module, parent) {
+            this.unregisterModuleRoutes(module);
+            module.url = null;
+
+            this.stopListening(module, 'do:route:navigate', this.navigate);
+            this.stopListening(module, 'do:route:register', this.route);
+
+            if (!parent) {
+                this.stopListening(module, 'start:first', this.startHistory);
+                this.stopListening(module, 'stop', this.stopHistory);
+            }
+        },
+
+        setModuleUrl: function (module, parent) {
+            var parentUrl = parent ? parent.url : this.prefix;
+            module.url = url(parentUrl, module.urlRoot);
+
+            return this;
+        },
+
+        registerModuleRoutes: function (module) {
+            var routes = module.routes;
+            if (!routes) {
+                return this;
+            }
+
+            _.each(routes, function (callback, path) {
+                module.route(path, callback);
+            });
+
+            return this;
+        },
+
+        unregisterModuleRoutes: function (module) {
+            var routes = module.routes;
+            if (!routes) {
+                return this;
+            }
+
+            console.error('Up to now there is no way to unregister routes');
+
+            return this;
+        },
+
+        startHistory: function () {
+            if (!Backbone.History.started) {
+                Backbone.history.start(this.history);
+            }
+
+            return this;
+        },
+
+        stopHistory: function () {
+            if (Backbone.History.started) {
+                Backbone.history.stop();
+            }
+
+            return this;
+        },
+
+        // Navigate to a route.
+        // This method is bound to module's 'do:route:navigate' event
+        //
+        // It mainly binds Backbone.Router `navigate` method.
+        navigate: function (module, path) {
+            var extra = _.rest(arguments, 2);
+
+            path = url(module.url, path);
+            this.router.navigate.apply(this.router, [path].concat(extra));
+
+            return this;
+        },
+
+        // Register a route.
+        // This method is bound to module's 'do:route:navigate' event
+        //
+        // It mainly binds Backbone.Router `route` method.
+        route: function (module, path, name, callback) {
+            var original;
+            path = url(module.url, path);
+            if (typeof(name) === "function") {
+                callback = name;
+                name = '';
+            }
+            original = callback;
+            callback = function fossilRouting() {
+                if (typeof(path) === "string" && typeof(module[path]) === "function") {
+                    // path is the name of a method
+                    original = _.bind(module[path], module);
+                } else if (typeof(path) === "string" && typeof(original) !== "function") {
+                    // path is a string and no matching method
+                    // let's trigger the event
+                    original = _.bind(module.trigger, module, path);
+                }
+                if (!module.run) {
+                    module.start();
+                }
+                module.then(_.bind(original, module, arguments));
+            };
+            this.router.route.call(this.router, path, name, callback);
+
+            return this;
         }
+
+
     });
 
-    function prefixPath(path, prefix) {
-        return [ prefix || '', path || '' ].join('');
+    function url() {
+        var parts = _.toArray(arguments);
+        parts = _.reduce(parts, function (accumulator, part) {
+            if (part) {
+                accumulator.push(cleanFragment(part, !accumulator.length));
+            }
+
+            return accumulator;
+        }, []);
+
+        return parts.join('/');
+    }
+
+    var cleanFirstReg = new RegExp('^(.*[^/]+)/*$');
+    var cleanReg = new RegExp('^/*([^/]*.*[^/]+)/*$');
+    function cleanFragment(fragment, first) {
+        if (first) {
+            return fragment.match(cleanFirstReg)[1];
+        }
+        return fragment.match(cleanReg)[1];
     }
 
     return Routing;
-})(Fossil, _, Backbone);
+});

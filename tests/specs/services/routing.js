@@ -1,358 +1,360 @@
-(function (chai, Application, Module, RoutingService) {
+define([
+    'jquery', 'assert', 'sinon', 'fossil/module', 'fossil/services/routing'
+], function ($, assert, sinon, Module, Routing) {
+    var location, window;
+    // Mocking location
+    var Location = function(href) {
+        this.replace(href);
+    };
 
-    describe('Fossil.Service.Routing', function () {
-        var assert = chai.assert;
-        var location, window;
-        var routingOptions = {
-            //default navigate options.
-            navigate: {
-                trigger: true,
-                replace: true
-            },
-            // options to pass to history.start
-            history: { }
-        };
-        // Mocking location
-        var Location = function(href) {
-            this.replace(href);
-        };
+    _.extend(Location.prototype, {
 
-        _.extend(Location.prototype, {
+        replace: function(href) {
+            _.extend(this, _.pick($('<a></a>', {href: href})[0],
+                'href',
+                'hash',
+                'host',
+                'search',
+                'fragment',
+                'pathname',
+                'protocol'
+            ));
+            // In IE, anchor.pathname does not contain a leading slash though
+            // window.location.pathname does.
+            if (!/^\//.test(this.pathname)) this.pathname = '/' + this.pathname;
+        },
 
-            replace: function(href) {
-                _.extend(this, _.pick($('<a></a>', {href: href})[0],
-                    'href',
-                    'hash',
-                    'host',
-                    'search',
-                    'fragment',
-                    'pathname',
-                    'protocol'
-                ));
-                // In IE, anchor.pathname does not contain a leading slash though
-                // window.location.pathname does.
-                if (!/^\//.test(this.pathname)) this.pathname = '/' + this.pathname;
-            },
+        toString: function() {
+            return this.href;
+        }
 
-            toString: function() {
-                return this.href;
-            }
+    });
 
-        });
+    // A helper function to regenerate history before launching a test.
+    //
+    // Use it for every test that starts a router.
+    function replaceHistory() {
+        location = new Location('http://example.com');
+        Backbone.history = _.extend(new Backbone.History(), {location: location});
+        Backbone.history.interval = 2;
+    }
+    function emptyFn() {}
 
-        beforeEach(function () {
-            location = new Location('http://example.com');
-            Backbone.history = _.extend(new Backbone.History(), {location: location});
-            Backbone.history.interval = 2;
-        });
 
-        afterEach(function () {
+    suite('service/routing', function () {
+
+        teardown(function () {
             Backbone.history.stop();
         });
 
-        // as routing cannot be unregistered in backbone, this service cannot be
-        // unregistered. Tests are all made on the same instance, that makes it
-        // very fragile.
+        suite('options', function () {
+            _.each(['router', 'prefix', 'history'], function (key) {
+                suite('#'+key, function () {
+                    test('should be copied', function () {
+                        var options, routing;
+                        options = {};
+                        options[key] = 'foo';
+                        routing = new Routing(options);
 
-        describe('Fossil.Service.Routing register routes ', function () {
+                        assert.equal(routing[key], 'foo');
+                    });
+                });
+            });
+        }); // end of suite options
 
-            it('should register module routes defined via extension', function(done) {
-                this.timeout(10);
-                done = _.after(4, done);
-                function onModBar(id) {
-                    assert.equal(id, 2);
-                    done();
-                }
+        suite('#setModuleUrl()', function () {
+            suite('without module `urlRoot`', function () {
+                test('should prepend parent.url if parent is provided', function () {
+                    var routing = new Routing({prefix: 'foo'});
+                    var parent = {url: 'bar'};
+                    var module = {};
 
-                // initialize application
-                var application = new Application();
-                var routing = new RoutingService(routingOptions);
-                application.connect('mod1/', Module.extend({
-                    routes: {
-                        'foo': 'mod:foo',
-                        'foo/bar': 'mod:foo:bar'
-                    }
-                }));
-                application.use('router', routing);
-                application.connect('mod2/', Module.extend({
-                    routes: {
-                        'bar/:id': 'mod:bar'
-                    }
-                }));
-                application.start();
+                    routing.setModuleUrl(module, parent);
 
-                var module1 = application.getModule('mod1/');
-                var module2 = application.getModule('mod2/');
-                module1.on('mod:foo', done);
-                module1.on('mod:foo:bar', done);
-                module2.on('mod:bar', onModBar);
+                    assert.equal(module.url, parent.url);
+                });
+                test('should prepend parent.url if parent is provided and parent.url is empty', function () {
+                    var routing = new Routing({prefix: 'foo'});
+                    var parent = {url: ''};
+                    var module = {};
 
-                routing.navigate('mod1/foo');
-                routing.navigate('mod1/foo/bar');
-                routing.navigate('mod2/bar/2');
+                    routing.setModuleUrl(module, parent);
 
-                // all those should not be triggered
-                routing.navigate('foo');
+                    assert.equal(module.url, parent.url);
+                });
+                test('should prepend prefix if no parent is provided', function () {
+                    var routing = new Routing({prefix: 'foo'});
+                    var module = {};
 
-                done();
+                    routing.setModuleUrl(module);
+
+                    assert.equal(module.url, routing.prefix);
+                });
+            });
+            suite('with module `urlRoot`', function () {
+                test('should prepend parent.url if parent is provided', function () {
+                    var routing = new Routing({prefix: 'foo'});
+                    var parent = {url: 'bar'};
+                    var module = {urlRoot: 'baz'};
+
+                    routing.setModuleUrl(module, parent);
+
+                    assert.equal(module.url, [parent.url, module.urlRoot].join('/'));
+                });
+                test('should prepend parent.url if parent is provided and parent.url is empty', function () {
+                    var routing = new Routing({prefix: 'foo'});
+                    var parent = {url: ''};
+                    var module = {urlRoot: 'baz'};
+
+                    routing.setModuleUrl(module, parent);
+
+                    assert.equal(module.url, module.urlRoot);
+                });
+                test('should prepend prefix if no parent is provided', function () {
+                    var routing = new Routing({prefix: 'foo'});
+                    var module = {urlRoot: 'baz'};
+
+                    routing.setModuleUrl(module);
+
+                    assert.equal(module.url, [routing.prefix, module.urlRoot].join('/'));
+                });
             });
 
-            it('should accept methods and function as route', function(done) {
-                this.timeout(10);
-                done = _.after(2, done);
+            suite('leading slashes', function () {
+                test('in prefix', function () {
+                    var routing = new Routing({prefix: '/foo'});
+                    var module = {urlRoot: 'baz'};
 
-                var Application1 = Application.extend({
-                    routes: {
-                        'first/:id': 'first',
-                        'second/:id': function (id) {
-                            assert.equal(id, 2);
-                            done();
-                        }
+                    routing.setModuleUrl(module);
 
-                    },
-                    first: function (id) {
-                        assert.equal(id, 1);
-                        done();
-                    }
+                    assert.equal(module.url, '/foo/baz');
                 });
-                var application = new Application1();
-                var routing = new RoutingService(routingOptions);
-                application.use('router', routing);
-                application.start();
-                routing.navigate('first/1');
-                routing.navigate('second/2');
+                test('in parent', function () {
+                    var routing = new Routing({prefix: 'foo'});
+                    var parent = {url: '/bar'};
+                    var module = {urlRoot: 'baz'};
+
+                    routing.setModuleUrl(module, parent);
+
+                    assert.equal(module.url, '/bar/baz');
+                });
             });
+            suite('trailing slashes', function () {
+                test('in prefix', function () {
+                    var routing = new Routing({prefix: 'foo/'});
+                    var module = {urlRoot: 'baz'};
 
-            it('should register application routes defined via prototype', function(done) {
-                this.timeout(10);
-                done = _.after(2, done);
-                // initialize application
-                var Application1 = Application.extend({
-                    routes: {
-                        'application/prototype': 'application:prototype'
-                    }
-                });
-                var application = new Application1({
-                    routes: {
-                        'application/options': 'application:options'
-                    }
-                });
-                var routing = new RoutingService(routingOptions);
-                application.use('router', routing);
-                application.start();
+                    routing.setModuleUrl(module);
 
-                application.on('application:prototype', done);
-                routing.navigate('application/prototype');
-                done();
+                    assert.equal(module.url, 'foo/baz');
+                });
+                test('in parent', function () {
+                    var routing = new Routing({prefix: 'foo'});
+                    var parent = {url: 'bar/'};
+                    var module = {urlRoot: 'baz'};
+
+                    routing.setModuleUrl(module, parent);
+
+                    assert.equal(module.url, 'bar/baz');
+                });
+                test('in urlRoot', function () {
+                    var routing = new Routing({prefix: 'foo'});
+                    var parent = {url: 'bar'};
+                    var module = {urlRoot: 'baz/'};
+
+                    routing.setModuleUrl(module, parent);
+
+                    assert.equal(module.url, 'bar/baz');
+                });
             });
+        }); // end of suite #setModuleUrl()
 
-            it('should register application routes defined via options', function(done) {
-                this.timeout(10);
-                done = _.after(2, done);
-                // initialize application
-                var Application1 = Application.extend({
-                    routes: {
-                        'application/prototype': 'application:prototype'
-                    }
+        suite('Module', function () {
+            suite('actions', function () {
+                var module, routing, router, spy;
+                setup(function () {
+                    router = new Backbone.Router();
+                    spy = sinon.spy();
+                    module = new Module();
+                    routing = new Routing({
+                        router: router
+                    });
+
+                    module.use('routing', routing);
                 });
-                var application = new Application1({
-                    routes: {
-                        'application/options': 'application:options'
-                    }
+                test('#navigate()', function () {
+                    var options = {trigger: true, replace: true};
+
+                    // spy on router navigate method
+                    router.navigate = spy;
+
+                    module.navigate('foo', options);
+
+                    assert.ok(spy.calledOnce);
+                    assert.ok(spy.calledWith('foo', options));
                 });
-                var routing = new RoutingService(routingOptions);
-                application.use('router', routing);
-                application.start();
+                test('#route()', function () {
 
-                application.on('application:options', done);
-                routing.navigate('application/options');
-                application.off('application:options', done);
-                done();
+                    // spy on router route method
+                    router.route = spy;
+
+                    module.route('foo', 'bar', emptyFn);
+
+                    assert.ok(spy.calledOnce);
+                    assert.ok(spy.calledWith('foo', 'bar'/* callback is wrapped */));
+                    assert.ok(!spy.calledWith('foo', 'bar', emptyFn));
+                });
+            }); // end of suite actions
+
+            suite("options", function () {
+                suite("#routes", function () {
+                    var module, routing, router, spy, TestModule;
+                    setup(function () {
+                        replaceHistory();
+                        spy = sinon.spy();
+                        // creates a stub module binding
+                        TestModule = Module.extend({});
+                        router = new Backbone.Router();
+                        routing = new Routing({
+                            router: router
+                        });
+
+                        Backbone.history.start();
+                    });
+                    teardown(function () {
+                        Backbone.history.stop();
+                    });
+                    test('should accept functions', function () {
+                        TestModule.prototype.routes = {
+                            'foo': spy
+                        };
+                        module = new TestModule();
+                        module.use('routing', routing);
+
+                        router.navigate('foo', {trigger: true, replace: true});
+
+                        assert.ok(spy.calledOnce);
+                    });
+                    test('should accept method name', function () {
+                        TestModule.prototype.routes = {
+                            'foo': 'foo'
+                        };
+                        module = new TestModule();
+                        // this is possible as callbacks are
+                        // lazy bounded
+                        module.foo = spy;
+                        module.use('routing', routing);
+
+                        router.navigate('foo', {trigger: true, replace: true});
+
+                        assert.ok(spy.calledOnce);
+                    });
+                    test('should accept event name', function () {
+                        TestModule.prototype.routes = {
+                            'foo': 'foo'
+                        };
+                        module = new TestModule();
+                        module.on('foo', spy);
+                        module.use('routing', routing);
+
+                        router.navigate('foo', {trigger: true, replace: true});
+
+                        assert.ok(spy.calledOnce);
+                    });
+                }); //end of suite route
+            }); //end of suite options
+
+            suite('starting', function () {
+                var module, routing, router, spy, TestModule;
+                setup(function () {
+                    replaceHistory();
+                    spy = sinon.spy();
+                    router = new Backbone.Router();
+                    routing = new Routing({
+                        router: router
+                    });
+                    module = new Module();
+                    module.use('routing', routing);
+                });
+                teardown(function () {
+                    Backbone.history.stop();
+                });
+                test('module should start history', function () {
+                    Backbone.history.start = spy;
+                    module.start();
+                    assert.ok(spy.calledOnce);
+                });
+                test('module should be achieved by route', function () {
+                    Backbone.history.start();
+                    module.start = spy;
+                    module.route('foo', emptyFn);
+                    router.navigate('foo', {trigger: true, replace: true});
+                    assert.ok(spy.calledOnce);
+                });
             });
+        }); // end of suite Module
 
-            it('should register router routes defined via options', function(done) {
-                this.timeout(10);
-                done = _.after(2, done);
-                var application = new Application();
-                var routing = new RoutingService(_.extend(
-                    routingOptions,
-                    {
-                        routes: {
-                            'router/options': 'router:options'
-                        }
-                    }));
-                application.use('router', routing);
-                application.start();
+        suite('Navigation', function () {
+            var spy, module, child, routing;
+            setup(function () {
+                replaceHistory();
+                spy = sinon.spy();
+                module = new Module();
+                child = new Module();
+                routing = new Routing({
+                    prefix: 'foo'
+                });
 
-                application.on('router:options', done);
-                routing.navigate('router/options');
-                application.off('router:options', done);
-                done();
-            });
+                module.urlRoot = 'bar';
+                child.urlRoot = 'baz';
 
-        });
-
-        describe('Fossil.Services.Routing exposes', function () {
-            it('navigate method', function () {
-                var application = new Application();
-                var routing = new RoutingService({expose: true});
-                application
+                module
                     .use('routing', routing)
-                    .start();
-                assert.ok(application.navigate);
+                    .connect('child', child);
+
+                child.route('', spy);
+                child.route('go', spy);
+
+                module.start();
             });
-        });
-
-        describe('Fossil.Services.Routing triggers module workflow', function () {
-
-            it('should trigger application events module:{standby,change,start} when app is changed', function (done) {
-                this.timeout(50);
-                done = _.after(9, done);
-                // initialize application
-                var application = new Application();
-                var routing = new RoutingService(routingOptions);
-                application.connect('app1/', Module.extend({
-                    routes: {
-                        'foo': 'app:foo',
-                        'foo/bar': 'app:foo:bar'
-                    }
-                }));
-                application.use('router', routing);
-                application.connect('app2/', Module.extend({
-                    routes: {
-                        'bar/:id': 'app:bar'
-                    }
-                }));
-                application.start();
-
-                // it will migrate to app1
-                application.once('module:change', function (prev, next) {
-                    assert.equal(next.path, 'app1/', 'app1/foo: change to app1');
-                    assert.isNull(prev, 'no previous app');
-                    done();
-                });
-                application.once('module:start', function (module) {
-                    assert.equal(module.path, 'app1/', 'app1/foo: start app1');
-                    done();
-                });
-                routing.navigate('app1/foo');
-
-                // it will migrate to app2
-                application.once('module:standby', function (module) {
-                    assert.equal(module.path, 'app1/', 'app2/bar/2: standby app1');
-                    done();
-                });
-                application.once('module:change', function (prev, next) {
-                    assert.equal(prev.path, 'app1/', 'app2/bar/2: change from app1');
-                    assert.equal(next.path, 'app2/', 'app2/bar/2: change to app2');
-                    done();
-                });
-                application.once('module:start', function (module) {
-                    assert.equal(module.path, 'app2/', 'app2/bar/2: start app2');
-                    done();
-                });
-                routing.navigate('app2/bar/2');
-
-                // it will migrate to app1
-                application.once('module:standby', function (module) {
-                    assert.equal(module.path, 'app2/', 'app1/foo/bar: standby app2');
-                    done();
-                });
-                application.once('module:change', function (prev, next) {
-                    assert.equal(prev.path, 'app2/', 'app1/foo/bar: change from app2');
-                    assert.equal(next.path, 'app1/', 'app1/foo/bar: change to app1');
-                    done();
-                });
-                application.once('module:start', function (module) {
-                    assert.equal(module.path, 'app1/', 'app1/foo/bar: start app1');
-                    done();
-                });
-
-                routing.navigate('app1/foo/bar');
-
-                done();
+            teardown(function () {
+                Backbone.history.stop();
             });
 
-            it('should trigger application events module:{standby,change,start} when app is not changed', function () {
-                function failure() {
-                    assert(false, 'module did not change.');
-                }
-                // initialize application
-                var application = new Application();
-                var routing = new RoutingService(routingOptions);
-                application.connect('app1/', Module.extend({
-                    routes: {
-                        'foo': 'app:foo',
-                        'foo/bar': 'app:foo:bar'
-                    }
-                }));
-                application.use('router', routing);
-                application.connect('app2/', Module.extend({
-                    routes: {
-                        'bar/:id': 'app:bar'
-                    }
-                }));
-                application.start();
+            test('can be triggerd by module', function () {
+                child.navigate('', {trigger: true, replace: true});
 
-                routing.navigate('app1/foo');
+                assert.ok(spy.calledOnce);
+            });
+            test('should use fragment (module)', function () {
+                child.navigate('go', {trigger: true});
 
-                application.on('module:standby', failure);
-                application.on('module:change', failure);
-                application.on('module:start', failure);
-
-                routing.navigate('app1/foo/bar');
+                assert.ok(spy.calledOnce);
             });
 
-            it('should call Module `start` and `standby`', function(done) {
-                this.timeout(10);
-                done = _.after(3, done);
-                function success () {
-                    assert(true);
-                    done();
-                }
-                function failure() {
-                    assert(false);
-                }
-                var application = new Application();
-                var routing = new RoutingService(routingOptions);
-                application.connect('app1/', Module.extend({
-                    routes: {
-                        'foo': 'app:foo',
-                        'foo/bar': 'app:foo:bar'
-                    }
-                }));
-                application.use('router', routing);
-                application.connect('app2/', Module.extend({
-                    routes: {
-                        'bar/:id': 'app:bar'
-                    }
-                }));
-                application.start();
-                var app1 = application.getModule('app1/');
-                var app2 = application.getModule('app2/');
+            test('can be triggerd by parent', function () {
+                module.navigate('baz', {trigger: true, replace: true});
 
-                app1.start = success;
-                app1.standby = failure;
-                app2.start = failure;
-                app2.standby = failure;
-
-                routing.navigate('app1/foo');
-
-                app1.start = failure;
-                app1.standby = failure;
-                app2.start = failure;
-                app2.standby = failure;
-
-                routing.navigate('app1/foo/bar');
-
-                app1.start = failure;
-                app1.standby = success;
-                app2.start = success;
-                app2.standby = failure;
-
-                routing.navigate('app2/bar/1');
-
+                assert.ok(spy.calledOnce);
             });
-        });
-    });
-})(chai, Fossil.Application, Fossil.Module, Fossil.Services.Routing);
+            test('should use fragment (parent)', function () {
+                module.navigate('baz/go', {trigger: true, replace: true});
+
+                assert.ok(spy.calledOnce);
+            });
+
+            test('can be triggerd by router', function () {
+                routing.router.navigate('foo/bar/baz', {trigger: true, replace: true});
+
+                assert.ok(spy.calledOnce);
+            });
+            test('should use fragment (router)', function () {
+                routing.router.navigate('foo/bar/baz/go', {trigger: true});
+
+                assert.ok(spy.calledOnce);
+            });
+        }); // end of suite Navigation
+
+    }); //end of suite service/routing
+
+});
