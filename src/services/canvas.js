@@ -30,6 +30,8 @@ define(['jquery', '../service', '../utils'], function ($, Service, utils) {
         },
 
         // render canvas on
+        //
+        // TODO deal with case module is already started
         useRoot: function (module) {
             module.on('start:first', function (module) {
                 this.canvas.setElement(this.selector);
