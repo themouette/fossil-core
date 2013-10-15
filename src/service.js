@@ -46,10 +46,10 @@ define([
         // It calls the `use` method. If `useDeep` is true, then it uses
         // service for every submodule, present or to be registered.
         doUseModuleListener: function (module, serviceid, service) {
-            use(this, module);
+            use(this, serviceid, module);
             if (this.useDeep) {
                 _.each(module.modules, function (submodule) {
-                    use(this, submodule, module);
+                    use(this, serviceid, submodule, module);
                 }, this);
                 // listen to events and forward serviceid
                 module.on('on:child:connect', _.bind(this.onChildConnectListener, this, serviceid));
