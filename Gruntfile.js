@@ -52,6 +52,41 @@ module.exports = function(grunt) {
             }
         }
     },
+    requirejs: {
+        standalone: {
+            options: {
+                out: '<%= pkg.name %>.js',
+                optimize: 'none',
+                baseUrl: 'src/',
+                include: [
+                    'deferred',
+                    'utils',
+                    'mixin',
+                    'module',
+                    'service',
+                    'observableBuffer',
+                    'mixins/observable',
+                    'mixins/startable',
+                    'mixins/deferrable',
+                    'services/canvas',
+                    'services/routing',
+                    'services/template',
+                    'engine/handlebars'
+                ],
+                wrap: {
+                    startFile: [ 'bower_components/almond/almond.js' ]
+                },
+                paths: {
+                    'jquery': 'empty:',
+                    'underscore': 'empty:',
+                    'backbone': 'empty:',
+                    'fossil/view': 'empty:',
+                    'handlebars': 'empty:'
+                }
+            }
+        }
+    },
+
     concat: {
         library:{
             options: {
@@ -65,13 +100,6 @@ module.exports = function(grunt) {
             dest: '<%= pkg.name %>.js'
         },
         amd:{
-            options: {
-                banner: "define('fossil', ['underscore', 'backbone', 'jquery'], function (_, Backbone, jQuery) {\n",
-                footer: [
-                    "return Fossil;",
-                    "});"
-                ].join("\n")
-            },
             src: '<%= buildsrc %>',
             dest: '<%= pkg.name %>-amd.js'
         }
@@ -83,15 +111,11 @@ module.exports = function(grunt) {
       library: {
         src: '<%= pkg.name %>.js',
         dest: '<%= pkg.name %>.min.js'
-      },
-      amd: {
-        src: '<%= pkg.name %>-amd.js',
-        dest: '<%= pkg.name %>-amd.min.js'
       }
     },
     copy: {
         libToSamples: {
-            src: ['<%= pkg.name %>.js', '<%= pkg.name %>-amd.js'],
+            src: ['<%= pkg.name %>.js'],
             dest: 'samples/'
         }
     }
@@ -104,12 +128,13 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-concurrent');
   grunt.loadNpmTasks('grunt-contrib-concat');
   grunt.loadNpmTasks('grunt-contrib-copy');
+  grunt.loadNpmTasks('grunt-contrib-requirejs');
   grunt.loadNpmTasks('grunt-mocha');
 
   // Default task(s).
   grunt.registerTask('test', ['mocha']);
-  grunt.registerTask('dev', ['concat:library', 'concat:amd', 'concurrent:dev']);
-  grunt.registerTask('release', ['test', 'concat:library', 'concat:amd', 'uglify:library', 'uglify:amd', 'copy:libToSamples']);
+  grunt.registerTask('dev', ['concat:library', 'concurrent:dev']);
+  grunt.registerTask('release', ['test', 'requirejs:standalone', 'uglify:library', 'copy:libToSamples']);
   grunt.registerTask('default', ['release']);
 
 };
