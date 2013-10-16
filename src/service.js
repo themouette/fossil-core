@@ -47,14 +47,6 @@ define([
         // service for every submodule, present or to be registered.
         doUseModuleListener: function (module, serviceid, service) {
             use(this, serviceid, module);
-            if (this.useDeep) {
-                _.each(module.modules, function (submodule) {
-                    use(this, serviceid, submodule, module);
-                }, this);
-                // listen to events and forward serviceid
-                module.on('on:child:connect', _.bind(this.onChildConnectListener, this, serviceid));
-                module.on('on:child:disconnect', _.bind(this.onChildDisconnectListener, this, serviceid));
-            }
         },
 
         // Service listener on the do:dispose:module command.
@@ -62,13 +54,6 @@ define([
         // It calls the `dispose` method. If `disposeDeep` is true, then it
         // disposes service for every submodule, and unregister event listeners.
         doDisposeModuleListener: function (module, serviceid, service) {
-            if (this.useDeep) {
-                _.each(module.modules, function (submodule) {
-                    dispose(this, serviceid, submodule, module);
-                }, this);
-                module.off('on:child:connect', null, this);
-                module.off('on:child:disconnect', null, this);
-            }
             dispose(this, serviceid, module);
         },
 
@@ -116,6 +101,14 @@ define([
             service.doExpose(module, serviceid);
         }
         service.use(module, parent);
+        if (service.useDeep) {
+            _.each(module.modules, function (submodule) {
+                use(service, serviceid, submodule, module);
+            }, service);
+            // listen to events and forward serviceid
+            module.on('on:child:connect', _.bind(service.onChildConnectListener, service, serviceid));
+            module.on('on:child:disconnect', _.bind(service.onChildDisconnectListener, service, serviceid));
+        }
     }
 
     function dispose(service, serviceid, module, parent) {
@@ -124,6 +117,13 @@ define([
         }
         if (_.result(service, 'expose')) {
             service.undoExpose(module, serviceid);
+        }
+        if (service.useDeep) {
+            _.each(module.modules, function (submodule) {
+                dispose(service, serviceid, submodule, module);
+            }, service);
+            module.off('on:child:connect', null, service);
+            module.off('on:child:disconnect', null, service);
         }
         service.dispose(module, parent);
     }
