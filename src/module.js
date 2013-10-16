@@ -18,6 +18,8 @@ define([
         constructor: function (options) {
             this.modules = {};
             this.services = [];
+            this.options = options;
+
 
             // create a stub observable for parent.
             this.parent = new ObservableBuffer();
