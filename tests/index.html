@@ -25,7 +25,8 @@
             'jquery': '../bower_components/jquery/jquery',
             'underscore': '../bower_components/underscore/underscore',
             'backbone': '../bower_components/backbone/backbone',
-            'fossil': './'
+            'fossil': './',
+            'fossil/views': '../samples/mail-app/components/fossil-view/src'
           },
           shim: {
             'chai': {exports: 'chai'},
@@ -37,6 +38,10 @@
 
       define('assert', ['chai'], function (chai) {
         return chai.assert;
+      });
+      // mock fossil-view
+      define('fossil/views/regionManager', [], function (){
+            return function () {}
       });
   </script>
 
