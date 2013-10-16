@@ -207,6 +207,14 @@ define([
             }); // end of suite actions
 
             suite("options", function () {
+                suite("#urlRoot", function () {
+                    test('should be copied', function () {
+                        var module = new Module({urlRoot: 'foo'});
+                        module.use('routing', new Routing());
+
+                        assert.equal(module.urlRoot, 'foo');
+                    });
+                });
                 suite("#routes", function () {
                     var module, routing, router, spy, TestModule;
                     setup(function () {
@@ -299,14 +307,11 @@ define([
             setup(function () {
                 replaceHistory();
                 spy = sinon.spy();
-                module = new Module();
-                child = new Module();
+                module = new Module({urlRoot: 'bar'});
+                child = new Module({urlRoot: 'baz'});
                 routing = new Routing({
                     prefix: 'foo'
                 });
-
-                module.urlRoot = 'bar';
-                child.urlRoot = 'baz';
 
                 module
                     .use('routing', routing)
@@ -319,6 +324,37 @@ define([
             });
             teardown(function () {
                 Backbone.history.stop();
+            });
+
+            suite('should forward url parameters', function () {
+                test('to event', function () {
+
+                    child.route('a/:param', 'do:navigate:to');
+                    child.on('do:navigate:to', spy);
+                    child.navigate('a/123', {trigger: true, replace: true});
+
+                    assert.ok(spy.calledOnce, 'calls url');
+                    assert.ok(spy.calledWith('123'), 'parameters are forwarded');
+                });
+
+                test('to function', function () {
+
+                    child.route('a/:param', spy);
+                    child.navigate('a/123', {trigger: true, replace: true});
+
+                    assert.ok(spy.calledOnce, 'calls url');
+                    assert.ok(spy.calledWith('123'), 'parameters are forwarded');
+                });
+
+                test('to method by name', function () {
+
+                    child.route('a/:param', 'bar');
+                    child.bar = spy;
+                    child.navigate('a/123', {trigger: true, replace: true});
+
+                    assert.ok(spy.calledOnce, 'calls url');
+                    assert.ok(spy.calledWith('123'), 'parameters are forwarded');
+                });
             });
 
             test('can be triggerd by module', function () {

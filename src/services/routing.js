@@ -48,6 +48,10 @@ define(['underscore', 'backbone', '../utils', '../service'], function (_, Backbo
 
         setModuleUrl: function (module, parent) {
             var parentUrl = parent ? parent.url : this.prefix;
+
+            // copy properties
+            utils.copyOption(['urlRoot'], module, module.options);
+
             module.url = url(parentUrl, module.urlRoot);
 
             return this;
@@ -120,10 +124,11 @@ define(['underscore', 'backbone', '../utils', '../service'], function (_, Backbo
             original = callback;
             callback = function fossilRouting() {
                 var eventName, method;
+                var args = arguments;
                 if (typeof(original) === "string" && typeof(module[original]) === "function") {
                     // path is the name of a method
                     method = module[original];
-                    original = _.bind(method, module);
+                    original = method;
                 } else if (typeof(original) === "string" && typeof(original) !== "function") {
                     // path is a string and no matching method
                     // let's trigger the event
@@ -133,7 +138,9 @@ define(['underscore', 'backbone', '../utils', '../service'], function (_, Backbo
                 if (!module.run) {
                     module.start();
                 }
-                module.then(_.bind(original, module, arguments));
+                module.then(function () {
+                    original.apply(module, args);
+                });
             };
             this.router.route.call(this.router, path, name, callback);
 
