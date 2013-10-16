@@ -113,19 +113,22 @@ define(['underscore', 'backbone', '../utils', '../service'], function (_, Backbo
         route: function (module, path, name, callback) {
             var original;
             path = url(module.url, path);
-            if (typeof(name) === "function") {
+            if (typeof(name) === "function" || !callback) {
                 callback = name;
                 name = '';
             }
             original = callback;
             callback = function fossilRouting() {
-                if (typeof(path) === "string" && typeof(module[path]) === "function") {
+                var eventName, method;
+                if (typeof(original) === "string" && typeof(module[original]) === "function") {
                     // path is the name of a method
-                    original = _.bind(module[path], module);
-                } else if (typeof(path) === "string" && typeof(original) !== "function") {
+                    method = module[original];
+                    original = _.bind(method, module);
+                } else if (typeof(original) === "string" && typeof(original) !== "function") {
                     // path is a string and no matching method
                     // let's trigger the event
-                    original = _.bind(module.trigger, module, path);
+                    eventName = original;
+                    original = _.bind(module.trigger, module, eventName);
                 }
                 if (!module.run) {
                     module.start();

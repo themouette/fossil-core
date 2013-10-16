@@ -237,12 +237,12 @@ define([
                     });
                     test('should accept method name', function () {
                         TestModule.prototype.routes = {
-                            'foo': 'foo'
+                            'foo': 'bar'
                         };
                         module = new TestModule();
                         // this is possible as callbacks are
                         // lazy bounded
-                        module.foo = spy;
+                        module.bar = spy;
                         module.use('routing', routing);
 
                         router.navigate('foo', {trigger: true, replace: true});
@@ -251,10 +251,10 @@ define([
                     });
                     test('should accept event name', function () {
                         TestModule.prototype.routes = {
-                            'foo': 'foo'
+                            'foo': 'bar'
                         };
                         module = new TestModule();
-                        module.on('foo', spy);
+                        module.on('bar', spy);
                         module.use('routing', routing);
 
                         router.navigate('foo', {trigger: true, replace: true});
