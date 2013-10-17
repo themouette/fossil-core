@@ -1,4 +1,6 @@
-define(['assert', 'sinon', 'fossil/module', 'backbone'], function (assert, sinon, Module, Backbone) {
+define([
+    'assert', 'sinon', 'fossil/module', 'backbone', 'fossil/views/view'
+], function (assert, sinon, Module, Backbone, View) {
 
     suite('Module', function () {
 
@@ -11,9 +13,9 @@ define(['assert', 'sinon', 'fossil/module', 'backbone'], function (assert, sinon
 
         suite('View', function () {
 
-            suite('#render', callEventAndForwardExtraParams('do:view:render', 'render'));
-            suite('#attach', callEventAndForwardExtraParams('do:view:attach', 'attach'));
-            suite('#useView', function () {
+            suite('#render()', callEventAndForwardExtraParams('do:view:render', 'render'));
+            suite('#attach()', callEventAndForwardExtraParams('do:view:attach', 'attach'));
+            suite('#useView()', function () {
                 var render, attach, module, view;
                 setup(function () {
                     render = sinon.spy();
@@ -27,14 +29,18 @@ define(['assert', 'sinon', 'fossil/module', 'backbone'], function (assert, sinon
                     module.useView(view);
 
                     assert.ok(render.calledOnce);
+                    assert.ok(render.calledWith(module, view));
                     assert.ok(attach.calledOnce);
+                    assert.ok(attach.calledWith(module, view));
                 });
                 test('should render rendered view', function () {
                     view._rendered = true;
                     module.useView(view);
 
                     assert.ok(render.calledOnce);
+                    assert.ok(render.calledWith(module, view));
                     assert.ok(attach.calledOnce);
+                    assert.ok(attach.calledWith(module, view));
                 });
                 test('should render unrendered recycle view', function () {
                     view._rendered = false;
@@ -42,7 +48,9 @@ define(['assert', 'sinon', 'fossil/module', 'backbone'], function (assert, sinon
                     module.useView(view);
 
                     assert.ok(render.calledOnce);
+                    assert.ok(render.calledWith(module, view));
                     assert.ok(attach.calledOnce);
+                    assert.ok(attach.calledWith(module, view));
                 });
                 test('should not render rendered recycle view', function () {
                     view._rendered = true;
@@ -51,6 +59,17 @@ define(['assert', 'sinon', 'fossil/module', 'backbone'], function (assert, sinon
 
                     assert.ok(!render.called);
                     assert.ok(attach.calledOnce);
+                    assert.ok(attach.calledWith(module, view));
+                });
+                test('should create view from string', function () {
+                    view = 'foo';
+
+                    module.useView(view);
+
+                    assert.ok(render.calledOnce);
+                    assert.ok(render.calledWithMatch(sinon.match.any, sinon.match.instanceOf(View)));
+                    assert.ok(attach.calledOnce);
+                    assert.ok(attach.calledWithMatch(sinon.match.any, sinon.match.instanceOf(View)));
                 });
             });
 

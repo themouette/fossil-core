@@ -1,7 +1,8 @@
 define([
     'underscore', 'backbone', './utils', './mixin',
-    './mixins/observable', './mixins/deferrable', './mixins/startable', './observableBuffer'
-], function (_, Backbone, utils, Mixin, Observable, Deferrable, Startable, ObservableBuffer) {
+    './mixins/observable', './mixins/deferrable', './mixins/startable', './observableBuffer',
+    'fossil/views/view'
+], function (_, Backbone, utils, Mixin, Observable, Deferrable, Startable, ObservableBuffer, View) {
     'use strict';
 
     var messages = {
@@ -123,10 +124,17 @@ define([
         // @see Module#render
         // @see Module#attach
         useView: function (view) {
-            var args = _.toArray(arguments);
+            var args;
+            if (typeof(view) === "string") {
+                view = new View({template: view});
+            }
+
+            args = [view].concat(_.rest(arguments, 1));
+
             if (view && !(view.recycle && view._rendered)) {
                 this.render.apply(this, args);
             }
+
             this.attach.apply(this, args);
 
             return this;
@@ -137,8 +145,8 @@ define([
         // and otherwise `viewKo` will be used.
         thenUseView: function (viewOk, viewKo) {
             this.then(
-                _.bind(this.useView, this, viewOk),
-                _.bind(this.useView, this, viewKo)
+                viewOk ? _.bind(this.useView, this, viewOk) : null,
+                viewKo ? _.bind(this.useView, this, viewKo) : null
             );
 
             return this;
