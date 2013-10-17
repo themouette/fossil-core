@@ -24,6 +24,8 @@ define(['underscore', '../utils', '../service'], function (_, utils, Service) {
         // Template listens to 'do:view:render' and 'do:register:helper'
         // commands.
         use: function (module, parent) {
+            utils.copyOption(['helpers'], module, module.options);
+            module.helpers || (module.helpers = {});
 
             this.helper({}, module);
 
@@ -60,7 +62,7 @@ define(['underscore', '../utils', '../service'], function (_, utils, Service) {
         //
         // this is this service main goal
         doViewRender: function (module, view) {
-            var helpers = this.getHelpers(module);
+            var helpers = this.getHelpers(module, view);
             var globals = this.getExtraData(module, view);
 
             this.engine.render(view, helpers, globals);
@@ -70,8 +72,13 @@ define(['underscore', '../utils', '../service'], function (_, utils, Service) {
         // engine.
         //
         // Module helpers are stored in it's `helpers` property.
-        getHelpers: function (module) {
-            return _.extend({}, this.helpers, module.helpers);
+        getHelpers: function (module, view) {
+            return _.extend(
+                {},
+                this.helpers,
+                module.helpers,
+                view.helpers || {}
+            );
         },
 
         // some data to inject to engine.
