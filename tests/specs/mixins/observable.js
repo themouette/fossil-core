@@ -1,23 +1,23 @@
-(function (assert, Observable) {
+define([
+    'assert', 'fossil/mixin', 'fossil/mixins/observable'
+], function (assert, Mixin, Observable) {
     'use strict';
 
-    describe('Fossil.Mixins.Observable', function () {
+    suite('mixins/observable', function () {
 
-        var Events = function (options) {
-            this.options = options;
-            this.registerEvents();
-        };
-        _.extend(Events.prototype, Observable);
+        var Events = Mixin.extend({
+            constructor: function (options) {
+                this.options = options;
+                Mixin.call(this, options);
+            }
+        });
+        Events.mix(Observable);
 
-        describe('Init methods', function () {
+        suite('Init methods', function () {
 
-            it('should accept prototype events', function (done) {
+            test('should accept prototype events', function (done) {
                 this.timeout(10);
-                var Obj = function (options) {
-                    Events.call(this, options);
-                };
-
-                _.extend(Obj.prototype, Events.prototype, {
+                var Obj = Events.extend({
                     events: {
                         foo: done
                     }
@@ -28,7 +28,7 @@
                 o.trigger('foo');
             });
 
-            it('should accept options events', function (done) {
+            test('should accept options events', function (done) {
                 this.timeout(10);
 
                 var o = new Events({
@@ -39,13 +39,9 @@
 
                 o.trigger('foo');
             });
-            it('should override prototype events with options events', function (done) {
+            test('should override prototype events with options events', function (done) {
                 this.timeout(10);
-                var Obj = function (options) {
-                    Events.call(this, options);
-                };
-
-                _.extend(Obj.prototype, Events.prototype, {
+                var Obj = Events.extend({
                     events: {
                         foo: function () {
                             assert.ok(false, 'This should be overriden');
@@ -63,18 +59,15 @@
             });
         });
 
-        describe('create pubsub', function () {
-            it('should be possible to expose pubsub', function(done) {
+        suite('create pubsub', function () {
+            test('should be possible to expose pubsub', function(done) {
                 this.timeout(20);
                 done = _.after(2, done);
 
                 var parent = new Events();
                 var o;
 
-                var Obj = function (options) {
-                    Events.call(this, options);
-                };
-                _.extend(Obj.prototype, Events.prototype, {
+                var Obj = Events.extend({
                     parentEvents: {
                         foo: 'mymethod',
                         bar: function () {
@@ -102,5 +95,28 @@
                 pubsub.trigger('bar');
             });
         });
+
+        suite('#forward()', function () {
+            var observable, spy;
+            setup(function () {
+                observable = new Events();
+                spy = sinon.spy();
+                observable.on('dest', spy);
+                observable.forward('src', 'dest');
+            });
+            test('forward event', function (done) {
+                observable.on('dest', function () {done();});
+                observable.trigger('src');
+
+                assert.ok(spy.calledOnce);
+            });
+            test('forward event params', function (done) {
+                observable.on('dest', function () {done();});
+                observable.trigger('src', 1, 'foo');
+
+                assert.ok(spy.calledOnce, 'call');
+                assert.ok(spy.calledWith(1, 'foo'), 'args');
+            });
+        });
     });
-})(chai.assert, Fossil.Mixins.Observable);
+});

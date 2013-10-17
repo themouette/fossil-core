@@ -56,8 +56,21 @@ define([
             });
 
             return pubsub;
+        },
+
+        forward: function (src, dest) {
+            this.on(src, forward(this, dest));
+
+            return this;
         }
     });
+
+    var forward = function (observable, eventname) {
+        return function (original) {
+            var args = _.toArray(arguments);
+            observable.trigger.apply(observable, [eventname].concat(args));
+        };
+    };
 
     return Observable;
 });
