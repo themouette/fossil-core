@@ -187,7 +187,6 @@ define(['underscore', '../deferred'], function (_, Deferred) {
                 // default fail behavior.
                 return this.reject(messages.rejected);
             }
-            console.log(this.results);
 
             this.deferred.resolve.apply(this.deferred, this.results);
             this.stop();
