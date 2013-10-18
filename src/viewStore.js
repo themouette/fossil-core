@@ -169,6 +169,7 @@ define(['underscore', './utils', './mixin'], function (_, utils, Mixin) {
             _.each(this.views, function (view, id) {
                 this.remove(id);
             }, this);
+            this.factories = [];
 
             return this;
         },
