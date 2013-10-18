@@ -65,6 +65,7 @@ define(['underscore', '../deferred'], function (_, Deferred) {
         this.uuid = uuidCounter++;
         // timeouts
         this.timeouts = [];
+        this.results = [];
     }
 
     _.extend(Wait.prototype, {
@@ -75,6 +76,7 @@ define(['underscore', '../deferred'], function (_, Deferred) {
             promise.deferrableUuid = this.uuid;
             // add promise to list
             this.promises.push(promise);
+            this.results.push(null);
             // register callbacks
             if (options.timeout) {
                 this.addTimeout(promise, options.timeout);
@@ -146,7 +148,7 @@ define(['underscore', '../deferred'], function (_, Deferred) {
         // failfast only
         onDone: function (promise) {
             if (!this.isValidPromise(promise)) {return ;}
-            this.processAsyncReturn(promise);
+            this.processAsyncReturn(promise, _.rest(arguments, 1));
         },
         // failfast only
         onFail: function (promise, error) {
@@ -156,18 +158,24 @@ define(['underscore', '../deferred'], function (_, Deferred) {
         // failsilently only
         onAlways: function (promise) {
             if (!this.isValidPromise(promise)) {return ;}
-            this.processAsyncReturn(promise);
+            this.processAsyncReturn(promise, _.rest(arguments, 1));
         },
         reject: function (error) {
             this.deferred.reject(error);
             this.deferred.reject.apply(this.deferred, [error].concat(this.promises));
             this.stop();
         },
-        processAsyncReturn: function (promise) {
+        processAsyncReturn: function (promise, data) {
             // are all the promises processed ?
             var processed = _.every(this.promises, function (p) {
                 return "pending" !== p.state();
             });
+            _.any(this.promises, function (p, index) {
+                if (p === promise) {
+                    this.results.splice(index, 1, data.length <= 2 ? data[0] : _.rest(data, 1));
+                    return true;
+                }
+            }, this);
             if (!processed) { return this; }
 
             // has there been a failure ?
@@ -179,8 +187,9 @@ define(['underscore', '../deferred'], function (_, Deferred) {
                 // default fail behavior.
                 return this.reject(messages.rejected);
             }
+            console.log(this.results);
 
-            this.deferred.resolve.apply(this.deferred, this.promises);
+            this.deferred.resolve.apply(this.deferred, this.results);
             this.stop();
         },
         isValidPromise: function (promise) {
