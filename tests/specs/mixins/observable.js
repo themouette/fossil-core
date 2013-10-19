@@ -149,6 +149,63 @@ define([
                     assert.equal(observable.trigger('one!foo'), 1);
                 });
             });
+
+            suite('#removeEventModifier', function () {
+                var modified, original;
+                setup(function () {
+                    modified = sinon.spy();
+                    original = sinon.spy();
+                    observable.on('foo', modified);
+                    observable.on('map!foo', original);
+                });
+                test('should remove modifier', function () {
+
+                    observable.removeEventModifier('map');
+
+                    observable.trigger('map!foo');
+
+                    assert.ok(!modified.calledOnce);
+                    assert.ok(original.called);
+                });
+                test('should remove all modifier by name', function () {
+                    observable.addEventModifier('map', sinon.stub());
+
+                    observable.removeEventModifier('map');
+
+                    observable.trigger('map!foo');
+
+                    assert.ok(!modified.calledOnce);
+                    assert.ok(original.called);
+                });
+                test('should remove modifiers by RegExp', function () {
+                    var spy = sinon.spy();
+                    observable.addEventModifier(/^foo!(.*)$/i, spy);
+
+                    observable.trigger('foo!bar');
+
+                    assert.ok(spy.calledOnce);
+
+                    observable.removeEventModifier('foo');
+
+                    observable.trigger('foo!bar');
+
+                    assert.ok(spy.calledOnce);
+                });
+                test('should remove modifiers by RegExp', function () {
+                    var spy = sinon.spy();
+                    observable.addEventModifier('foo', spy);
+
+                    observable.trigger('foo!bar');
+
+                    assert.ok(spy.calledOnce);
+
+                    observable.removeEventModifier(/^foo!(.*)$/i);
+
+                    observable.trigger('foo!bar');
+
+                    assert.ok(spy.calledOnce);
+                });
+            });
         });
     });
 });

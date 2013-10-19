@@ -111,6 +111,27 @@ define([
             });
 
             return this;
+        },
+
+        // remove all event modifiers by key.
+        //
+        // @argument String|RegExp  matcher the matcher to remove.
+        //
+        // @return Observable
+        removeEventModifier: function (matcher) {
+            if (!(matcher instanceof RegExp)) {
+                matcher = ensureRegexp(matcher);
+            }
+
+            this.eventModifiers = _.reduce(this.eventModifiers, function (accumulator, modifier) {
+                if (modifier.matcher.toString() !== matcher.toString()) {
+                    accumulator.push(modifier);
+                }
+
+                return accumulator;
+            }, []);
+
+            return this;
         }
     });
 
