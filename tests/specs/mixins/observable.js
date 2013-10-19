@@ -118,5 +118,37 @@ define([
                 assert.ok(spy.calledWith(1, 'foo'), 'args');
             });
         });
+
+        suite('event matchers', function () {
+            var observable, spy;
+            setup(function () {
+                observable = new Events();
+                spy = sinon.spy();
+            });
+            suite('map!', function () {
+                test('should return an array', function () {
+                    assert.isArray(observable.trigger('map!foo'));
+                });
+                test('should return handlers results', function () {
+                    observable.on('foo', sinon.stub().returns(1));
+                    observable.on('foo', sinon.stub().returns(2));
+                    observable.on('foo', sinon.stub().returns(3));
+
+                    assert.deepEqual(observable.trigger('map!foo'), [1,2,3]);
+                });
+            });
+            suite('one!', function () {
+                test('should return null if no listener', function () {
+                    assert.isNull(observable.trigger('one!foo'));
+                });
+                test('should return handlers results', function () {
+                    observable.on('foo', sinon.stub().returns(1));
+                    observable.on('foo', sinon.stub().returns(2));
+                    observable.on('foo', sinon.stub().returns(3));
+
+                    assert.equal(observable.trigger('one!foo'), 1);
+                });
+            });
+        });
     });
 });

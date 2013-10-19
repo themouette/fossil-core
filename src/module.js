@@ -1,3 +1,11 @@
+// Wrap observable callback to handle `parent!` event modifier.
+//
+// To manipulate parent events, it is possible to use traditional
+// observable method, just prefix the event with `parent!`.
+//
+// ``` js
+// module.on('parent!do:execute:command', function () {}, this);
+// ```
 define([
     'underscore', 'backbone', './utils', './mixin',
     './mixins/observable', './mixins/deferrable', './mixins/startable', './observableBuffer',
@@ -27,6 +35,9 @@ define([
 
             // call parent constructor
             Mixin.apply(this, arguments);
+
+            // add event modifier
+            this.addEventModifier('parent', parentEvent, ['trigger', 'on', 'off', 'once']);
 
             // copy options to main object
             utils.copyOption(['startWithParent'], this, options);
@@ -344,32 +355,12 @@ define([
         }
     });
 
-    // Wrap observable callback to handle `parent!` event modifier.
-    //
-    // To manipulate parent events, it is possible to use traditional
-    // observable method, just prefix the event with `parent!`.
-    //
-    // ``` js
-    // module.on('parent!do:execute:command', function () {}, this);
-    // ```
-    var parentMatcher = /^parent!(.*)$/i;
-    _.each(['on', 'off', 'once', 'trigger'], function (method) {
-        Module.prototype[method] = function wrapEventMethod(eventname) {
-            var extra;
+    // envent modifier for parent!
+    function parentEvent(obj, method, eventname, extra) {
+        obj.parent[method].apply(obj.parent, [eventname].concat(extra));
 
-            if (eventname && parentMatcher.test(eventname)) {
-                eventname = eventname.match(parentMatcher)[1];
-                extra = _.rest(arguments);
-                this.parent[method].apply(this.parent, [eventname].concat(extra));
-
-                return this;
-            }
-
-            Observable[method].apply(this, arguments);
-
-            return this;
-        };
-    });
+        return obj;
+    }
     // note that listenTo, listenToOnce and stopListening relies on other
     // methods so there is no need to extend them.
 
