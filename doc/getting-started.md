@@ -56,7 +56,7 @@ You should see a welcome message.
 ## The boot process
 
 Open the
-`[src/kernel.js](https://github.com/themouette/fossil-core/skeleton/src/kernel.js)`
+[`src/kernel.js`](https://github.com/themouette/fossil-core/skeleton/src/kernel.js)
 file, this is the core of this new Fossil application.
 
 This file already contains a boilerplate application start process:
@@ -128,7 +128,7 @@ This is typical Backbone code, just copy paste the following.
 ## Create your application
 
 Open the
-`[src/application.js](https://github.com/themouette/fossil-core/skeleton/src/application.js)`
+[`src/application.js`](https://github.com/themouette/fossil-core/skeleton/src/application.js)
 
 There is the module minimal code, so we are ready to create our routes, but
 don't forget to update your application's `define` dependencies.
