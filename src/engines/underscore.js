@@ -1,6 +1,6 @@
 define([
-    'underscore', 'backbone', 'handlebars', '../mixin', '../mixins/observable', '../mixins/deferrable', '../mixins/startable'
-], function (_, Backbone, Handlebars, Mixin, Observable, Deferrable, Startable) {
+    'underscore', 'backbone', '../mixin', '../mixins/observable', '../mixins/deferrable', '../mixins/startable'
+], function (_, Backbone, Mixin, Observable, Deferrable, Startable) {
 
     var ViewExtension = {
         // if `template` is a string, it will be processed through Handlebars.
