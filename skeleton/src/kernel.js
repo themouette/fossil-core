@@ -8,7 +8,9 @@ define('kernel', [
 
     var engine = new Engine();
     var routing = new Routing();
-    var template = new Template();
+    var template = new Template({
+        engine: engine
+    });
     var canvas = new Canvas();
 
     var app = new Application();

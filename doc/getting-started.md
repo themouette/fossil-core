@@ -105,24 +105,96 @@ app
     .start();
 ```
 
+This is all you need to start a Fossil application.
+
+> During Alpha stage, Canvas service needs some more work. Because of that, you
+> are required to add some initialization code:
+>
+> ``` javascript
+> var app = new Application({
+>     // define canvas region to use
+>     // Canvas is created from initial page HTML
+>     region: 'content'
+> });
+> app.
+>     .on('start:first', function () {
+>         // define a region on the canvas of service "canvas".
+>         canvas.canvas.defineRegion('content', '.content');
+>     })
+> ```
+>
+> This boilerplate code should be removed before beta release and the selector
+> value should be used as root element for views, unless a canvas is explicitely
+> defined.
+
 ## Create views and collections
 
 This is typical Backbone code, just copy paste the following.
 
 ``` javascript
 // src/todo.js
+define(['backbone'], function (Backbone) {
+    return Backbone.Model.extend({});
+});
 ```
 
 ``` javascript
 // src/todoCollection.js
+define(['backbone', 'todo'], function (Backbone, Todo) {
+    return Backbone.Collection.extend({
+        model: Todo,
+        url: './tasks.json'
+    });
+});
 ```
 
 ``` javascript
 // src/listView.js
+define([ 'fossil/views/collection', 'fossil/views/collection' ], function (View, CollectionView) {
+
+    var ItemView = View.extend({
+        tagName: 'li',
+        template: '<a href="#<%= id %>"><%= title %></a>',
+        getViewData: function () {
+            return this.model.toJSON();
+        }
+    });
+
+    var ListView = CollectionView.extend({
+        selector: 'ul',
+        ItemView: ItemView,
+        template: '<ul></lu>'
+    });
+
+    return ListView;
+});
 ```
 
 ``` javascript
 // src/showView.js
+define([ 'fossil/views/view' ], function (View) {
+
+    var ShowView = View.extend({
+        template: '<p><%= title %></p><a href="#">List</a>',
+        getViewData: function () {
+            return this.model.toJSON();
+        }
+    });
+
+    return ShowView;
+});
+```
+
+``` javascript
+// tasks.json
+[
+    {"id": 0, "title": "foo"},
+    {"id": 1, "title": "bar"},
+    {"id": 2, "title": "baz"},
+    {"id": 3, "title": "foobar"},
+    {"id": 4, "title": "Learn more about Fossil"},
+    {"id": 5, "title": "Use Handlebars"}
+]
 ```
 
 ## Create your application
@@ -146,6 +218,58 @@ define([
 ], function (Module, Todo, TodoCollection, ListView, ShowView) {
 ```
 
+### Initialization phase
+
+Just as any Backbone object, a module accepts events as option or as part of its
+prototype.
+
+> Module lifecycle provides the following events:
+>
+> * `start:first`:
+> * `start`:
+> * `standby`:
+> * `stop`:
+>
+> Keep in mind that a module should cleans itself when it is stopped/standbyed,
+> so everything that is created on start should be destroyed on standby/stop.
+
+Todo application needs to fetch todos on start, and to release collection on
+standby.
+
+``` javascript
+var Application = Module.extend({
+    events: {
+        'start': 'startListener',
+        'standby': 'standbyListener'
+    },
+
+    startListener: function (app) {
+        // initialize collection.
+        var todos = this.todos = new TodoCollection();
+
+        this
+            // set view while loading.
+            //
+            // When `useView` receives a string, it is used as template.
+            .useView('Loading')
+            // event processing can delay next execution until
+            // a set of promises are resolved.
+            //
+            // So wait until all Todos are retreived from remote store.
+            .waitFor(todos.fetch())
+            // if an error occurs, 'Error' will be displayed.
+            .thenUseView(null, 'Error');
+    },
+
+    standbyListener: function (app) {
+        // undind any remaining event on todos collection.
+        this.todos.stopListening();
+        // and delete it.
+        this.todos = null;
+    }
+});
+```
+
 ### Create routes
 
 Just as a `Backbone.Router` define your route mapping in a `routes` property.
@@ -156,83 +280,54 @@ A naive implementation for our Todo app would look like this:
 
 ``` javascript
 var Application = Module.extend({
+
+    /*
+        events code
+    */
+
     routes: {
         '': 'index',
         ':id': 'show'
     },
 
     index: function () {
-        var todos = new TodoCollection();
         var view = new ListView({
-            collection: todos
+            collection: this.todos
         });
 
-        this
-            // set a loading message while fetching
-            // todos remotely
-            .useView('loading')
-            // delay next actions until promise is resolved
-            .waitFor(todos.fetch())
-            // then use given view.
-            .thenUseView(view);
+        this.useView(view);
     },
 
     show: function (id) {
-        var todo = new Todo({id: id});
+        var todo = this.todos.get(id);
+
+        if (!todo) {
+            this.useView('404');
+            return this;
+        }
+
         var view = new ListView({
             model: todo
         });
-
-        this
-            .waitFor(todo.fetch())
-            .thenUseView(view);
+        this.useView(view);
     }
 });
 ```
-
-### Initialization phase
-
-Just as any Backbone object, a module accepts events as option or as part of its
-prototype.
-
-Module lifecycle provides the following events:
-
-* `start:first`:
-* `start`:
-* `standby`:
-* `stop`:
-
-To hook into initialization phase, we'll use `start` event.
-
-``` javascript
-var Application = Module.extend({
-    events: {
-        'start': 'startListener',
-        'standby': 'standbyListener'
-    },
-
-    startListener: function (app) {
-    },
-
-    standbyListener: function (app) {
-    },
-
-    /*
-        routing code
-    */
-});
-```
-
-For now listeners are left empty. Just keep in mind that anything started should
-be stopped during standby or stop event.
 
 ### Next steps
 
 Here we are, there is a simple todo app that poorly does the job. Next part is
 about make our application more user friendly by leveraging Fossil tools.
 
-For instance, todos are reloode everytime user gets back to the list, this is
-useless.
+For instance, index view is recreated everytime user gets back to the list, this
+is useless, Fossil provides easy view reuse capabilities.
+
+Another Enhancement that should be done before going in production is providing
+real error and not found views.
+
+Fossil is all about having modules working together, it should be shown.
+
+Event modifiers should be shown either.
 
 ## Enhancement
 
