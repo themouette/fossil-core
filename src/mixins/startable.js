@@ -13,7 +13,20 @@ define([], function () {
                 this._firstStart();
                 this._firstStarted = true;
             }
-            this.thenWith(this, this._doStart, this._startError);
+            // TODO enhance Deferrable/Startable to use a nested promise
+            // so start is always called once start:fisrt is resolved and
+            // upper level registered then handlers are executed after both
+            // events.
+            //
+            // ```
+            // app.on('start:first', function () {this.waitFor($.ajax(...));});
+            // app.on('start', function () {this.waitFor($.ajax(...));});
+            // app
+            //     .start();
+            //     .then(function() {/* should be called after both start:first and start */});
+            // ```
+            this._doStart();
+            this.thenWith(this, null, this._startError);
         },
         standby: function () {
             if (!this.run) {

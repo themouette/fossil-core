@@ -81,10 +81,12 @@ define(['underscore', 'backbone', '../utils', '../service'], function (_, Backbo
             return this;
         },
 
-        startHistory: function () {
-            if (!Backbone.History.started) {
-                Backbone.history.start(this.history);
-            }
+        startHistory: function (module) {
+            module.thenWith(this, function () {
+                if (!Backbone.History.started) {
+                    Backbone.history.start(this.history);
+                }
+            });
 
             return this;
         },
@@ -135,9 +137,11 @@ define(['underscore', 'backbone', '../utils', '../service'], function (_, Backbo
                     eventName = original;
                     original = _.bind(module.trigger, module, eventName);
                 }
+                // start module if not already
                 if (!module.run) {
                     module.start();
                 }
+                // Once module is started, call the route function.
                 module.then(function () {
                     original.apply(module, args);
                 });
