@@ -65,13 +65,16 @@ module.exports = function(grunt) {
                     'module',
                     'service',
                     'observableBuffer',
+                    'viewStore',
                     'mixins/observable',
                     'mixins/startable',
                     'mixins/deferrable',
+                    'services/session',
                     'services/canvas',
                     'services/routing',
+                    'services/events',
                     'services/template',
-                    'engine/handlebars'
+                    'engines/handlebars'
                 ],
                 wrap: {
                     startFile: [ 'bower_components/almond/almond.js' ]
@@ -80,7 +83,8 @@ module.exports = function(grunt) {
                     'jquery': 'empty:',
                     'underscore': 'empty:',
                     'backbone': 'empty:',
-                    'fossil/view': 'empty:',
+                    'fossil/views/view': 'empty:',
+                    'fossil/views/regionManager': 'empty:',
                     'handlebars': 'empty:'
                 }
             }
@@ -113,10 +117,31 @@ module.exports = function(grunt) {
         dest: '<%= pkg.name %>.min.js'
       }
     },
+    compress: {
+        main: {
+            options: {
+                mode: 'gzip'
+            },
+            expand: true,
+            src: ['<%= pkg.name %>.min.js'],
+            cwd: './',
+            dest: './',
+            ext: '.gz.js'
+        }
+    },
     copy: {
         libToSamples: {
             src: ['<%= pkg.name %>.js'],
             dest: 'samples/'
+        }
+    },
+
+    docco: {
+        lib: {
+            src: ['src/**/*.js'],
+            options: {
+                output: 'doc/sources'
+            }
         }
     }
   });
@@ -129,7 +154,9 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-concat');
   grunt.loadNpmTasks('grunt-contrib-copy');
   grunt.loadNpmTasks('grunt-contrib-requirejs');
+  grunt.loadNpmTasks('grunt-contrib-compress');
   grunt.loadNpmTasks('grunt-mocha');
+  grunt.loadNpmTasks('grunt-docco');
 
   // Default task(s).
   grunt.registerTask('test', ['mocha']);
