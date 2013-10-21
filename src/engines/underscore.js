@@ -44,7 +44,25 @@ define([
         // View has been extended to accept formatted Handlebars extra data.
         // learn more at http://handlebarsjs.com/execution.html#Options
         render: function (view, helpers, data) {
-            var extra = _.extend(
+            var extraTpl, extra;
+
+            // emulate handlebars style extra data for template helpers.
+            extraTpl = {
+                // extra helpers to use for this context
+                helpers: helpers,
+                // add global available data
+                data: data
+            };
+
+            // wrap helpers sot it receives the extra data.
+            _.each(helpers || {}, function (helper, key) {
+                helpers[key] = function () {
+                    return helper.apply(this, _.toArray(arguments).concat([extraTpl]));
+                };
+            });
+
+            // data to be passed to
+            extra = _.extend(
                 {},
                 // extra helpers to use for this context
                 helpers || {},
