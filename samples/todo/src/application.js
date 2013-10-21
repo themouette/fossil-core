@@ -1,11 +1,12 @@
 define([
     'fossil/module',
     'fossil/viewStore',
+    'fossil/views/view',
     './todo',
     './todoCollection',
     './listView',
     './showView'
-], function (Module, ViewStore, Todo, TodoCollection, ListView, ShowView) {
+], function (Module, ViewStore, View, Todo, TodoCollection, ListView, ShowView) {
     var Application = Module.extend({
 
         events: {
@@ -14,6 +15,29 @@ define([
         },
 
         startListener: function (app) {
+
+            var store = this.store = new ViewStore();
+            store.set('404', function (message) {
+                return new View({template: message || 'Not found'});
+            });
+            store.set('loading', function () {
+                return new View({
+                    template: '<p>Loading...</p>'
+                });
+            });
+            store.set('list', function (collection) {
+                return new ListView({
+                    collection: collection,
+                    // reuse the view
+                    recycle: true
+                });
+            });
+            store.set('show', function (collection, id) {
+                return new ShowView({
+                    model: collection.get(id)
+                });
+            });
+
             // initialize collection.
             var todos = this.todos = new TodoCollection();
 
@@ -32,10 +56,13 @@ define([
         },
 
         standbyListener: function (app) {
-            // undind any remaining event on todos collection.
+            // unbind any remaining event on todos collection.
             this.todos.stopListening();
             // and delete it.
             this.todos = null;
+
+            this.store.clean();
+            this.store = null;
         },
 
 
@@ -45,7 +72,6 @@ define([
         },
 
         index: function () {
-            console.log('index');
             var view = new ListView({
                 collection: this.todos
             });
@@ -54,7 +80,6 @@ define([
         },
 
         show: function (id) {
-            console.log('show');
             var todo = this.todos.get(id);
 
             if (!todo) {
@@ -66,6 +91,14 @@ define([
                 model: todo
             });
             this.useView(view);
+        },
+
+        // retrive or instanciat a view from store
+        useView: function (name, options) {
+            if (this.store.has(name)) {
+                return Module.prototype.useView.call(this, this.store.get.apply(this.store, arguments));
+            }
+            return Module.prototype.useView.apply(this, arguments);
         }
     });
 

@@ -331,9 +331,198 @@ Event modifiers should be shown either.
 
 ## Enhancement
 
-### Use session service
+### Define helpers
+
+Fossil provides a way to define engine agnostic tempaltes. During the alpha
+stage, there is no simple escaping methods, but it will come eventually.
+
+In this chapter, we'll se how to create url related helpers. Provided helpers
+are not perfect, but demonstrates how it works.
+
+First helper is `url` helper, generating and absolute url from provided
+fragments and prefixing result with module url prefix.
+This template is registered on template service, but can be module specific.
+
+> To register a helper on a module, use the `do:register:helper` event, with the
+> exact same parameters as the `template.helper` function.
+
+``` javascript
+// src/kernel.js
+template.helper('url', function () {
+    // last argument is always the extra data.
+    // extra data are as follow:
+    // {
+    //     helpers: {/* list of all available helpers */},
+    //     data: {
+    //         view: /* the current rendering view, be careful with nesting rendering as it will be the parent view */,
+    //         module: /* the current rendering module */
+    //     }
+    // }
+    var extra = _.last(arguments);
+    // fragments are all but the last argument
+    var fragments = _.initial(arguments, 1);
+    // module `url` is computed by Routing service from module urlRoot option
+    // and parent modules.
+    // A real implementation would use a Routing service generate method.
+    return '#' + (extra.data.module.url || '' ) + fragments.join('');
+});
+template.helper('linkTo', function (title, url) {
+    var extra = _.last(arguments);
+    // fragments are all but title and extra arguments
+    var fragments = _.initial(_.tail(arguments));
+    // note that it is possible to call other helpers in helper.
+    return '<a href="' + extra.helpers.url.apply(this, fragments) +'">'+title+'</a>';
+});
+```
+
+All there is to do now is to update view templates as follow:
+
+``` javascript
+// src/showView.js
+var ShowView = View.extend({
+    template: '<p><%= title %></p><%= linkTo("List", "") %>',
+    /* ... */
+});
+// src/listView.js
+var ItemView = View.extend({
+    tagName: 'li',
+    template: '<%= linkTo(title, id) %>',
+    /* ... */
+});
+```
+
+So It is possible to use scoped helpers, but there is more: It is possible to
+**attach dom behaviors from helpers**.
+
+Relying on `fossil-view` 'do:attach:plugins' event, here is how to define a
+`buttonTo` helper, calling Routing service to
+
+``` javascript
+// src/kernel.js
+template.helper('buttonTo', function (title, url) {
+    var id = "b_"+_.uniqueId();
+    var extra = _.last(arguments);
+    var view = extra.data.view;
+    var module = extra.data.module;
+    url = extra.helpers.url(url);
+
+    // Once DOM is attach, generated button receives a onClick listener
+    view.once('on:plugins:attach', function () {
+        $('button[data-fossil-id='+id+']').on('click', _.bind(module.navigate, module, url, {trigger: true, replace: true}));
+
+        // and when view is detached from DOM, event listener is removed.
+        view.once('on:plugins:detach', function () {
+            $('button[data-fossil-id='+id+']').off('click');
+        });
+    });
+
+    return '<button data-fossil-id="'+id+'">'+title+'</button>';
+});
+```
+
+If you ask me, this is a Fossil killer feature, it becomes possible to define
+reusable UI plugins.
 
 ### Use a view store
 
+Backbone views are great, and often there is no need to recreate them, as they
+change along with data.
+
+Some people calls it zombies, but to me this is a feature. Fossil helps you
+leveraging this powerfull Backbone feature with no risk thanks to ViewStore.
+
+A ViewStore accepts view factories, and instanciates views on demand. To prevent
+view reinstanciation every time it is requested, all you need is to pass
+`recycle` option to true.
+
+For this example,
+
+``` javascript
+// src/application.js
+define([
+    'fossil/module',
+    'fossil/viewStore',  // add viewStore
+    'fossil/views/view', // and Fossil base view
+    './todo',
+    './todoCollection',
+    './listView',
+    './showView'
+], function (Module, ViewStore, View, Todo, TodoCollection, ListView, ShowView) {
+var Application = Module.extend({
+
+    startListener: function () {
+        var store = this.store = new ViewStore();
+        store.set('list', function (collection) {
+            return new ListView({
+                collection: collection,
+                // reuse the view
+                recycle: true
+            });
+        });
+        store.set('show', function (collection, id) {
+            return new ShowView({
+                model: collection.get(id)
+            });
+        });
+
+        /*
+            previous code
+        */
+
+    },
+
+    standbyListener: function (app) {
+
+        /*
+            previous code
+        */
+
+        this.store.clean();
+        this.store = null;
+    },
+});
+```
+
+A simple application extension add the ability to pass view key to `useView`:
+
+``` javascript
+// src/application.js
+var Application = Module.extend({
+
+    /*
+        previous code
+    */
+
+    // retrive or instanciat a view from store
+    useView: function (name, options) {
+        if (this.store.has(name)) {
+            return Module.prototype.useView.call(this, this.store.get.apply(this.store, arguments));
+        }
+        return Module.prototype.useView.apply(this, arguments);
+    }
+});
+```
+
+From now on, list relies on CollectionView behavior to keep in sync with
+collection and will not be rerendered.
+
 ### Add Loading and Error pages
+
+Thanks to previous code, it becomes super easy to replace our '404' and 'loading' views:
+
+``` javascript
+// src/application.js
+
+// Add this during store initialisation
+store.set('404', function (message) {
+    return new View({template: message || 'Not found'});
+});
+store.set('loading', function () {
+    return new View({
+        template: '<p>Loading...</p>'
+    });
+});
+```
+
+This is great for progressive enhancement, don't you think ?
 

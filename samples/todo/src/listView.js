@@ -2,7 +2,7 @@ define([ 'fossil/views/collection', 'fossil/views/collection' ], function (View,
 
     var ItemView = View.extend({
         tagName: 'li',
-        template: '<a href="#<%= id %>"><%= title %></a>',
+        template: '<%= linkTo(title, id) %>',
         getViewData: function () {
             return this.model.toJSON();
         }
