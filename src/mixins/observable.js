@@ -25,6 +25,9 @@ define([
             );
             var observable = this;
 
+            // register event modifiers
+            this.initializeEventModifiers(options);
+
             this.events = events;
 
             _.each(events, function (method, eventid) {
@@ -35,7 +38,9 @@ define([
                 }
                 observable.listenTo(observable, eventid, _.bind(method, observable));
             });
+        },
 
+        initializeEventModifiers: function (options) {
             this.addEventModifier('one', oneEvent, ['trigger']);
             this.addEventModifier('map', mapEvent, ['trigger']);
         },

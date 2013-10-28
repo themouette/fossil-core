@@ -33,9 +33,6 @@ define([
             // create a stub observable for parent.
             this.parent = new ObservableBuffer();
 
-            // add event modifier
-            this.addEventModifier('parent', parentEvent, ['trigger', 'on', 'off', 'once']);
-
             // call parent constructor
             Mixin.apply(this, arguments);
 
@@ -52,6 +49,13 @@ define([
                 this.initialize.apply(this, arguments);
             }
         },
+
+        initializeEventModifiers: function () {
+            Observable.initializeEventModifiers.apply(this, arguments);
+            // add event modifier
+            this.addEventModifier('parent', parentEvent, ['trigger', 'on', 'off', 'once']);
+        },
+
         // Use this to navigate to a url.
         // An event is triggered and should be handled by
         // a dedicated service.

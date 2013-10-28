@@ -292,6 +292,41 @@ define([
                     assert.ok(spy.calledOn(module));
                     assert.ok(spy.calledWith(1,2,3));
                 });
+                test('should register options parent!events', function () {
+                    var spy = sinon.spy();
+                    var module = new Module({
+                        events: {
+                            'parent!foo': spy
+                        }
+                    });
+                    var parent = new Module();
+                    parent.connect('bar', module);
+
+                    parent.trigger('foo', 1, 2, 3);
+
+                    assert.ok(spy.called, 'called');
+                    assert.ok(spy.calledOnce, 'once');
+                    assert.ok(spy.calledOn(module), 'on module');
+                    assert.ok(spy.calledWith(1,2,3), 'with arguments');
+                });
+                test('should register prototype parent!events', function () {
+                    var spy = sinon.spy();
+                    var module = new (Module.extend({
+                        events: {
+                            'parent!foo': 'foo'
+                        },
+                        'foo': spy
+                    }))();
+                    var parent = new Module();
+                    parent.connect('bar', module);
+
+                    parent.trigger('foo', 1, 2, 3);
+
+                    assert.ok(spy.called, 'called');
+                    assert.ok(spy.calledOnce, 'once');
+                    assert.ok(spy.calledOn(module), 'on module');
+                    assert.ok(spy.calledWith(1,2,3), 'with arguments');
+                });
             }); // end of suite #events property
 
             suite('#parent', function () {
@@ -339,10 +374,9 @@ define([
 
                     child.listenTo(child, 'parent!foo', spy);
                     module.connect('child', child);
-                    child.stopListening(child, 'parent!foo');
                     module.trigger('foo');
 
-                    assert.equal(spy.callCount, 0);
+                    assert.ok(spy.calledOnce);
                 });
                 test('should forward parent! prefix (stopListening)', function () {
                     var spy = sinon.spy();
@@ -351,9 +385,10 @@ define([
 
                     child.listenTo(child, 'parent!foo', spy);
                     module.connect('child', child);
+                    child.stopListening(child, 'parent!foo');
                     module.trigger('foo');
 
-                    assert.ok(spy.calledOnce);
+                    assert.equal(spy.callCount, 0);
                 });
             }); // end of suite observable methods
         }); // end of suite Event
