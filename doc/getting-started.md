@@ -30,7 +30,6 @@ $ cp -r bower_components/fossil-core/skeleton/{src,index.html,Gruntfile.js} .
 Your directory should now look like
 
 ```
-
 todo
 |-- bower_components
 |-- bower.json
@@ -41,8 +40,6 @@ todo
 `-- src
     |-- config.js
     `-- kernel.js
-
-15 directories, 7 files
 ```
 
 Launch grunt development task and open a browser:
@@ -53,21 +50,22 @@ $ grunt dev --port 3000 & open http://localhost:3000
 
 You should see a welcome message.
 
-## The boot process
+## The Kernel aka Boot Process
 
 Open the
 [`src/kernel.js`](https://github.com/themouette/fossil-core/skeleton/src/kernel.js)
 file, this is the core of this new Fossil application.
 
-This file already contains a boilerplate application start process:
+This file already contains a boilerplate application start process, let's review
+it:
 
-> variables are injected through require.
-> report to original file to learn more.
+> Note that variables are injected through require, please report to original
+> file to learn more.
 
-### Create services
+### First Step: Create Services
 
 Services are a way to extend modules with event listeners. Changing a behavior
-is as easy as changing of service implementation.
+is as easy as changing service implementation.
 
 ``` javascript
 // extend views with template engine dedicated methods, and handles template
@@ -79,6 +77,7 @@ var routing = new Routing();
 
 // service in charge of rendering views.
 // Using a service allow to compute extra data to rendering method.
+// For instance it become possible to add helpers on a module basis.
 var template = new Template({
         engine: engine
     });
@@ -91,17 +90,19 @@ var canvas = new Canvas({
 });
 ```
 
-### Start the application
+### Second Step: Start the application
 
-App is started after all services have been registered.
+Application is started after all services have been registered.
 Every service can be used and disposed at will.
 
 ``` javascript
 var app = new Application();
 app
+    // activate services for application
     .use('routing', routing)
     .use('template', template)
     .use('canvas', canvas)
+    // and finaly start.
     .start();
 ```
 
@@ -197,15 +198,24 @@ define([ 'fossil/views/view' ], function (View) {
 ]
 ```
 
-## Create your application
+## Create Application
 
 Open the
 [`src/application.js`](https://github.com/themouette/fossil-core/skeleton/src/application.js)
+to see a module minimal code.
 
-There is the module minimal code, so we are ready to create our routes, but
-don't forget to update your application's `define` dependencies.
+In Fossil, modules are isolated pieces of application, exposing their API
+through event dispatchers. A module can connect children modules, as deeply
+nested as you wish. If configured to do so, services will be used on children
+modules as well. This is the way Fossil achieves reusability.
+
+This section demonstrates how to build the Todo module, that is our main
+application.
 
 ### Update require dependencies
+
+First thing first, module dependencies must be updated to import views and
+models.
 
 ``` javascript
 // src/application.js
@@ -218,7 +228,7 @@ define([
 ], function (Module, Todo, TodoCollection, ListView, ShowView) {
 ```
 
-### Initialization phase
+### Initialization Phase
 
 Just as any Backbone object, a module accepts events as option or as part of its
 prototype.
@@ -319,7 +329,7 @@ var Application = Module.extend({
 Here we are, there is a simple todo app that poorly does the job. Next part is
 about make our application more user friendly by leveraging Fossil tools.
 
-For instance, index view is recreated everytime user gets back to the list, this
+For instance, index view is recreated every time user gets back to the list, this
 is useless, Fossil provides easy view reuse capabilities.
 
 Another Enhancement that should be done before going in production is providing
@@ -333,10 +343,10 @@ Event modifiers should be shown either.
 
 ### Define helpers
 
-Fossil provides a way to define engine agnostic tempaltes. During the alpha
+Fossil provides a way to define engine agnostic templates. During the alpha
 stage, there is no simple escaping methods, but it will come eventually.
 
-In this chapter, we'll se how to create url related helpers. Provided helpers
+In this chapter, we'll see how to create url related helpers. Provided helpers
 are not perfect, but demonstrates how it works.
 
 First helper is `url` helper, generating and absolute url from provided
@@ -493,7 +503,7 @@ var Application = Module.extend({
         previous code
     */
 
-    // retrive or instanciat a view from store
+    // retrive or instanciate a view from store
     useView: function (name, options) {
         if (this.store.has(name)) {
             return Module.prototype.useView.call(this, this.store.get.apply(this.store, arguments));
