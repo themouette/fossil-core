@@ -33,11 +33,11 @@ define([
             // create a stub observable for parent.
             this.parent = new ObservableBuffer();
 
-            // call parent constructor
-            Mixin.apply(this, arguments);
-
             // add event modifier
             this.addEventModifier('parent', parentEvent, ['trigger', 'on', 'off', 'once']);
+
+            // call parent constructor
+            Mixin.apply(this, arguments);
 
             // copy options to main object
             utils.copyOption(['startWithParent'], this, options);
