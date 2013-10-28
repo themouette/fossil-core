@@ -141,7 +141,7 @@ define([
                 test('should return null if no listener', function () {
                     assert.isNull(observable.trigger('one!foo'));
                 });
-                test('should return handlers results', function () {
+                test('should return first handler result', function () {
                     observable.on('foo', sinon.stub().returns(1));
                     observable.on('foo', sinon.stub().returns(2));
                     observable.on('foo', sinon.stub().returns(3));
