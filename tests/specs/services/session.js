@@ -1,4 +1,3 @@
-// TODO: return values !
 define([
     'assert', 'sinon', 'backbone', 'fossil/module', 'fossil/services/session'
 ], function (assert, sinon, Backbone, Module, Session) {
@@ -117,6 +116,17 @@ define([
 
                 assert.isTrue(session.has('foo'));
                 assert.isTrue(model.has('foo'));
+            });
+
+            test('should access model method throug events', function () {
+                var session = new Session();
+                var module = new Module();
+                module.use('session', session);
+
+                assert.isFalse(module.trigger('one!do:has:session', 'foo'));
+                module.trigger('do:set:session', 'foo', 'bar');
+                assert.strictEqual(module.trigger('one!do:get:session', 'foo'), 'bar');
+                assert.isTrue(module.trigger('one!do:has:session', 'foo'));
             });
         });
 
