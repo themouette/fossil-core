@@ -536,3 +536,70 @@ store.set('loading', function () {
 
 This is great for progressive enhancement, don't you think ?
 
+### Communicate
+
+Another powerful Fossil feature is the ability to hook into event management.
+First goal is to ease communication between application, by exposing an API
+through event dispatcher.
+
+Let's say we want our module to expose a way to do the following:
+
+* create a todo
+* delete a todo by id
+* get a todo by id
+* filter todos
+
+We'll hook into start and standby events to register and unregister events:
+
+``` javascript
+var Application = Module.extend({
+
+    initialize: function () {
+        _.bindAll(this, 'addTodo', 'deleteTodo', 'getTodo', 'filterTodos');
+    },
+
+    startListener: function (app) {
+
+        /*
+            previous code
+        */
+
+        this.listenTo(app, 'do:add:todo', this.addTodo);
+        this.listenTo(app, 'do:get:todo', this.getTodo);
+        this.listenTo(app, 'do:filter:todo', this.filterTodos);
+        this.listenTo(app, 'do:delete:todo', this.deleteTodo);
+    },
+
+    standbyListener: function (app) {
+        this.stopListening(app, 'do:add:todo', this.addTodo);
+        this.stopListening(app, 'do:get:todo', this.getTodo);
+        this.stopListening(app, 'do:filter:todo', this.filterTodos);
+        this.stopListening(app, 'do:delete:todo', this.deleteTodo);
+
+        /*
+            previous code
+        */
+
+    },
+
+    addTodo: function (todo) {
+        this.todos.add(todo);
+    },
+
+    deleteTodo: function (id) {
+        this.todos.get(id).destroy();
+    },
+
+    getTodo: function (id) {
+        return this.todos.get(id);
+    },
+
+    filterTodos: function (filters) {
+        return this.todos.filter(filters);
+    }
+});
+```
+
+That's all ! Our todo module is now fully reusable and can be controlled from
+parent module and helpers.
+
