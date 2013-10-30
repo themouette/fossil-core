@@ -6,7 +6,7 @@ A set of functions to do recuring tasks.
 ## Usage
 
 ``` js
-define(['fossil/utils'], funciton (utils) {
+define(['fossil/utils'], function (utils) {
     // do amazing stuff.
 });
 ```
