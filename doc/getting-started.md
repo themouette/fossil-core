@@ -151,7 +151,7 @@ define(['backbone', 'todo'], function (Backbone, Todo) {
 
 ``` javascript
 // src/listView.js
-define([ 'fossil/views/collection', 'fossil/views/collection' ], function (View, CollectionView) {
+define([ 'fossil/views/view', 'fossil/views/collection' ], function (View, CollectionView) {
 
     var ItemView = View.extend({
         tagName: 'li',
