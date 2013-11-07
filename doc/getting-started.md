@@ -2,7 +2,7 @@
 title: Getting started with Fossil
 ---
 
-Through this tutorial, I'll show you how to build a simple todo application with
+Through this tutorial, you will learn you how to build a simple todo application with
 Fossil. Check out the
 [result](http://themouette.github.io/fossil-core/samples/todo/).
 
@@ -54,7 +54,7 @@ You should see a welcome message.
 
 Open the
 [`src/kernel.js`](https://github.com/themouette/fossil-core/skeleton/src/kernel.js)
-file, this is the core of this new Fossil application.
+file, this is the core of your new Fossil application.
 
 This file already contains a boilerplate application start process, let's review
 it:
@@ -66,6 +66,9 @@ it:
 
 Services are a way to extend modules with event listeners. Changing a behavior
 is as easy as changing service implementation.
+
+More information about services can be found in the [service documentation
+](https://themouette.github.com/fossil-core/services.markdown)
 
 ``` javascript
 // extend views with template engine dedicated methods, and handles template
@@ -93,7 +96,9 @@ var canvas = new Canvas({
 ### Second Step: Start the application
 
 Application is started after all services have been registered.
-Every service can be used and disposed at will.
+
+Note that every service can be used and disposed at will, but it is a good
+practice to register application wide services before start.
 
 ``` javascript
 var app = new Application();
