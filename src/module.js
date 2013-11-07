@@ -127,7 +127,7 @@ define([
         },
         // Use this to replace current view.
         // If view is not marked as `recycle` and `_rendered`
-        // wiew will first be rendered using the `render` method.
+        // view will first be rendered using the `render` method.
         // View is then attached using `attach` method.
         //
         // It forwards extra arguments and prepend the module.
@@ -255,7 +255,7 @@ define([
         // Declare a service for `id`.
         //
         // This new service hooks into this module only.
-        // to hook into all submodules registered ot to be registered, you must
+        // to hook into all submodules registered or to be registered, you must
         // handle this at the service level.
         //
         // It is advised for services to offer a single option `deepUse` to
