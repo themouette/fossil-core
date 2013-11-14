@@ -1,23 +1,23 @@
-(function (assert, Observable) {
+define([
+    'assert', 'fossil/mixin', 'fossil/mixins/observable'
+], function (assert, Mixin, Observable) {
     'use strict';
 
-    describe('Fossil.Mixins.Observable', function () {
+    suite('mixins/observable', function () {
 
-        var Events = function (options) {
-            this.options = options;
-            this.registerEvents();
-        };
-        _.extend(Events.prototype, Observable);
+        var Events = Mixin.extend({
+            constructor: function (options) {
+                this.options = options;
+                Mixin.call(this, options);
+            }
+        });
+        Events.mix(Observable);
 
-        describe('Init methods', function () {
+        suite('Init methods', function () {
 
-            it('should accept prototype events', function (done) {
+            test('should accept prototype events', function (done) {
                 this.timeout(10);
-                var Obj = function (options) {
-                    Events.call(this, options);
-                };
-
-                _.extend(Obj.prototype, Events.prototype, {
+                var Obj = Events.extend({
                     events: {
                         foo: done
                     }
@@ -28,7 +28,7 @@
                 o.trigger('foo');
             });
 
-            it('should accept options events', function (done) {
+            test('should accept options events', function (done) {
                 this.timeout(10);
 
                 var o = new Events({
@@ -39,13 +39,9 @@
 
                 o.trigger('foo');
             });
-            it('should override prototype events with options events', function (done) {
+            test('should override prototype events with options events', function (done) {
                 this.timeout(10);
-                var Obj = function (options) {
-                    Events.call(this, options);
-                };
-
-                _.extend(Obj.prototype, Events.prototype, {
+                var Obj = Events.extend({
                     events: {
                         foo: function () {
                             assert.ok(false, 'This should be overriden');
@@ -63,18 +59,15 @@
             });
         });
 
-        describe('create pubsub', function () {
-            it('should be possible to expose pubsub', function(done) {
+        suite('create pubsub', function () {
+            test('should be possible to expose pubsub', function(done) {
                 this.timeout(20);
                 done = _.after(2, done);
 
                 var parent = new Events();
                 var o;
 
-                var Obj = function (options) {
-                    Events.call(this, options);
-                };
-                _.extend(Obj.prototype, Events.prototype, {
+                var Obj = Events.extend({
                     parentEvents: {
                         foo: 'mymethod',
                         bar: function () {
@@ -102,5 +95,117 @@
                 pubsub.trigger('bar');
             });
         });
+
+        suite('#forward()', function () {
+            var observable, spy;
+            setup(function () {
+                observable = new Events();
+                spy = sinon.spy();
+                observable.on('dest', spy);
+                observable.forward('src', 'dest');
+            });
+            test('forward event', function (done) {
+                observable.on('dest', function () {done();});
+                observable.trigger('src');
+
+                assert.ok(spy.calledOnce);
+            });
+            test('forward event params', function (done) {
+                observable.on('dest', function () {done();});
+                observable.trigger('src', 1, 'foo');
+
+                assert.ok(spy.calledOnce, 'call');
+                assert.ok(spy.calledWith(1, 'foo'), 'args');
+            });
+        });
+
+        suite('event matchers', function () {
+            var observable, spy;
+            setup(function () {
+                observable = new Events();
+                spy = sinon.spy();
+            });
+            suite('map!', function () {
+                test('should return an array', function () {
+                    assert.isArray(observable.trigger('map!foo'));
+                });
+                test('should return handlers results', function () {
+                    observable.on('foo', sinon.stub().returns(1));
+                    observable.on('foo', sinon.stub().returns(2));
+                    observable.on('foo', sinon.stub().returns(3));
+
+                    assert.deepEqual(observable.trigger('map!foo'), [1,2,3]);
+                });
+            });
+            suite('one!', function () {
+                test('should return null if no listener', function () {
+                    assert.isNull(observable.trigger('one!foo'));
+                });
+                test('should return first handler result', function () {
+                    observable.on('foo', sinon.stub().returns(1));
+                    observable.on('foo', sinon.stub().returns(2));
+                    observable.on('foo', sinon.stub().returns(3));
+
+                    assert.equal(observable.trigger('one!foo'), 1);
+                });
+            });
+
+            suite('#removeEventModifier', function () {
+                var modified, original;
+                setup(function () {
+                    modified = sinon.spy();
+                    original = sinon.spy();
+                    observable.on('foo', modified);
+                    observable.on('map!foo', original);
+                });
+                test('should remove modifier', function () {
+
+                    observable.removeEventModifier('map');
+
+                    observable.trigger('map!foo');
+
+                    assert.ok(!modified.calledOnce);
+                    assert.ok(original.called);
+                });
+                test('should remove all modifier by name', function () {
+                    observable.addEventModifier('map', sinon.stub());
+
+                    observable.removeEventModifier('map');
+
+                    observable.trigger('map!foo');
+
+                    assert.ok(!modified.calledOnce);
+                    assert.ok(original.called);
+                });
+                test('should remove modifiers by RegExp', function () {
+                    var spy = sinon.spy();
+                    observable.addEventModifier(/^foo!(.*)$/i, spy);
+
+                    observable.trigger('foo!bar');
+
+                    assert.ok(spy.calledOnce);
+
+                    observable.removeEventModifier('foo');
+
+                    observable.trigger('foo!bar');
+
+                    assert.ok(spy.calledOnce);
+                });
+                test('should remove modifiers by RegExp', function () {
+                    var spy = sinon.spy();
+                    observable.addEventModifier('foo', spy);
+
+                    observable.trigger('foo!bar');
+
+                    assert.ok(spy.calledOnce);
+
+                    observable.removeEventModifier(/^foo!(.*)$/i);
+
+                    observable.trigger('foo!bar');
+
+                    assert.ok(spy.calledOnce);
+                });
+            });
+        });
     });
-})(chai.assert, Fossil.Mixins.Observable);
+});

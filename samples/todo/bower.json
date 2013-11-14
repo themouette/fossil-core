@@ -1,0 +1,29 @@
+{
+  "name": "fossil-todo",
+  "version": "0.0.0",
+  "homepage": "https://github.com/themouette/fossil-core",
+  "authors": [
+    "Julien Muetton <themouette@gmail.com>"
+  ],
+  "description": "Fossil todo app",
+  "main": "app.js",
+  "keywords": [
+    "fossil",
+    "todo"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "fossil-view": ">=0.2.3",
+    "requirejs": "~2.1.9",
+    "jquery": "~2.0.3",
+    "backbone": "~1.1.0",
+    "underscore": "~1.5.2"
+  }
+}

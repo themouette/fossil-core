@@ -1,155 +1,74 @@
-Fossil.Service = (function (Fossil, _, Backbone) {
+define([
+    'underscore', './utils', './mixin', './mixins/observable'
+], function (_, utils, Mixin, Observable) {
     'use strict';
 
-    Fossil.Services = {};
+    var Service = Mixin.extend({
+        // should the service methods be exposed  to module context ?
+        // an exposed methods will be exposed under app[serviceMethod]
+        expose: null,
+        // should there be a shortlink on module
+        // this would make service available under application[serviceid]
+        // to avoid conflic this MUST be set by user.
+        link: null,
+        // should the service be propagated to submodules ?
+        // if yes, then all submodules will use the service.
+        useDeep: null,
 
-    var Service = function (options) {
-        this.options = _.extend({}, this.options, options || {});
-        this.registerEvents();
-        this.initialize.apply(this, arguments);
-    };
-
-    _.extend(Service.prototype, Fossil.Mixins.Observable, {
-        // create a link to those methods in every element exposed
-        // to the service
-        // @array
-        exposedMethods: null,
-
-        // default options
-        options: {
-            // default configuration for service methods exposure
-            expose: false,
-            // default configuration for service link
-            link: false,
-            // should the service methods be exposed  to app context ?
-            // an exposed methods will be exposed under app[serviceMethod]
-            exposeToApplication: null,
-            // should there be a shortlink on application
-            // this would make service available under application[serviceid]
-            // to avoid conflic this MUST be set by user.
-            linkToApplication: null,
-            // should the service methods be exposed  to module context ?
-            // an exposed methods will be exposed under module[serviceMethod]
-            exposeToModule: null,
-            // should there be a shortlink on module
-            // this would make service available under module[serviceid]
-            // to avoid conflic this MUST be set by user.
-            linkToModule: null,
-            // should the service methods be exposed to fragement context ?
-            // an exposed methoods will be available under fragement[serviceMethod]
-            exposeToFragment: null,
-            // should there be a shortlink on fragement
-            // this would make service available under fragement[serviceid]
-            // to avoid conflic this MUST be set by user.
-            linkToFragment: null
-        },
-        // A hook to initialize service,
-        // after application and modules are initialized.
-        initialize: function (options) {
+        // Callback for developer to implement service logic for module use.
+        use: function (module, parent) {
+            // do something amazing
         },
 
-        // activate Service for application
-        activateApplication: function (application, id) {
-            var service = this;
-            this.prefixEvent = _.bind(prefixEvent, this, id);
-            if (processConfig(this, 'exposeToApplication', 'expose')) {
-                this.doExpose(application, id);
-            }
-            if (processConfig(this, 'linkToApplication', 'link')) {
-                this.doLink(application, id);
-            }
-
-            // create pubSub
-            this.application = application.createPubSub(this, 'applicationEvents');
-            // activate application
-            this._doActivateApplication(application);
-
-            // activate all modules
-            _.each(application.getModule(), function (module) {
-                service.activateModule.call(service, module, application, id);
-            });
-            // register on new module connection
-            this.listenTo(application, 'module:connect', _.bind(this.activateModuleListener, this, id));
-
-            this.listenTo(application, 'fragmentable:fragment:setup', _.bind(this.activateFragmentListener, this, id));
-            // tell the world we're ready
-            application.trigger(this.prefixEvent('ready'), this);
-        },
-        // unplug for application
-        suspendApplication: function (application, id) {
-            var service = this;
-            // suspend for every application modules
-            _.each(application.getModule(), function (module) {
-                service.suspendModule.call(service, module, application, id);
-            });
-            if (processConfig(this, 'exposeToApplication', 'expose')) {
-                this.undoExpose(application, id);
-            }
-            if (processConfig(this, 'linkToApplication', 'link')) {
-                this.undoLink(application, id);
-            }
-            // remove event handler
-            this.stopListening();
-            // remove pubsub reference
-            this.application = null;
-            // finally suspend for application
-            this._doSuspendApplication(application);
+        // Callback for developer to implement service logic for module disposal.
+        dispose: function (module, parent) {
+            // do something amazing
         },
 
-        activateModule: function (module, application, id) {
-            if (!module.services) {
-                // module isn't booted yet.
-                return ;
+        constructor: function (options) {
+            // call parent constructor
+            Mixin.apply(this, arguments);
+
+            // copy options to main object
+            utils.copyOption(['link', 'expose', 'useDeep'], this, options);
+
+            this.on('do:use:module', this.doUseModuleListener, this);
+            this.on('do:dispose:module', this.doDisposeModuleListener, this);
+
+            // call initialize
+            if (typeof(this.initialize) === "function") {
+                this.initialize.apply(this, arguments);
             }
-            if (processConfig(this, 'exposeToModule', 'expose')) {
-                this.doExpose(module, id);
-            }
-            if (processConfig(this, 'linkToModule', 'link')) {
-                this.doLink(module, id);
-            }
-            this._doActivateModule.apply(this, arguments);
-            this.listenTo(module, 'fragmentable:fragment:setup', _.bind(this.activateFragmentListener, this, id));
-            module.trigger(this.prefixEvent('ready'), this);
-        },
-        suspendModule: function (module, application, id) {
-            if (processConfig(this, 'exposeToModule', 'expose')) {
-                this.undoExpose(module, id);
-            }
-            if (processConfig(this, 'linkToModule', 'link')) {
-                this.undoLink(module, id);
-            }
-            this._doSuspendModule.apply(this, arguments);
-        },
-        activateModuleListener: function (id, module, path, application) {
-            this.activateModule(module, application, id);
         },
 
-        activateFragment: function (fragment, parent, id) {
-            if (!fragment.services) {
-                // fragment isn't booted yet.
-                return ;
-            }
-            if (processConfig(this, 'exposeToFragment', 'expose')) {
-                this.doExpose(fragment, id);
-            }
-            if (processConfig(this, 'linkToFragment', 'link')) {
-                this.doLink(fragment, id);
-            }
-            this._doActivateFragment.apply(this, arguments);
-            this.listenTo(fragment, 'fragmentable:fragment:setup', _.bind(this.activateFragmentListener, this, id));
-            fragment.trigger(this.prefixEvent('ready'), this);
+        // Service listener on the do:use:module command.
+        //
+        // It calls the `use` method. If `useDeep` is true, then it uses
+        // service for every submodule, present or to be registered.
+        doUseModuleListener: function (module, serviceid, service) {
+            use(this, serviceid, module);
         },
-        suspendFragment: function (fragment, parent, id) {
-            if (processConfig(this, 'exposeToFragment', 'expose')) {
-                this.undoExpose(fragment, id);
-            }
-            if (processConfig(this, 'linkToFragment', 'link')) {
-                this.undoLink(fragment, id);
-            }
-            this._doSuspendFragment.apply(this, arguments);
+
+        // Service listener on the do:dispose:module command.
+        //
+        // It calls the `dispose` method. If `disposeDeep` is true, then it
+        // disposes service for every submodule, and unregister event listeners.
+        doDisposeModuleListener: function (module, serviceid, service) {
+            dispose(this, serviceid, module);
         },
-        activateFragmentListener: function (id, fragment, parent) {
-            this.activateFragment(fragment, parent, id);
+
+        // Module listener for on:child:connect event
+        //
+        // This is the way newly registered submodules are using service.
+        onChildConnectListener: function (serviceid, child, childid, parent) {
+            use(this, serviceid, child, parent);
+        },
+
+        // Module listener for on:child:disconnect event
+        //
+        // This is the way disconnected submodules are disposing service.
+        onChildDisconnectListener: function (serviceid, child, childid, parent) {
+            dispose(this, serviceid, child, parent);
         },
 
         doLink: function (element, serviceid) {
@@ -168,53 +87,46 @@ Fossil.Service = (function (Fossil, _, Backbone) {
             _.each(this.exposedMethods, function (methodname) {
                 element[methodname] = null;
             });
-        },
-
-        // activate service on application.
-        // this method has to be overriden with the service logic.
-        _doActivateApplication: function (application) {
-        },
-        // activate service on module.
-        // this method has to be overriden with the service logic.
-        _doActivateModule: function (module, application) {
-        },
-        // activate service on fragment.
-        // this method has to be overriden with the service logic.
-        _doActivateFragment: function (fragment, parent) {
-        },
-        // suspend service on application.
-        // this method has to be overriden with the service logic.
-        _doSuspendApplication: function (application) {
-        },
-        // suspend service on module.
-        // this method has to be overriden with the service logic.
-        _doSuspendModule: function (module, application) {
-        },
-        // suspend service on fragment.
-        // this method has to be overriden with the service logic.
-        _doSuspendFragment: function (fragment, parent) {
         }
+
     });
 
-    function prefixEvent (id, event) {
-        return ['service', id, event].join(':');
-    }
+    Service.mix(Observable);
 
-    function processConfig(service, prop, defaultProp) {
-        prop = _.result(service.options, prop);
-        if (prop !== null) {
-            return prop;
+    function use(service, serviceid, module, parent) {
+        if (_.result(service, 'link')) {
+            service.doExpose(module, serviceid);
         }
-
-        return _.result(service.options, defaultProp);
+        if (_.result(service, 'expose')) {
+            service.doExpose(module, serviceid);
+        }
+        service.use(module, parent);
+        if (service.useDeep) {
+            _.each(module.modules, function (submodule) {
+                use(service, serviceid, submodule, module);
+            }, service);
+            // listen to events and forward serviceid
+            module.on('on:child:connect', _.bind(service.onChildConnectListener, service, serviceid));
+            module.on('on:child:disconnect', _.bind(service.onChildDisconnectListener, service, serviceid));
+        }
     }
 
-    Service.extend = function () {
-        var options = this.prototype.options;
-        var child = Backbone.Model.extend.apply(this, arguments);
-        child.prototype.options = _.extend({}, this.prototype.options, child.prototype.options ||{});
-        return child;
-    };
+    function dispose(service, serviceid, module, parent) {
+        if (_.result(service, 'link')) {
+            service.undoLink(module, serviceid);
+        }
+        if (_.result(service, 'expose')) {
+            service.undoExpose(module, serviceid);
+        }
+        if (service.useDeep) {
+            _.each(module.modules, function (submodule) {
+                dispose(service, serviceid, submodule, module);
+            }, service);
+            module.off('on:child:connect', null, service);
+            module.off('on:child:disconnect', null, service);
+        }
+        service.dispose(module, parent);
+    }
 
     return Service;
-})(Fossil, _, Backbone);
+});

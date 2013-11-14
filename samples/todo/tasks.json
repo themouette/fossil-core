@@ -1,0 +1,8 @@
+[
+    {"id": 0, "title": "foo"},
+    {"id": 1, "title": "bar"},
+    {"id": 2, "title": "baz"},
+    {"id": 3, "title": "foobar"},
+    {"id": 4, "title": "Learn more about Fossil"},
+    {"id": 5, "title": "Use Handlebars"}
+]

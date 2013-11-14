@@ -37,7 +37,11 @@ module.exports = function(grunt) {
             reporter: 'Dot',
             run: true
         },
-        all: ['tests/test.html']
+
+        require: {
+          options: {run: false},
+          src: ['tests/index.html']
+        }
     },
     connect: {
         server: {
@@ -48,6 +52,45 @@ module.exports = function(grunt) {
             }
         }
     },
+    requirejs: {
+        standalone: {
+            options: {
+                out: '<%= pkg.name %>.js',
+                optimize: 'none',
+                baseUrl: 'src/',
+                include: [
+                    'deferred',
+                    'utils',
+                    'mixin',
+                    'module',
+                    'service',
+                    'observableBuffer',
+                    'viewStore',
+                    'mixins/observable',
+                    'mixins/startable',
+                    'mixins/deferrable',
+                    'services/session',
+                    'services/canvas',
+                    'services/routing',
+                    'services/events',
+                    'services/template',
+                    'engines/handlebars'
+                ],
+                wrap: {
+                    startFile: [ 'bower_components/almond/almond.js' ]
+                },
+                paths: {
+                    'jquery': 'empty:',
+                    'underscore': 'empty:',
+                    'backbone': 'empty:',
+                    'fossil/views/view': 'empty:',
+                    'fossil/views/regionManager': 'empty:',
+                    'handlebars': 'empty:'
+                }
+            }
+        }
+    },
+
     concat: {
         library:{
             options: {
@@ -61,13 +104,6 @@ module.exports = function(grunt) {
             dest: '<%= pkg.name %>.js'
         },
         amd:{
-            options: {
-                banner: "define('fossil', ['underscore', 'backbone', 'jquery'], function (_, Backbone, jQuery) {\n",
-                footer: [
-                    "return Fossil;",
-                    "});"
-                ].join("\n")
-            },
             src: '<%= buildsrc %>',
             dest: '<%= pkg.name %>-amd.js'
         }
@@ -79,16 +115,33 @@ module.exports = function(grunt) {
       library: {
         src: '<%= pkg.name %>.js',
         dest: '<%= pkg.name %>.min.js'
-      },
-      amd: {
-        src: '<%= pkg.name %>-amd.js',
-        dest: '<%= pkg.name %>-amd.min.js'
       }
+    },
+    compress: {
+        main: {
+            options: {
+                mode: 'gzip'
+            },
+            expand: true,
+            src: ['<%= pkg.name %>.min.js'],
+            cwd: './',
+            dest: './',
+            ext: '.gz.js'
+        }
     },
     copy: {
         libToSamples: {
-            src: ['<%= pkg.name %>.js', '<%= pkg.name %>-amd.js'],
+            src: ['<%= pkg.name %>.js'],
             dest: 'samples/'
+        }
+    },
+
+    docco: {
+        lib: {
+            src: ['src/**/*.js'],
+            options: {
+                output: 'doc/sources'
+            }
         }
     }
   });
@@ -100,12 +153,15 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-concurrent');
   grunt.loadNpmTasks('grunt-contrib-concat');
   grunt.loadNpmTasks('grunt-contrib-copy');
+  grunt.loadNpmTasks('grunt-contrib-requirejs');
+  grunt.loadNpmTasks('grunt-contrib-compress');
   grunt.loadNpmTasks('grunt-mocha');
+  grunt.loadNpmTasks('grunt-docco');
 
   // Default task(s).
   grunt.registerTask('test', ['mocha']);
-  grunt.registerTask('dev', ['concat:library', 'concat:amd', 'concurrent:dev']);
-  grunt.registerTask('release', ['test', 'concat:library', 'concat:amd', 'uglify:library', 'uglify:amd', 'copy:libToSamples']);
+  grunt.registerTask('dev', ['concat:library', 'concurrent:dev']);
+  grunt.registerTask('release', ['test', 'requirejs:standalone', 'uglify:library', 'copy:libToSamples']);
   grunt.registerTask('default', ['release']);
 
 };

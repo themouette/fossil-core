@@ -25,6 +25,9 @@
     "bower": "~1.2.5",
     "grunt-contrib-requirejs": "~0.4.1",
     "grunt-contrib-concat": "~0.3.0",
-    "grunt-contrib-copy": "~0.4.1"
+    "grunt-contrib-copy": "~0.4.1",
+    "docco": "~0.6.2",
+    "grunt-docco": "~0.3.0",
+    "grunt-contrib-compress": "~0.5.2"
   }
 }
