@@ -88,7 +88,7 @@ module.exports = function(grunt) {
     watch: {
         src: {
             files: 'src/**/*.js',
-            tasks: ['concat:library', 'concat:amd']
+            tasks: ['concat:library']
         }
     },
     mocha: {
@@ -134,26 +134,10 @@ module.exports = function(grunt) {
                 out: '<%= pkg.name %>.js',
                 optimize: 'none',
                 baseUrl: 'src/',
-                include: [
-                    'deferred',
-                    'utils',
-                    'mixin',
-                    'module',
-                    'service',
-                    'observableBuffer',
-                    'viewStore',
-                    'mixins/observable',
-                    'mixins/startable',
-                    'mixins/deferrable',
-                    'services/session',
-                    'services/canvas',
-                    'services/routing',
-                    'services/events',
-                    'services/template',
-                    'engines/handlebars'
-                ],
+                include: [ 'fossil' ],
                 wrap: {
-                    startFile: [ 'bower_components/almond/almond.js' ]
+                    start: 'var Fossil = (function () {',
+                    end: 'return fossil;})();'
                 },
                 paths: {
                     'jquery': 'empty:',
@@ -162,6 +146,9 @@ module.exports = function(grunt) {
                     'fossil/views/view': 'empty:',
                     'fossil/views/regionManager': 'empty:',
                     'handlebars': 'empty:'
+                },
+                onBuildWrite: function( name, path, contents ) {
+                    return require('amdclean').clean(contents);
                 }
             }
         }
@@ -178,10 +165,6 @@ module.exports = function(grunt) {
             },
             src: '<%= buildsrc %>',
             dest: '<%= pkg.name %>.js'
-        },
-        amd:{
-            src: '<%= buildsrc %>',
-            dest: '<%= pkg.name %>-amd.js'
         }
     },
     uglify: {
@@ -244,6 +227,6 @@ module.exports = function(grunt) {
   }
   grunt.registerTask('test', tests);
   grunt.registerTask('dev', ['concat:library', 'concurrent:dev']);
-  grunt.registerTask('release', ['test', 'requirejs:standalone', 'uglify:library', 'copy:libToSamples']);
+  grunt.registerTask('release', ['test', 'requirejs:standalone', 'uglify:library', 'compress', 'copy:libToSamples']);
   grunt.registerTask('default', ['release']);
 };
