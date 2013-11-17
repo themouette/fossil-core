@@ -2,5 +2,6 @@ language: node_js
 node_js:
     - "0.10"
 env:
-    - secure: "bVzeQWvKPA7mkWmzoZJR1+IFkCWMCrO58ELw+yKP/R0I26dOhNgvNgohqZBO7k2ZAcm0CiSPzes3ck2dL8J4xsu/fQ4Iwgd/+6oxRhp/mn+Sdkd7S1KF6GiFhQ21qkcxpm3lRwBsw4b6wzhDGdzO49CXKR2mQ0ExcUNXeXRhr0w="
-    - secure: "P56jr7/1tJjN2gkE5/eGQsput9K3gO0kx5p9zzHo6x3t4vJMjnSUyXBocLU5m33OM5L1PavVysyJ8tlOlmZ0lcXaF2mkOjFDm19vU4e1Pwqa4wPPuCIP0xfmT/kc1TtJwnl/lTAz2uBPGkVhSh+UTw/9K44STJCP2sZZkx4vESk="
+    global:
+        - secure: "bVzeQWvKPA7mkWmzoZJR1+IFkCWMCrO58ELw+yKP/R0I26dOhNgvNgohqZBO7k2ZAcm0CiSPzes3ck2dL8J4xsu/fQ4Iwgd/+6oxRhp/mn+Sdkd7S1KF6GiFhQ21qkcxpm3lRwBsw4b6wzhDGdzO49CXKR2mQ0ExcUNXeXRhr0w="
+        - secure: "P56jr7/1tJjN2gkE5/eGQsput9K3gO0kx5p9zzHo6x3t4vJMjnSUyXBocLU5m33OM5L1PavVysyJ8tlOlmZ0lcXaF2mkOjFDm19vU4e1Pwqa4wPPuCIP0xfmT/kc1TtJwnl/lTAz2uBPGkVhSh+UTw/9K44STJCP2sZZkx4vESk="

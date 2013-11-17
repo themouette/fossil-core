@@ -236,8 +236,13 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-docco');
 
   // Default task(s).
-  grunt.registerTask('test', ['mocha']);
-  grunt.registerTask('sauce', ['connect::server', 'saucelabs-mocha']);
+  grunt.registerTask('test:unit', ['mocha']);
+  grunt.registerTask('test:sauce', ['connect::server', 'saucelabs-mocha']);
+  var tests = ['test:unit'];
+  if (process.env.TRAVIS_SECURE_ENV_VARS === "true") {
+    tests.push('test:sauce');
+  }
+  grunt.registerTask('test', tests);
   grunt.registerTask('dev', ['concat:library', 'concurrent:dev']);
   grunt.registerTask('release', ['test', 'requirejs:standalone', 'uglify:library', 'copy:libToSamples']);
   grunt.registerTask('default', ['release']);
