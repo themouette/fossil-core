@@ -1,6 +1,6 @@
 define([
-    'jquery', 'assert', 'sinon', 'fossil/module', 'fossil/services/routing'
-], function ($, assert, sinon, Module, Routing) {
+    'jquery', 'assert', 'underscore', 'backbone', 'sinon', 'fossil/module', 'fossil/services/routing'
+], function ($, assert, _, Backbone, sinon, Module, Routing) {
     var location, window;
     // Mocking location
     var Location = function(href) {
