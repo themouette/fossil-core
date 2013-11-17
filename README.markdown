@@ -7,6 +7,11 @@ Fossil is yet another framework built on top of
 [![Build
 Status](https://travis-ci.org/themouette/fossil-core.png?branch=master)](https://travis-ci.org/themouette/fossil-core)
 
+[![Selenium Test
+Status](https://saucelabs.com/buildstatus/fossil)](https://saucelabs.com/u/fossil)
+[![Selenium Test
+Status](https://saucelabs.com/browser-matrix/fossil.svg)](https://saucelabs.com/u/fossil)
+
 It aims at easing and speed up development of large single page applications,
 because developping Backbone application should all be about creating Views,
 Models and Collections.

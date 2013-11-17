@@ -1,4 +1,65 @@
 module.exports = function(grunt) {
+  var versions = {
+    firefox: 25,
+    chrome: 30
+  };
+  var browsers = [{
+/*    browserName: 'firefox',
+    platform: 'Windows 8.1',
+    version: versions.firefox
+  }, {
+    browserName: 'firefox',
+    platform: 'Windows 8',
+    version: versions.firefox
+  }, {
+    browserName: 'firefox',
+    platform: 'Windows 7',
+    version: versions.firefox
+  }, {
+    browserName: 'firefox',
+    platform: 'Linux',
+    version: versions.firefox
+  }, {*/
+    browserName: 'chrome',
+    platform: 'Windows 8.1',
+    version: versions.chrome
+  }, {
+    browserName: 'chrome',
+    platform: 'Windows 8',
+    version: versions.chrome
+  }, {
+    browserName: 'chrome',
+    platform: 'Windows 7',
+    version: versions.chrome
+  }, {
+    browserName: 'chrome',
+    platform: 'XP',
+    version: versions.chrome
+  }, {
+    browserName: 'chrome',
+    platform: 'linux',
+    version: versions.chrome
+  }, {
+    browserName: 'internet explorer',
+    platform: 'Windows 8.1',
+    version: '11'
+  }, {
+    browserName: 'internet explorer',
+    platform: 'Windows 8',
+    version: '10'
+  }, {
+    browserName: 'internet explorer',
+    platform: 'Windows 7',
+    version: '10'
+  }, {
+    browserName: 'internet explorer',
+    platform: 'Windows 7',
+    version: '9'
+  }, {
+    browserName: 'opera',
+    platform: 'Windows 2008',
+    version: '12'
+  }];
 
   // Project configuration.
   grunt.initConfig({
@@ -41,6 +102,21 @@ module.exports = function(grunt) {
         require: {
           options: {run: false},
           src: ['tests/index.html']
+        }
+    },
+    'saucelabs-mocha': {
+        all: {
+            options: {
+                username: process.env.SAUCE_USERNAME || 'fossil',
+                key: process.env.SAUCE_ACCESS_KEY,
+                urls: ['http://127.0.0.1:8000/tests/index.html'],
+                tunnelTimeout: 120,
+                build: process.env.TRAVIS_JOB_ID || '<%= pkg.version %>-dev@<%= grunt.template.today() %>',
+                concurrency: 3,
+                browsers: browsers,
+                testReadyTimeout: 1000*60,
+                testname: "<%= pkg.name %> mocha tests"
+            }
         }
     },
     connect: {
@@ -155,13 +231,14 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-copy');
   grunt.loadNpmTasks('grunt-contrib-requirejs');
   grunt.loadNpmTasks('grunt-contrib-compress');
+  grunt.loadNpmTasks('grunt-saucelabs');
   grunt.loadNpmTasks('grunt-mocha');
   grunt.loadNpmTasks('grunt-docco');
 
   // Default task(s).
   grunt.registerTask('test', ['mocha']);
+  grunt.registerTask('sauce', ['connect::server', 'saucelabs-mocha']);
   grunt.registerTask('dev', ['concat:library', 'concurrent:dev']);
   grunt.registerTask('release', ['test', 'requirejs:standalone', 'uglify:library', 'copy:libToSamples']);
   grunt.registerTask('default', ['release']);
-
 };
