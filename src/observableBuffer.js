@@ -3,7 +3,9 @@
 //
 // It primary use is to stub modules `parent` pubsub
 // until the module is attached to
-define(['./mixin'], function (Mixin) {
+define(['./mixin', 'underscore'], function (Mixin, _) {
+    "use strict";
+
     var ObservableBuffer = Mixin.extend({
         constructor: function () {
             this.store = [];
