@@ -1,4 +1,15 @@
+// Template service is a way to both abstract rendering engine and inject
+// helpers.
+//
+// Template service is the priviledged way (and as much as possible should be
+// the only way) to render templates. It adds both `module` and `view` as
+// template variables.
+//
+// Template engine listens to modules 'do:view:render' event so it is totally
+// transparent to the module.
 define(['underscore', '../utils', '../service'], function (_, utils, Service) {
+    "use strict";
+
     var Template = Service.extend({
         // engine in use
         engine: null,
