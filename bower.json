@@ -24,8 +24,8 @@
     "underscore": "~1.4.4"
   },
   "devDependencies": {
-    "chai": "~1.6.1",
-    "mocha": "~1.11.0",
+    "chai": "~1.8.1",
+    "mocha": "~1.13.0",
     "sinon": "http://sinonjs.org/releases/sinon-1.7.3.js",
     "handlebars": "~1.0.0",
     "almond": "~0.2.6"

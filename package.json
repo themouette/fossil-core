@@ -20,7 +20,7 @@
     "grunt-contrib-qunit": "~0.2.2",
     "grunt-contrib-watch": "~0.4.4",
     "grunt-concurrent": "~0.2.0",
-    "grunt-mocha": "~0.3.4",
+    "grunt-mocha": "~0.4.1",
     "grunt-cli": "~0.1.9",
     "bower": "~1.2.5",
     "grunt-contrib-requirejs": "~0.4.1",
