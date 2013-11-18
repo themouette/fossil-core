@@ -21,23 +21,30 @@ define(['./mixin', 'underscore'], function (Mixin, _) {
                     case 'on':
                     case 'off':
                     case 'once':
-                        if (args && this === args[2]) {
-                            on[method].apply(on, args.slice(0,2).concat([on]).concat(args.slice(3)));
-                            break;
-                        }
+                        callAndReplaceWithArg(method, args, 2, on, this);
+                        break;
                     case 'stopListening':
                     case 'listenToOnce':
                     case 'listenTo':
-                        if (args && this === args[1]) {
-                            on[method].apply(on, args.slice(0,1).concat([on]).concat(args.slice(2)));
-                            break;
-                        }
+                        callAndReplaceWithArg(method, args, 1, on, this);
+                        break;
                     default:
                         on[method].apply(on, args);
                 }
             }, this);
         }
     });
+
+    function callAndReplaceWithArg(method, args, position, on, ifEqual) {
+        var newArgs;
+        if (args && ifEqual === args[position]) {
+            newArgs = args.slice(0,position).concat([on]).concat(args.slice(position + 1));
+        } else {
+            newArgs = args;
+        }
+
+        on[method].apply(on, newArgs);
+    }
 
     // store every call
     _.each(['on', 'off', 'once', 'listenTo', 'listenToOnce', 'stopListening', 'trigger'], function (method) {
