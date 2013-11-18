@@ -1,0 +1,12 @@
+{
+    "unused": false,
+    "strict": true,
+    "browser": true,
+    "eqeqeq": true,
+    "undef": true,
+    "expr": true,
+    "globals": {
+        "define": true,
+        "test": true
+    }
+}
