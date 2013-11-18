@@ -32,7 +32,6 @@ define([
 
         // removes Backbone.View prototype engine functions.
         _doStop: function () {
-            var engine = this.engine;
             _.each(ViewExtension, function unmix(method, name) {
                 if (Backbone.View.prototype[name] === method) {
                     Backbone.View.prototype[name] = null;
