@@ -1,3 +1,4 @@
+/* global console */
 define(['underscore', 'backbone', '../utils', '../service'], function (_, Backbone, utils, Service) {
     'use strict';
 

@@ -22,6 +22,7 @@ define([
     Session, Canvas, Routing, Events, Template,
     Underscore, Handlebars
 ) {
+  "use strict";
 
     var Fossil = {
         utils: utils,

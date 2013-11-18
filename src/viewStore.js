@@ -46,6 +46,7 @@
 // });
 // ```
 define(['underscore', './utils', './mixin'], function (_, utils, Mixin) {
+    "use strict";
 
     var ViewStore = Mixin.extend({
         // internal property to store view factories.

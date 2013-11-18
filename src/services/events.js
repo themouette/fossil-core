@@ -10,6 +10,7 @@
 // app.trigger('app!foo');
 // ```
 define(['underscore', '../service'], function (_, Service) {
+    "use strict";
 
     var Events = Service.extend({
         useDeep: true,

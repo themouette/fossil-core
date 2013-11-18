@@ -1,6 +1,8 @@
 define([
     'assert', 'sinon', 'fossil/viewStore'
 ], function (assert, sinon, ViewStore) {
+    "use strict";
+
     suite('ViewStore', function () {
         var store;
         setup(function () {

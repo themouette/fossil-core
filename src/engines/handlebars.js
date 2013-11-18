@@ -1,6 +1,7 @@
 define([
     'underscore', 'backbone', 'handlebars', '../mixin', '../mixins/observable', '../mixins/deferrable', '../mixins/startable'
 ], function (_, Backbone, Handlebars, Mixin, Observable, Deferrable, Startable) {
+  "use strict";
 
     var ViewExtension = {
         // if `template` is a string, it will be processed through Handlebars.
@@ -31,7 +32,6 @@ define([
 
         // removes Backbone.View prototype engine functions.
         _doStop: function () {
-            var engine = this.engine;
             _.each(ViewExtension, function unmix(method, name) {
                 if (Backbone.View.prototype[name] === method) {
                     Backbone.View.prototype[name] = null;

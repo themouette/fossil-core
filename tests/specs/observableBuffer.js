@@ -1,6 +1,7 @@
 define([
-    'assert', 'underscore', 'fossil/mixin', 'fossil/mixins/observable', 'fossil/observableBuffer'
-], function (assert, _, Mixin, Observable, ObservableBuffer) {
+    'assert', 'sinon', 'underscore', 'fossil/mixin', 'fossil/mixins/observable', 'fossil/observableBuffer'
+], function (assert, sinon, _, Mixin, Observable, ObservableBuffer) {
+  "use strict";
 
     var Module = Mixin.extend().mix(Observable);
     var emptyFn = function () {};

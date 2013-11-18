@@ -1,6 +1,7 @@
 define([
     'assert', 'sinon', 'backbone', 'fossil/module', 'fossil/services/template'
 ], function (assert, sinon, Backbone, Module, Template) {
+    "use strict";
     var mockEngine = function () {
         return {
             start: sinon.spy(),
@@ -47,7 +48,6 @@ define([
         suite('Engine', function () {
 
             suite('engine starts', function () {
-                var spy = sinon.spy();
                 var engine = mockEngine();
                 var template = new Template({engine: engine});
 

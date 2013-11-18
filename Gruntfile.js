@@ -1,4 +1,7 @@
+/* jshint node: true */
 module.exports = function(grunt) {
+  "use strict";
+
   var versions = {
     firefox: 25,
     chrome: 30
@@ -195,6 +198,14 @@ module.exports = function(grunt) {
         }
     },
 
+    jshint: {
+        options: {
+            jshintrc: true
+        },
+        src: [ 'src/**/*.js' ],
+        tests: [ 'tests/**/*.js' ]
+    },
+
     docco: {
         lib: {
             src: ['src/**/*.js'],
@@ -214,6 +225,7 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-copy');
   grunt.loadNpmTasks('grunt-contrib-requirejs');
   grunt.loadNpmTasks('grunt-contrib-compress');
+  grunt.loadNpmTasks('grunt-contrib-jshint');
   grunt.loadNpmTasks('grunt-saucelabs');
   grunt.loadNpmTasks('grunt-mocha');
   grunt.loadNpmTasks('grunt-docco');
@@ -221,7 +233,7 @@ module.exports = function(grunt) {
   // Default task(s).
   grunt.registerTask('test:unit', ['mocha']);
   grunt.registerTask('test:sauce', ['connect::server', 'saucelabs-mocha']);
-  var tests = ['test:unit'];
+  var tests = ['test:unit', 'jshint'];
   if (process.env.TRAVIS_SECURE_ENV_VARS === "true") {
     tests.push('test:sauce');
   }

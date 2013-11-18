@@ -1,4 +1,7 @@
-define(['jquery', '../service', '../utils', 'fossil/views/regionManager'], function ($, Service, utils, Region) {
+define([
+    'jquery', 'underscore', '../service', '../utils', 'fossil/views/regionManager'
+], function ($, _, Service, utils, Region) {
+    "use strict";
 
     var Canvas = Service.extend({
         // selector on wich to append the main canvas.

@@ -1,12 +1,14 @@
-(function (assert, _, Deferrable, Deferred) {
+define([
+    'assert', 'underscore', 'fossil/mixin', 'fossil/mixins/deferrable', 'fossil/deferred'
+],function (assert, _, Mixin, Deferrable, Deferred) {
     'use strict';
     var TIMEOUT = 20;
 
-    describe('Fossil.Mixins.Deferrable', function () {
-        var Queue = function () {};
-        _.extend(Queue.prototype, Deferrable);
+    suite('Fossil.Mixins.Deferrable', function () {
+        var Queue = Mixin.extend();
+        Queue.mix(Deferrable);
 
-        it('implements fluent interface', function () {
+        test('implements fluent interface', function () {
             var q = new Queue();
 
             assert.strictEqual(q, q.waitFor(new Deferred()));
@@ -15,8 +17,8 @@
             assert.strictEqual(q, q.abort());
         });
 
-        describe('waitFor method', function () {
-            it('accepts raw values', function(done) {
+        suite('waitFor method', function () {
+            test('accepts raw values', function(done) {
                 this.timeout(TIMEOUT);
                 var q = new Queue();
                 var value = 10;
@@ -26,7 +28,7 @@
                     done();
                 });
             });
-            it('should be possible to give no options', function(done) {
+            test('should be possible to give no options', function(done) {
                 this.timeout(TIMEOUT);
                 var q = new Queue();
                 var d = new Deferred();
@@ -38,7 +40,7 @@
 
                 d.resolve();
             });
-            it('should be possible to add parallel promises', function(done) {
+            test('should be possible to add parallel promises', function(done) {
                 this.timeout(TIMEOUT);
                 var q = new Queue();
                 var d1 = new Deferred();
@@ -58,7 +60,7 @@
                 calls++;
                 d2.resolve();
             });
-            it('accepts failFast=true', function (done) {
+            test('accepts failFast=true', function (done) {
                 this.timeout(TIMEOUT);
                 var q = new Queue();
                 var d1 = new Deferred();
@@ -73,7 +75,7 @@
 
                 d2.reject();
             });
-            it('accepts failFast=false', function () {
+            test('accepts failFast=false', function () {
                 var q = new Queue();
                 var d1 = new Deferred();
                 var d2 = new Deferred();
@@ -87,7 +89,7 @@
 
                 d2.reject();
             });
-            it('failFast=false triggers error if any is rejected', function (done) {
+            test('failFast=false triggers error if any is rejected', function (done) {
                 var q = new Queue();
                 var d1 = new Deferred();
                 var d2 = new Deferred();
@@ -102,7 +104,7 @@
                 d1.reject();
                 d2.resolve();
             });
-            it('accepts timeout', function (done) {
+            test('accepts timeout', function (done) {
                 this.timeout(TIMEOUT);
                 var q = new Queue();
                 var d1 = new Deferred();
@@ -114,15 +116,15 @@
             });
         });
 
-        describe('then method', function () {
-            it('can be used in synchronous mode', function() {
+        suite('then method', function () {
+            test('can be used in synchronous mode', function() {
                 var value = 0;
                 var q = new Queue();
                 q.then(function () { value = 1; });
 
                 assert.equal(value, 1);
             });
-            it('synchronous mode calls success and always', function() {
+            test('synchronous mode calls success and always', function() {
                 var calls = 0;
                 var q = new Queue();
                 q.then(
@@ -133,7 +135,7 @@
 
                 assert.equal(calls, 2);
             });
-            it('calls error and always callback when rejected', function() {
+            test('calls error and always callback when rejected', function() {
                 var calls = 0;
                 var message = "this is an error";
                 var q = new Queue();
@@ -148,7 +150,7 @@
                 d.reject(message);
                 assert.equal(calls, 2);
             });
-            it('calls success and always callback when resolved', function() {
+            test('calls success and always callback when resolved', function() {
                 var calls = 0;
                 var message = "this is an error";
                 var q = new Queue();
@@ -165,8 +167,8 @@
             });
         });
 
-        describe('thenWith method', function () {
-            it('can be used in synchronous mode', function() {
+        suite('thenWith method', function () {
+            test('can be used in synchronous mode', function() {
                 var value = 0;
                 var q = new Queue();
                 var q2 = new Queue();
@@ -177,7 +179,7 @@
 
                 assert.equal(value, 1);
             });
-            it('synchronous mode calls success and always', function() {
+            test('synchronous mode calls success and always', function() {
                 var calls = 0;
                 var q = new Queue();
                 var q2 = new Queue();
@@ -198,7 +200,7 @@
 
                 assert.equal(calls, 2);
             });
-            it('when rejected error is called', function() {
+            test('when rejected error is called', function() {
                 var calls = 0;
                 var message = "this is an error";
                 var q = new Queue();
@@ -224,7 +226,7 @@
                 d.reject(message);
                 assert.equal(calls, 2);
             });
-            it('when resolved success and always are called', function() {
+            test('when resolved success and always are called', function() {
                 var calls = 0;
                 var q = new Queue();
                 var q2 = new Queue();
@@ -250,8 +252,8 @@
             });
         });
 
-        describe('abort method', function () {
-            it('should be possible to abort', function (done) {
+        suite('abort method', function () {
+            test('should be possible to abort', function (done) {
                 this.timeout(TIMEOUT);
                 var q = new Queue();
                 var d1 = new Deferred();
@@ -268,11 +270,11 @@
 
                 q.abort();
             });
-            it('should be possible to abort whe not waiting', function() {
+            test('should be possible to abort whe not waiting', function() {
                 var q = new Queue();
                 q.abort();
             });
-            it('When aborted, deferred resolution does not trigger callbacks', function (done) {
+            test('When aborted, deferred resolution does not trigger callbacks', function (done) {
                 this.timeout(TIMEOUT);
                 done = _.after(2, done);
                 var q = new Queue();
@@ -293,7 +295,7 @@
                 d2.resolve();
                 done();
             });
-            it('calls deferred abort method if any.', function(done) {
+            test('calls deferred abort method if any.', function(done) {
                 this.timeout(TIMEOUT);
                 var q = new Queue();
                 var d1 = new Deferred();
@@ -310,8 +312,8 @@
             });
         });
 
-        describe('multiple queues', function () {
-            it('should be possible to create a new async after first one is aborted', function (done) {
+        suite('multiple queues', function () {
+            test('should be possible to create a new async after first one is aborted', function (done) {
                 this.timeout(TIMEOUT);
                 var q = new Queue();
                 var d1 = new Deferred();
@@ -329,7 +331,7 @@
                 q.then(function () {done();});
                 d2.resolve();
             });
-            it('should be possible to create a new async after first one is complete', function (done) {
+            test('should be possible to create a new async after first one is complete', function (done) {
                 this.timeout(TIMEOUT);
                 done = _.after(2, done);
                 var q = new Queue();
@@ -354,4 +356,4 @@
             });
         });
     });
-})(chai.assert, _, Fossil.Mixins.Deferrable, Fossil.Deferred);
+});
