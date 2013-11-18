@@ -7,6 +7,10 @@
     "expr": true,
     "globals": {
         "define": true,
-        "test": true
+        "test": true,
+        "suite": true,
+        "setup": true,
+        "teardown": true,
+        "it": true
     }
 }
