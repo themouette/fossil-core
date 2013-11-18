@@ -1,41 +1,41 @@
-(function (assert, _, Deferred, Fossil) {
+define([
+    'assert', 'underscore', 'fossil/mixin',
+    'fossil/mixins/startable', 'fossil/mixins/observable', 'fossil/mixins/deferrable',
+    'fossil/deferred'
+],function (assert, _, Mixin, Startable, Observable, Deferrable, Deferred) {
     'use strict';
 
-    describe('Fossil.Mixins.Startable', function () {
+    suite('mixins/startable', function () {
 
-        var Startable = function (){};
-        _.extend(
-            Startable.prototype,
-            Fossil.Mixins.Observable,
-            Fossil.Mixins.Deferrable,
-            Fossil.Mixins.Startable, {
+        var Start = Mixin.extend({
             _firstStart: function () {
                 // do stuff
-                Fossil.Mixins.Startable._firstStart.apply(this, arguments);
+                Startable._firstStart.apply(this, arguments);
                 // do stuff
             },
             _doStart: function () {
                 // do stuff
-                Fossil.Mixins.Startable._doStart.apply(this, arguments);
+                Startable._doStart.apply(this, arguments);
                 // do stuff
             },
             _doStandby: function () {
                 // do stuff
-                Fossil.Mixins.Startable._doStandby.apply(this, arguments);
+                Startable._doStandby.apply(this, arguments);
                 // do stuff
             },
             _doStop: function () {
                 // do stuff
-                Fossil.Mixins.Startable._doStop.apply(this, arguments);
+                Startable._doStop.apply(this, arguments);
                 // do stuff
             }
         });
+        Start.mix([Observable, Deferrable, Startable]);
 
-        describe('start event', function () {
-            it('should trigger start:first and start on first start', function (done) {
+        suite('start event', function () {
+            test('should trigger start:first and start on first start', function (done) {
                 done = _.after(2, done);
                 this.timeout(10);
-                var startable = new Startable();
+                var startable = new Start();
 
                 startable.on('start:first', function () {
                     assert.ok(true, 'start:first is called on fist start');
@@ -48,9 +48,9 @@
 
                 startable.start();
             });
-            it('should trigger start:first on first start only', function (done) {
+            test('should trigger start:first on first start only', function (done) {
                 this.timeout(10);
-                var startable = new Startable();
+                var startable = new Start();
 
                 startable.start();
                 startable.standby();
@@ -65,8 +65,8 @@
 
                 startable.start();
             });
-            it('should not start again if already started', function() {
-                var startable = new Startable();
+            test('should not start again if already started', function() {
+                var startable = new Start();
 
                 startable.start();
 
@@ -74,8 +74,8 @@
 
                 startable.start();
             });
-            it('start:first is deferrable', function() {
-                var startable = new Startable();
+            test('start:first is deferrable', function() {
+                var startable = new Start();
                 var d = new Deferred();
                 var calls = 0;
 
@@ -83,20 +83,20 @@
                     startable.waitFor(d);
                     calls++;
                 });
-                startable.on('start', function (startable) {
+                startable.start();
+                startable.then(function (startable) {
                     calls++;
                 });
-                startable.start();
                 // passed through start:first but don't go further until async is processed.
                 assert.equal(calls, 1);
                 d.resolve();
                 // passed through start
                 assert.equal(calls, 2);
             });
-            it('should trigger start:first and start when previously stopped', function (done) {
+            test('should trigger start:first and start when previously stopped', function (done) {
                 done = _.after(2, done);
                 this.timeout(10);
-                var startable = new Startable();
+                var startable = new Start();
 
                 startable.start();
                 startable.stop();
@@ -114,9 +114,9 @@
             });
         });
 
-        describe('standby event', function () {
-            it('should not be triggered when not started', function() {
-                var startable = new Startable();
+        suite('standby event', function () {
+            test('should not be triggered when not started', function() {
+                var startable = new Start();
 
                 startable.on('standby', function () {
                     assert.ok(false, 'standby should not be called');
@@ -124,8 +124,8 @@
 
                 startable.standby();
             });
-            it('should be triggered when previously started', function(done) {
-                var startable = new Startable();
+            test('should be triggered when previously started', function(done) {
+                var startable = new Start();
 
                 startable.start();
 
@@ -136,8 +136,8 @@
 
                 startable.standby();
             });
-            it('should not be triggered when already in standby', function() {
-                var startable = new Startable();
+            test('should not be triggered when already in standby', function() {
+                var startable = new Start();
 
                 startable.start();
                 startable.standby();
@@ -150,9 +150,9 @@
             });
         });
 
-        describe('stop event', function () {
-            it('should not be triggered when not started', function() {
-                var startable = new Startable();
+        suite('stop event', function () {
+            test('should not be triggered when not started', function() {
+                var startable = new Start();
 
                 startable.on('stop', function () {
                     assert.ok(false, 'stop should not be called');
@@ -160,8 +160,8 @@
 
                 startable.stop();
             });
-            it('should be triggered when previously started', function(done) {
-                var startable = new Startable();
+            test('should be triggered when previously started', function(done) {
+                var startable = new Start();
 
                 startable.start();
 
@@ -172,9 +172,9 @@
 
                 startable.stop();
             });
-            it('should be triggered when in standby', function(done) {
+            test('should be triggered when in standby', function(done) {
                 this.timeout(10);
-                var startable = new Startable();
+                var startable = new Start();
 
                 startable.start();
                 startable.standby();
@@ -186,8 +186,8 @@
 
                 startable.stop();
             });
-            it('should not be triggered when already stopped', function() {
-                var startable = new Startable();
+            test('should not be triggered when already stopped', function() {
+                var startable = new Start();
 
                 startable.start();
                 startable.stop();
@@ -198,8 +198,8 @@
 
                 startable.stop();
             });
-            it('standby is deferrable', function() {
-                var startable = new Startable();
+            test('standby is deferrable', function() {
+                var startable = new Start();
                 var d = new Deferred();
                 var calls = 0;
 
@@ -220,4 +220,4 @@
             });
         });
     });
-})(chai.assert, _, Fossil.Deferred, Fossil);
+});
