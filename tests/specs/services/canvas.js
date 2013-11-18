@@ -1,4 +1,5 @@
 define(['assert', 'fossil/services/canvas', 'fossil/module'], function (assert, Canvas, Module) {
+    "use strict";
 
     suite('service/canvas', function () {
         test('should be instanciatiable', function () {

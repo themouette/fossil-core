@@ -10,7 +10,6 @@
         "test": true,
         "suite": true,
         "setup": true,
-        "teardown": true,
-        "it": true
+        "teardown": true
     }
 }

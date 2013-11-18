@@ -1,6 +1,7 @@
 define([
     'assert', 'sinon', 'backbone', 'fossil/module', 'fossil/services/session'
 ], function (assert, sinon, Backbone, Module, Session) {
+    "use strict";
 
     suite('Session', function () {
 

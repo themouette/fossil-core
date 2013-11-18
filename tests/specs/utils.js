@@ -1,4 +1,5 @@
 define(['assert', 'sinon', 'fossil/utils'], function (assert, sinon, utils) {
+  "use strict";
 
     suite('utils', function () {
 

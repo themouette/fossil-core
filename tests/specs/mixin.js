@@ -1,4 +1,5 @@
 define(['sinon', 'assert', 'fossil/mixin'], function (sinon, assert, Mixin) {
+  "use strict";
 
     suite('Mixin', function () {
 

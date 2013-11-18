@@ -1,6 +1,7 @@
 define([
     'assert', 'sinon', 'underscore', 'fossil/module', 'fossil/services/events'
 ], function (assert, sinon, _, Module, Events) {
+    "use strict";
     suite('services/events', function () {
         var methods = ['on', 'off', 'once', 'trigger'];
         var events, module, fooSpy;
