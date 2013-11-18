@@ -118,9 +118,9 @@ define(['underscore'], function (_) {
                 return ;
             }, from);
 
-            return typeof(result) !== "undefined"
-                ? result
-                : alt;
+            return typeof(result) !== "undefined" ?
+                result :
+                alt;
         }),
         // deeply set a property.
         //

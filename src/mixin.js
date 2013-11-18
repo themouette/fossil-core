@@ -180,7 +180,7 @@ define(['underscore', './utils'], function (_, utils) {
             // `parent`'s constructor function.
             var Surrogate = function(){ this.constructor = child; };
             Surrogate.prototype = parent.prototype;
-            child.prototype = new Surrogate;
+            child.prototype = new Surrogate();
 
             // Add prototype properties (instance properties) to the subclass,
             // if supplied.
