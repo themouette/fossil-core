@@ -1,6 +1,6 @@
 define([
-    'assert', 'underscore', 'fossil/mixin', 'fossil/mixins/observable'
-], function (assert, _, Mixin, Observable) {
+    'assert', 'sinon', 'underscore', 'fossil/mixin', 'fossil/mixins/observable'
+], function (assert, sinon, _, Mixin, Observable) {
     'use strict';
 
     suite('mixins/observable', function () {
