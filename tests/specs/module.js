@@ -1,6 +1,7 @@
 define([
-    'assert', 'sinon', 'fossil/module', 'backbone', 'fossil/views/view'
-], function (assert, sinon, Module, Backbone, View) {
+    'assert', 'sinon', 'underscore', 'fossil/module', 'backbone', 'fossil/views/view'
+], function (assert, sinon, _, Module, Backbone, View) {
+  "use strict";
 
     suite('Module', function () {
 
