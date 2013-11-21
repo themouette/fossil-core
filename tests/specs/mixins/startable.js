@@ -1,8 +1,8 @@
 define([
-    'assert', 'underscore', 'fossil/mixin',
+    'assert', 'sinon', 'underscore', 'fossil/mixin',
     'fossil/mixins/startable', 'fossil/mixins/observable', 'fossil/mixins/deferrable',
     'fossil/deferred'
-],function (assert, _, Mixin, Startable, Observable, Deferrable, Deferred) {
+],function (assert, sinon, _, Mixin, Startable, Observable, Deferrable, Deferred) {
     'use strict';
 
     suite('mixins/startable', function () {
@@ -111,6 +111,24 @@ define([
                 });
 
                 startable.start();
+            });
+            test('should wait for the whole event to be processed before colling deferred', function () {
+                var startable = new Start();
+                var spy = sinon.spy();
+                var d = new Deferred();
+
+                startable.on('start:first', function () {
+                    // register callback befor deferred
+                    this.then(spy);
+                });
+                startable.on('start', function () {
+                    this.waitFor(d);
+                });
+
+                startable.start();
+                assert.ok(!spy.called, 'wait for deferred to be resolved');
+                d.resolve(true);
+                assert.ok(spy.called, 'calls on resolution');
             });
         });
 

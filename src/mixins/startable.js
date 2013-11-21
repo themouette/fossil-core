@@ -1,4 +1,4 @@
-define([], function () {
+define(['underscore', '../deferred'], function (_, Deferred) {
     'use strict';
 
     // This mixin requires Fossil.Mixins.Deferrable
@@ -10,6 +10,8 @@ define([], function () {
                 return false;
             }
             this.run = true;
+            var d = new Deferred();
+            this.waitFor(d);
             if (!this._firstStarted) {
                 this._firstStarted = true;
                 this._firstStart();
@@ -27,6 +29,7 @@ define([], function () {
             //     .then(function() {/* should be called after both start:first and start */});
             // ```
             this._doStart();
+            d.resolve(true);
             this.thenWith(this, null, this._startError);
         },
         standby: function () {
