@@ -55,7 +55,7 @@ define([
 
             if (view._attachPlugin) {
                 view._attachPlugin();
-            } else if(view.attachPlugin()) {
+            } else if(view.attachPlugin) {
                 view.attachPlugin();
             }
         }
