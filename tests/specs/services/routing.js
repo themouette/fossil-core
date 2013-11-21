@@ -1,6 +1,7 @@
 define([
-    'jquery', 'assert', 'underscore', 'backbone', 'sinon', 'fossil/module', 'fossil/services/routing'
-], function ($, assert, _, Backbone, sinon, Module, Routing) {
+    'jquery', 'assert', 'underscore', 'backbone', 'sinon', 'fossil/module',
+    'fossil/services/routing', 'fossil/deferred'
+], function ($, assert, _, Backbone, sinon, Module, Routing, Deferred) {
     "use strict";
     var location, window;
     // Mocking location
@@ -390,7 +391,111 @@ define([
 
                 assert.ok(spy.calledOnce);
             });
+        }); // end of suite Module
+
+        suite('navigate to module', function () {
+
+            suite('simple usage', function () {
+                var module, routing, spy, routespy;
+                setup(function () {
+                    spy = sinon.spy();
+                    routespy = sinon.spy();
+                    routing = new Routing();
+                    var MyModule = Module.extend({
+                        routes: {
+                            '': routespy
+                        }
+                    });
+                    module = new MyModule();
+
+                    module
+                        .use('routing', routing)
+                        .on('start:first', spy)
+                        .start();
+                });
+                teardown(function () {
+                    Backbone.history.stop();
+                });
+                test('should call start once', function () {
+                    routing.router.navigate('', {trigger: true});
+                    assert.ok(routespy.called, 'route called');
+                    assert.ok(routespy.calledOnce, 'route only once');
+                    assert.ok(spy.called, 'start has been called');
+                    assert.ok(spy.calledOnce, 'only once');
+                });
+            });
+
+            suite('should start', function () {
+                var modulespy, childspy, module, child, routing, routespy;
+                setup(function () {
+                    replaceHistory();
+                    modulespy = sinon.spy();
+                    childspy = sinon.spy();
+                    routespy = sinon.spy();
+
+                    module = new Module({urlRoot: 'bar'});
+                    child = new Module({urlRoot: 'baz'});
+                    routing = new Routing({
+                        prefix: 'foo'
+                    });
+
+
+                    child.on('start:first', childspy);
+
+                    module
+                        .use('routing', routing)
+                        .on('start:first', modulespy)
+                        .connect('child', child)
+                        ;
+
+                    module.route('', routespy);
+                    child.route('', routespy);
+
+                    module.start();
+                });
+                teardown(function () {
+                    Backbone.history.stop();
+                });
+
+                test('main module only once', function () {
+                    routing.router.navigate('foo/bar', {trigger: true});
+
+                    assert.ok(routespy.calledOnce, 'route was called');
+
+                    assert.ok(modulespy.called, 'module has been started');
+                    assert.ok(modulespy.calledOnce, 'module has been started once');
+
+                    assert.ok(!childspy.called, 'child has not been started');
+                    assert.ok(!childspy.calledOnce, 'child has not been started once');
+                });
+
+                test('child module', function () {
+                    routing.router.navigate('foo/bar/baz', {trigger: true});
+
+                    assert.ok(routespy.calledOnce, 'route was called');
+
+                    assert.ok(modulespy.called, 'module has been started');
+                    assert.ok(modulespy.calledOnce, 'module has been started once');
+
+                    assert.ok(childspy.called, 'child has been started');
+                    assert.ok(childspy.calledOnce, 'child has been started once');
+                });
+
+                test('child module only once', function () {
+                    child.start();
+                    routing.router.navigate('foo/bar/baz', {trigger: true});
+
+                    assert.ok(routespy.calledOnce, 'route was called');
+
+                    assert.ok(modulespy.called, 'module has been started');
+                    assert.ok(modulespy.calledOnce, 'module has been started once');
+
+                    assert.ok(childspy.called, 'child has been started');
+                    assert.ok(childspy.calledOnce, 'child has been started once');
+                });
+            });
         }); // end of suite Navigation
+
 
     }); //end of suite service/routing
 
