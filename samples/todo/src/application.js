@@ -7,6 +7,7 @@ define([
     './listView',
     './showView'
 ], function (Module, ViewStore, View, Todo, TodoCollection, ListView, ShowView) {
+    "use strict";
     var Application = Module.extend({
 
         events: {
@@ -72,11 +73,7 @@ define([
         },
 
         index: function () {
-            var view = new ListView({
-                collection: this.todos
-            });
-
-            this.useView(view);
+            this.useView(this.store.get('list', this.todos));
         },
 
         show: function (id) {
