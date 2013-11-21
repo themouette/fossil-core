@@ -11,6 +11,7 @@ define([
 
         initialize: function (options) {
             utils.copyOption(['selector'], this, options);
+            this.currentView = {};
         },
 
         // Listen to `do:view:attach` event and attach given view to selector.
@@ -43,13 +44,14 @@ define([
         },
 
         attachView: function (module, view) {
-            if (this.currentView) {
-                this.currentView.remove();
+            var selector = module.selector || this.selector;
+            if (this.currentView[selector]) {
+                this.currentView[selector].remove();
             }
 
-            this.currentView = view;
+            this.currentView[selector] = view;
 
-            $(this.selector).append(view.$el);
+            $(selector).append(view.$el);
 
             if (view._attachPlugin) {
                 view._attachPlugin();
