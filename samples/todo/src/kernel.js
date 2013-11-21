@@ -49,7 +49,8 @@ define('kernel', [
         url = extra.helpers.url(url);
 
         view.once('on:plugins:attach', function () {
-            $('button[data-fossil-id='+id+']').on('click', _.bind(module.navigate, module, url, {trigger: true, replace: true}));
+            $('button[data-fossil-id='+id+']')
+                .on('click', _.bind(module.navigate, module, url, {trigger: true, replace: true}));
 
             view.once('on:plugins:detach', function () {
                 $('button[data-fossil-id='+id+']').off('click');
@@ -66,8 +67,6 @@ define('kernel', [
         .use('routing', routing)
         .use('template', template)
         .use('canvas', canvas)
-        .on('start:first', function () {
-            canvas.canvas.defineRegion('content', '.content');
-        })
+        .on('start:first', function () { })
         .start();
 });
