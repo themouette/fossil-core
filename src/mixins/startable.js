@@ -9,9 +9,10 @@ define([], function () {
             if (this.run) {
                 return false;
             }
+            this.run = true;
             if (!this._firstStarted) {
-                this._firstStart();
                 this._firstStarted = true;
+                this._firstStart();
             }
             // TODO enhance Deferrable/Startable to use a nested promise
             // so start is always called once start:fisrt is resolved and
@@ -62,7 +63,6 @@ define([], function () {
         },
         _doStart: function () {
             this.trigger('start', this);
-            this.run = true;
         },
         _doStandby: function () {
             this.trigger('standby', this);
