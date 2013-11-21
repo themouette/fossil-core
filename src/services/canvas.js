@@ -53,10 +53,10 @@ define([
 
             $(selector).append(view.$el);
 
-            if (view._attachPlugin) {
-                view._attachPlugin();
-            } else if(view.attachPlugin) {
-                view.attachPlugin();
+            if (view._attachPlugins) {
+                view._attachPlugins();
+            } else if(view.attachPlugins) {
+                view.attachPlugins();
             }
         }
 
