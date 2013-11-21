@@ -8,7 +8,7 @@ define(['assert', 'fossil/services/canvas', 'fossil/module'], function (assert, 
 
         test('should have `deepUse` to true', function () {
             var canvas = new Canvas();
-            assert.ok(canvas.useDeep);
+            assert.ok(!canvas.useDeep);
         });
 
         test('should be possible to use', function() {
