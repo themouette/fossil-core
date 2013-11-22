@@ -2085,7 +2085,7 @@ define('kernel', [
         engine: engine
     });
     var canvas = new Canvas({
-        selector: '#l-wrap'
+        selector: '.content'
     });
 
     template.helper('url', function () {
