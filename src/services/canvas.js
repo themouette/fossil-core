@@ -7,10 +7,15 @@ define([
         // selector on wich to append the main canvas.
         selector: 'body',
 
+        // Empty target selector before appening view.
+        // This is useful to place a default message for not supported
+        // browsers for instance.
+        empty: true,
+
         useDeep: false,
 
         initialize: function (options) {
-            utils.copyOption(['selector'], this, options);
+            utils.copyOption(['selector', 'empty'], this, options);
             this.currentView = {};
         },
 
@@ -45,13 +50,16 @@ define([
 
         attachView: function (module, view) {
             var selector = module.selector || this.selector;
+            var $selector = $(selector);
             if (this.currentView[selector]) {
                 this.currentView[selector].remove();
             }
 
+            if (this.empty) { $selector.empty(); }
+
             this.currentView[selector] = view;
 
-            $(selector).append(view.$el);
+            $selector.append(view.$el);
 
             if (view._attachPlugins) {
                 view._attachPlugins();
