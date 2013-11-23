@@ -1,7 +1,7 @@
 define([
     'underscore',
     'fossil/module', 'fossil/views/regionManager',
-    'txt!templates/layout'
+    'hbars!templates/layout'
 ], function (_, Module, RegionManager, layoutTpl) {
     "use strict";
 

@@ -1,10 +1,11 @@
 define('kernel', [
     './application',
-    'fossil/engines/underscore',
+    'fossil/engines/handlebars',
     'fossil/services/routing',
     'fossil/services/template',
     'fossil/services/canvas'
 ], function (Application, Engine, Routing, Template, Canvas) {
+    "use strict";
 
     var engine = new Engine();
     var routing = new Routing();
