@@ -1,149 +1,73 @@
 define([
-    'jquery', 'underscore', '../service', '../utils', 'fossil/views/regionManager'
-], function ($, _, Service, utils, Region) {
+    'jquery', 'underscore', '../service', '../utils'
+], function ($, _, Service, utils) {
     "use strict";
 
     var Canvas = Service.extend({
         // selector on wich to append the main canvas.
         selector: 'body',
 
-        // the main application canvas
-        canvas: null,
+        // Empty target selector before appening view.
+        // This is useful to place a default message for not supported
+        // browsers for instance.
+        empty: true,
 
-        useDeep: true,
+        useDeep: false,
 
         initialize: function (options) {
-            utils.copyOption(['selector', 'canvas'], this, options);
-            if (!this.canvas) {
-                this.canvas = new Region({
-                    template: $(this.selector).html(),
-                    manageRendering: false
-                });
-            }
+            utils.copyOption(['selector', 'empty'], this, options);
+            this.currentView = {};
         },
 
-        // Manage application canvases.
+        // Listen to `do:view:attach` event and attach given view to selector.
         //
-        // It is possible to provide a canvas property at any level (module or
-        // service), and it will be used as container for children and module
-        // rendering.
-        // If no canvas is declared in your application, service creates one
-        // from service.selector html content.
+        // It is possible to override selector on a module basis
+        // by providing a selector option.
         //
-        // module.region property is used to provide the region name to render
-        // on.
+        // ``` javascript
+        // var canvas = new SelectorCanvas({selector: "body"});
         //
+        // // default behavior
+        // var module = new Module();
+        // module
+        //   .use('canvas', canvas); // append view to "body"
         //
-        //
-        // case module is root:
-        //  * render service canvas on module start.
-        //  * append service canvas to selector
-        // case canvas is provided:
-        //  * render canvas on module start
-        //  * append canvas to container canvas
-        // case no canvas
-        //  * copy parent canvas to module.canvas
-        // always:
-        //  * use module.region as target region on module canvas
-        //
+        // // override on module basis
+        // var module = new Module({selector: ".l-content"});
+        // module
+        //   .use('canvas', canvas); // append view to ".l-content"
+        // ```
         use: function (module, parent) {
-            // parent container for module canvas, or view if none provided
-            var container = (parent && parent.canvas) || this.canvas;
-            // region to store canvas on container
-            var canvasRegion = module.containerRegion || (parent && parent.region);
-
-            utils.copyOption(['region'], module, module.options);
-
-            // case module is root:
-            // bind service canvas rendering and attachement
-            if (!parent) {
-                if (module.run) {
-                    // module is started
-                    this.renderAndAppendService(module);
-                } else {
-                    // attach on start event
-                    module.on('start', this.renderAndAppendService, this);
-                }
-            }
-
-            // case canvas is provided:
-            //  * render canvas on module start
-            //  * append canvas to container canvas
-            if (module.canvas) {
-
-                if (module.run) {
-                    // module is started
-                    this.renderAndAppendCanvas(canvasRegion, module, container);
-                } else {
-                    // attach on start event
-                    module.on('start', _.bind(this.renderAndAppendCanvas, this, canvasRegion, module, container), this);
-                }
-
-            // case no canvas
-            //  * copy parent canvas to module.canvas
-            } else {
-                module.canvas = container;
-            }
-
-            // always:
-            //  * use module.region as target region on module canvas
+            // copy selector option if any.
+            utils.copyOption(['selector'], module, module.options);
+            // Listen to view attach event.
             module.on('do:view:attach', this.attachView, this);
         },
 
         dispose: function (module, parent) {
-            if (!parent) {
-                this.disposeRoot(module);
-            } else {
-                this.disposeRegion(module, parent);
-            }
-        },
-
-        // render service canvas on module start.
-        // append service canvas to selector
-        renderAndAppendService: function (module) {
-            this.canvas.setElement(this.selector);
-            module.render(this.canvas);
-        },
-
-        renderAndAppendCanvas: function (region, module, container) {
-            module.render(module.canvas);
-            container.registerView(module.canvas, region);
+            module.off('do:view:attach', this.attachView, this);
         },
 
         attachView: function (module, view) {
-            var canvas = module.canvas || this.canvas;
-            canvas.registerView(view, module.region);
-        },
-
-        // Following cases are faced:
-        // case module is root:
-        //  * canvas provided: use as canvas and append it to service
-        //  * no canvas: use service canvas
-        // case module is child
-        //  * canvas provided: use as canvas and append it to parent
-        //  * no canvas: copy parent canvas
-        useRegion: function (module, parent) {
-            var canvas = (parent && parent.canvas) || this.canvas;
-            if (module.canvas) {
-
-            } else if (parent) {
-                // append module canvas to parent canvas
-                parent.attach(canvas);
+            var selector = module.selector || this.selector;
+            var $selector = $(selector);
+            if (this.currentView[selector]) {
+                this.currentView[selector].remove();
             }
-            // attach on canvas
-            module.on('do:view:attach', function (module, view) {
-                var canvas = module.canvas || (parent && parent.canvas) || this.canvas;
-                canvas.registerView(view, module.region);
-            }, this);
-        },
 
-        disposeRoot: function (module) {
-            module.off('start:first', null, this);
-        },
+            if (this.empty) { $selector.empty(); }
 
-        disposeRegion: function (module, parent) {
-            module.off('do:view:attach', null, this);
+            this.currentView[selector] = view;
+
+            $selector.append(view.$el);
+
+            if (view._attachPlugins) {
+                view._attachPlugins();
+            } else if(view.attachPlugins) {
+                view.attachPlugins();
+            }
         }
+
     });
 
     return Canvas;

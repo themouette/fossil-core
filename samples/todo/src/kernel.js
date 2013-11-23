@@ -1,11 +1,13 @@
 define('kernel', [
     'jquery',
+    'underscore',
     './application',
     'fossil/engines/underscore',
     'fossil/services/routing',
     'fossil/services/template',
     'fossil/services/canvas'
-], function ($, Application, Engine, Routing, Template, Canvas) {
+], function ($, _, Application, Engine, Routing, Template, Canvas) {
+    "use strict";
 
     var engine = new Engine();
     var routing = new Routing();
@@ -13,7 +15,7 @@ define('kernel', [
         engine: engine
     });
     var canvas = new Canvas({
-        selector: '#l-wrap'
+        selector: '.content'
     });
 
     template.helper('url', function () {
@@ -47,7 +49,8 @@ define('kernel', [
         url = extra.helpers.url(url);
 
         view.once('on:plugins:attach', function () {
-            $('button[data-fossil-id='+id+']').on('click', _.bind(module.navigate, module, url, {trigger: true, replace: true}));
+            $('button[data-fossil-id='+id+']')
+                .on('click', _.bind(module.navigate, module, url, {trigger: true, replace: true}));
 
             view.once('on:plugins:detach', function () {
                 $('button[data-fossil-id='+id+']').off('click');
@@ -64,8 +67,6 @@ define('kernel', [
         .use('routing', routing)
         .use('template', template)
         .use('canvas', canvas)
-        .on('start:first', function () {
-            canvas.canvas.defineRegion('content', '.content');
-        })
+        .on('start:first', function () { })
         .start();
 });
