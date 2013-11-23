@@ -19,5 +19,6 @@ define('kernel', [
         .use('routing', routing)
         .use('template', template)
         .use('canvas', canvas)
+
         .start();
 });
