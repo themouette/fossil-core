@@ -1,0 +1,50 @@
+@import 'bourbon/bourbon';
+
+$background-color: #f3f1ec;
+$tonic-color: #3d3d3d;
+$width: 460px;
+
+html{height: 100%;}
+body {
+    @include background(linear-gradient($background-color, darken($background-color, 10%)) left no-repeat);
+    margin: 0;
+}
+#l-wrap {
+    width: $width;
+    margin: 30px auto;
+    background: $tonic-color;
+    border: 1px solid darken($background-color, 30%);
+    border-radius: 10px;
+}
+
+h1 {
+    text-align: center;
+    padding:0;
+    margin: -1px -1px 0 -1px;
+    @include background(radial-gradient(tint($tonic-color, 30), $tonic-color));
+    border-radius: 10px 10px 0 0;
+    border: 1px solid darken($background-color, 30%);
+}
+.content {
+    input[name="title"] {width: 85%;}
+    input[type="submit"] {width:12%}
+    padding-bottom: 10px;
+    ul {
+        margin: 0;
+        padding: 0;
+    }
+    li {
+        background: #fff;
+        list-style: none;
+        display:block;
+        border-bottom: 1px solid darken($background-color, 10%);
+    }
+    li:hover {
+        @include background(linear-gradient(darken($background-color, 10%), $background-color) left no-repeat);
+    }
+    li a {
+        margin:0;
+        padding: 5px 30px;
+        display:block;
+    }
+}
