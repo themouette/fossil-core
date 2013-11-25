@@ -39,11 +39,6 @@ define([
             // copy options to main object
             utils.copyOption(['startWithParent'], this, options);
 
-            // initialize some events
-            this.on('start', this.startListener, this);
-            this.on('standby', this.standbyListener, this);
-            this.on('stop', this.stopListener, this);
-
             // call initialize
             if (typeof(this.initialize) === "function") {
                 this.initialize.apply(this, arguments);
@@ -336,7 +331,8 @@ define([
         }),
 
         // for every module that should start with parent
-        startListener: function () {
+        _doStart: function () {
+            Startable._doStart.apply(this, arguments);
             _.each(this.modules, function (module) {
                 if (module.startWithParent) {
                     module.start();
@@ -345,14 +341,16 @@ define([
         },
 
         // standby all submodules
-        standbyListener: function () {
+        _doStandby: function () {
+            Startable._doStandby.apply(this, arguments);
             _.each(this.modules, function (module) {
                 module.standby();
             }, this);
         },
 
         // stop all submodules
-        stopListener: function () {
+        _doStop: function () {
+            Startable._doStop.apply(this, arguments);
             _.each(this.modules, function (module) {
                 module.stop();
             }, this);
