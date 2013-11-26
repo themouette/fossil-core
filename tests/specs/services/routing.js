@@ -496,6 +496,146 @@ define([
             });
         }); // end of suite Navigation
 
+        suite('moduleid', function () {
+            setup(function () {
+                replaceHistory();
+            });
+            teardown(function () {
+                Backbone.history.stop();
+            });
+            test('should be used as urlRoot if null', function () {
+                assertUseChildidBeforeServiceConnected(null);
+                Backbone.history.stop();
+                replaceHistory();
+                assertUseChildidAfterServiceConnected(null);
+            });
+            test('should be used as urlRoot if undefined', function () {
+                assertUseChildidBeforeServiceConnected();
+                Backbone.history.stop();
+                replaceHistory();
+                assertUseChildidAfterServiceConnected();
+            });
+            test('should not be used as urlRoot if empty', function () {
+                assertDoNotUseChildidBeforeServiceConnected('');
+                Backbone.history.stop();
+                replaceHistory();
+                assertDoNotUseChildidAfterServiceConnected('');
+            });
+            test('should not be used as urlRoot if already provided', function () {
+                assertDoNotUseChildidBeforeServiceConnected('baz');
+                Backbone.history.stop();
+                replaceHistory();
+                assertDoNotUseChildidAfterServiceConnected('baz');
+            });
+
+            function assertUseChildidBeforeServiceConnected(urlRoot) {
+                var routespy = sinon.spy();
+
+                var module = new Module({urlRoot: 'bar'});
+                var Child = Module.extend({
+                    routes: {
+                        '': routespy
+                    }
+                });
+                var child = new Child({
+                    urlRoot: urlRoot
+                });
+                var routing = new Routing({
+                    prefix: 'foo'
+                });
+
+
+                module
+                    .connect('child', child)
+                    .use('routing', routing)
+                    .start();
+
+                routing.router.navigate('foo/bar/child', {trigger: true});
+
+                assert.ok(routespy.called, 'route should be called');
+                assert.ok(routespy.calledOnce, 'once');
+            }
+            function assertDoNotUseChildidBeforeServiceConnected(urlRoot) {
+                var routespy = sinon.spy();
+
+                var module = new Module({urlRoot: 'bar'});
+                var Child = Module.extend({
+                    routes: {
+                        '': routespy
+                    }
+                });
+                var child = new Child({
+                    urlRoot: urlRoot
+                });
+                var routing = new Routing({
+                    prefix: 'foo'
+                });
+
+
+                module
+                    .connect('child', child)
+                    .use('routing', routing)
+                    .start();
+
+                routing.router.navigate('foo/bar/child', {trigger: true});
+
+                assert.notOk(routespy.called, 'route should not be called');
+            }
+            function assertUseChildidAfterServiceConnected(urlRoot) {
+                var routespy = sinon.spy();
+
+                var module = new Module({urlRoot: 'bar'});
+                var Child = Module.extend({
+                    routes: {
+                        '': routespy
+                    }
+                });
+                var child = new Child({
+                    urlRoot: urlRoot
+                });
+                var routing = new Routing({
+                    prefix: 'foo'
+                });
+
+
+                module
+                    .use('routing', routing)
+                    .connect('child', child)
+                    .start();
+
+                routing.router.navigate('foo/bar/child', {trigger: true});
+
+                assert.ok(routespy.called, 'route should be called');
+                assert.ok(routespy.calledOnce, 'once');
+            }
+            function assertDoNotUseChildidAfterServiceConnected(urlRoot) {
+                var routespy = sinon.spy();
+
+                var module = new Module({urlRoot: 'bar'});
+                var Child = Module.extend({
+                    routes: {
+                        '': routespy
+                    }
+                });
+                var child = new Child({
+                    urlRoot: urlRoot
+                });
+                var routing = new Routing({
+                    prefix: 'foo'
+                });
+
+
+                module
+                    .use('routing', routing)
+                    .connect('child', child)
+                    .start();
+
+                routing.router.navigate('foo/bar/child', {trigger: true});
+
+                assert.notOk(routespy.called, 'route should not be called');
+            }
+        });
+
 
     }); //end of suite service/routing
 

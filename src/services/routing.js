@@ -20,7 +20,7 @@ define(['underscore', 'backbone', '../utils', '../service'], function (_, Backbo
             }
         },
 
-        use: function (module, parent) {
+        use: function (module, parent, moduleid) {
             if (!parent) {
                 this.listenTo(module, 'start:first', this.startHistory);
                 this.listenTo(module, 'stop', this.stopHistory);
@@ -30,11 +30,11 @@ define(['underscore', 'backbone', '../utils', '../service'], function (_, Backbo
             this.listenTo(module, 'do:route:register', this.route);
 
             this
-                .setModuleUrl(module, parent)
+                .setModuleUrl(module, parent, moduleid)
                 .registerModuleRoutes(module);
         },
 
-        dispose: function (module, parent) {
+        dispose: function (module, parent, moduleid) {
             this.unregisterModuleRoutes(module);
             module.url = null;
 
@@ -47,11 +47,15 @@ define(['underscore', 'backbone', '../utils', '../service'], function (_, Backbo
             }
         },
 
-        setModuleUrl: function (module, parent) {
+        setModuleUrl: function (module, parent, moduleid) {
             var parentUrl = parent ? parent.url : this.prefix;
 
             // copy properties
             utils.copyOption(['urlRoot'], module, module.options);
+
+            if (typeof module.urlRoot === "undefined" || null === module.urlRoot) {
+                module.urlRoot = moduleid;
+            }
 
             module.url = url(parentUrl, module.urlRoot);
 
