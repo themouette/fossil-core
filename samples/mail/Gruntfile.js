@@ -9,6 +9,7 @@ module.exports = function(grunt) {
             kernel: {
                 src: [
                     'bower_components/requirejs/require.js',
+                    'src/services.js',
                     'src/config.js',
                     'src/kernel.js'
                 ],
@@ -28,7 +29,7 @@ module.exports = function(grunt) {
 
         watch: {
             kernel: {
-                files: [ 'src/config.js', 'src/kernel.js' ],
+                files: [ 'src/services.js', 'src/config.js', 'src/kernel.js' ],
                 tasks: ['concat:kernel']
             }
         },
