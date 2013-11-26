@@ -98,11 +98,11 @@ define(['fossil/service'], function (Service) {
             /* called on service instanciation */
         },
 
-        use: function (module, parent) {
+        use: function (module, parent, moduleid) {
             /* called whenever a module use our service */
         },
 
-        dispose: function (module, parent) {
+        dispose: function (module, parent, moduleid) {
             /* called whenever a module dispose our service */
         }
 

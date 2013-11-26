@@ -61,14 +61,14 @@ define([
         //
         // This is the way newly registered submodules are using service.
         onChildConnectListener: function (serviceid, child, childid, parent) {
-            use(this, serviceid, child, parent);
+            use(this, serviceid, child, parent, childid);
         },
 
         // Module listener for on:child:disconnect event
         //
         // This is the way disconnected submodules are disposing service.
         onChildDisconnectListener: function (serviceid, child, childid, parent) {
-            dispose(this, serviceid, child, parent);
+            dispose(this, serviceid, child, parent, childid);
         },
 
         doLink: function (element, serviceid) {
@@ -93,17 +93,17 @@ define([
 
     Service.mix(Observable);
 
-    function use(service, serviceid, module, parent) {
+    function use(service, serviceid, module, parent, childid) {
         if (_.result(service, 'link')) {
             service.doExpose(module, serviceid);
         }
         if (_.result(service, 'expose')) {
             service.doExpose(module, serviceid);
         }
-        service.use(module, parent);
+        service.use(module, parent, childid);
         if (service.useDeep) {
-            _.each(module.modules, function (submodule) {
-                use(service, serviceid, submodule, module);
+            _.each(module.modules, function (submodule, childid) {
+                use(service, serviceid, submodule, module, childid);
             }, service);
             // listen to events and forward serviceid
             module.on('on:child:connect', _.bind(service.onChildConnectListener, service, serviceid));
@@ -111,7 +111,7 @@ define([
         }
     }
 
-    function dispose(service, serviceid, module, parent) {
+    function dispose(service, serviceid, module, parent, childid) {
         if (_.result(service, 'link')) {
             service.undoLink(module, serviceid);
         }
@@ -119,13 +119,13 @@ define([
             service.undoExpose(module, serviceid);
         }
         if (service.useDeep) {
-            _.each(module.modules, function (submodule) {
-                dispose(service, serviceid, submodule, module);
+            _.each(module.modules, function (submodule, childid) {
+                dispose(service, serviceid, submodule, module, childid);
             }, service);
             module.off('on:child:connect', null, service);
             module.off('on:child:disconnect', null, service);
         }
-        service.dispose(module, parent);
+        service.dispose(module, parent, childid);
     }
 
     return Service;
