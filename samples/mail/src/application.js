@@ -1,42 +1,50 @@
 define([
     'underscore',
-    'fossil/module', 'fossil/views/regionManager',
+    'fossil/module', 'fossil/views/view', 'fossil/views/regionManager',
     'hbars!templates/layout',
-    './modules/compose/compose',
-    './modules/conversation/conversation',
-    './modules/folder/folder'
-], function (_, Module, RegionManager, layoutTpl, ComposeModule, ConversationModule, FolderModule) {
+    'module.compose',
+    'module.conversation',
+    'module.folder',
+    'collections/folder'
+], function (_, Module, View, RegionManager, layoutTpl, compose, conversation, folder, FolderCollection) {
     "use strict";
 
     var Application = Module.extend({
         events: {
-            start: 'startListener',
-            // forwarded attach events
-            'do:view:attach:folder': 'attachLeft',
-            'do:view:attach:conversation': 'attachMain',
-            'do:view:attach:compose': 'attachMain',
+            'start': 'startListener',
             // routes
-            'route:conversations': 'showConversations'
+            'route:conversations': 'showConversations',
+            'route:drafts': 'showDrafts',
+            'route:showoneconversation': 'showOneConversation',
+            'route:compose': 'showCompose'
         },
 
         routes: {
-            '': 'route:conversations'
+            '': 'route:conversations',
+            'inbox': 'route:conversations',
+            'inbox/:id': 'route:showoneconversation',
+            'draft': 'route:drafts',
+            'draft/:id': 'route:compose',
+            'compose': 'route:compose'
         },
 
         initialize: function () {
+            _.bindAll(this, 'attachMain', 'attachLeft');
+
             this
-                .connect('compose', new ComposeModule())
-                .connect('conversation', new ConversationModule())
-                .connect('folder', new FolderModule());
+                .connect('compose', compose)
+                .connect('conversation', conversation)
+                .connect('folder', folder);
         },
 
         startListener: function () {
-            this.initCanvas();
+            this.initLayout();
             this.forwardModuleAttach();
+            this.loadFolders();
         },
 
-        initCanvas: function () {
-            this.canvas = new RegionManager({
+        initLayout: function () {
+            this.layout = new RegionManager({
                 regions: {
                     'left': 'section[data-fossil-region=left]',
                     'main': 'section[data-fossil-region=main]'
@@ -45,28 +53,78 @@ define([
                 managerRendering: false
             });
 
-            this.useView(this.canvas);
+            this.useView(this.layout);
 
-            return this.canvas;
+            return this.layout;
         },
 
+        // Modules triggers 'do:view:attach' to attach a view.
+        //
+        // By default nothing happens as nothing listens to this event.
+        // An orchestration module handles its children attachement. In our
+        // case a region manager is used, but feel free to be inventive.
+        //
+        // This method listens to children 'do:view:attach' events and
+        // handles attachement.
+        //
+        // An other way to do that would be to forward events:
+        //
+        // ```
+        // // forwarded attach events
+        // events: {
+        //     'do:view:attach:folder': 'attachLeft',
+        //     'do:view:attach:conversation': 'attachMain',
+        //     'do:view:attach:compose': 'attachMain'
+        // },
+        //
+        // handleModuleAttach: function () {
+        //     folder.forward('do:view:attach', 'parent!do:view:attach:folder');
+        //     conversation.forward('do:view:attach', 'parent!do:view:attach:conversation');
+        //     compose.forward('do:view:attach', 'parent!do:view:attach:compose');
+        // }
+        // ```
         forwardModuleAttach: function () {
-            _.each([
-                'folder', 'conversation', 'compose'
-            ], function(id) {
-                this.modules[id].forward('do:view:attach', 'parent!do:view:attach:'+id);
-            }, this);
+            this.listenTo(folder, 'do:view:attach', this.attachLeft);
+            this.listenTo(conversation, 'do:view:attach', this.attachMain);
+            this.listenTo(compose, 'do:view:attach', this.attachMain);
+        },
+
+        loadFolders: function () {
+            var folders = new FolderCollection();
+            this
+                .waitFor(folders.fetch())
+                .thenWith(this, function () {
+                    folder.trigger('route:show', folders);
+                }, this.showError);
         },
 
         attachLeft: function (module, view) {
-            this.canvas.registerView(view, 'left');
+            this.layout.registerView(view, 'left');
         },
         attachMain: function (module, view) {
-            this.canvas.registerView(view, 'main');
+            this.layout.registerView(view, 'main');
         },
 
         showConversations: function () {
-            this.modules.conversation.trigger('route:show:list');
+            conversation.trigger('route:show:list');
+        },
+
+        showDrafts: function () {
+            conversation.trigger('route:show:list');
+        },
+
+        showOneConversation: function (id) {
+            conversation.trigger('route:show:one', id);
+        },
+
+        showCompose: function (id) {
+            compose.trigger('route:show:compose', id);
+        },
+
+        showError: function () {
+            this.attachLeft(this, new View({
+                template: 'Une erreur est survenue'
+            }));
         }
     });
 
