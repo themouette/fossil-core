@@ -4,6 +4,10 @@ define([
     "use strict";
 
     var Compose = Module.extend({
+        routes: {
+            '': 'route:show:compose',
+            ':id': 'route:show:compose'
+        },
         events: {
             'route:show:compose': 'compose'
         },
