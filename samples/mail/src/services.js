@@ -25,13 +25,34 @@ define('service.canvas', [ 'fossil/services/canvas' ], function (Canvas) {
 // modules are instanciated here either.
 define('module.compose', ['modules/compose/compose'], function (Compose) {
     "use strict";
-    return new Compose();
+    return new Compose({
+        startWithParent: true
+    });
 });
 define('module.conversation', ['modules/conversation/conversation'], function (Conversation) {
     "use strict";
-    return new Conversation();
+    return new Conversation({
+        startWithParent: true,
+        type: 'inbox'
+    });
+});
+define('module.draft', ['modules/conversation/conversation'], function (Conversation) {
+    "use strict";
+    return new Conversation({
+        startWithParent: true,
+        type: 'drafts'
+    });
+});
+define('module.trash', ['modules/conversation/conversation'], function (Conversation) {
+    "use strict";
+    return new Conversation({
+        startWithParent: true,
+        type: 'trash'
+    });
 });
 define('module.folder', ['modules/folder/folder'], function (Folder) {
     "use strict";
-    return new Folder();
+    return new Folder({
+        startWithParent: true
+    });
 });

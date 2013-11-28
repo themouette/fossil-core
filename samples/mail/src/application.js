@@ -4,9 +4,11 @@ define([
     'hbars!templates/layout',
     'module.compose',
     'module.conversation',
+    'module.draft',
+    'module.trash',
     'module.folder',
-    'collections/folder'
-], function (_, Module, View, RegionManager, layoutTpl, compose, conversation, folder, FolderCollection) {
+    './modules/conversation/conversation'
+], function (_, Module, View, RegionManager, layoutTpl, compose, conversation, draft, trash, folder, Conversation) {
     "use strict";
 
     var Application = Module.extend({
@@ -15,17 +17,24 @@ define([
             // routes
             'route:conversations': 'showConversations',
             'route:drafts': 'showDrafts',
+            'route:trash': 'showTrash',
             'route:showoneconversation': 'showOneConversation',
-            'route:compose': 'showCompose'
+            'route:compose': 'showCompose',
+            'route:listfolder': 'showFolder',
+            'route:showfolderitem': 'showFolderItem'
         },
 
         routes: {
+            //'*route': function (route) {this.attachMain(this, new View({template:'404'}));},
             '': 'route:conversations',
             'inbox': 'route:conversations',
             'inbox/:id': 'route:showoneconversation',
-            'draft': 'route:drafts',
-            'draft/:id': 'route:compose',
-            'compose': 'route:compose'
+            'drafts': 'route:drafts',
+            'drafts/:id': 'route:compose',
+            'trash': 'route:trash',
+            'compose': 'route:compose',
+            'folders/:id': 'route:listfolder',
+            'folders/:folder/:id': 'route:showfolderitem'
         },
 
         initialize: function () {
@@ -33,7 +42,9 @@ define([
 
             this
                 .connect('compose', compose)
-                .connect('conversation', conversation)
+                .connect('inbox', conversation)
+                .connect('draft', draft)
+                .connect('trash', trash)
                 .connect('folder', folder);
         },
 
@@ -86,20 +97,17 @@ define([
         forwardModuleAttach: function () {
             this.listenTo(folder, 'do:view:attach', this.attachLeft);
             this.listenTo(conversation, 'do:view:attach', this.attachMain);
+            this.listenTo(draft, 'do:view:attach', this.attachMain);
+            this.listenTo(trash, 'do:view:attach', this.attachMain);
             this.listenTo(compose, 'do:view:attach', this.attachMain);
         },
 
         loadFolders: function () {
-            var folders = new FolderCollection();
-            this
-                .waitFor(folders.fetch())
-                .thenWith(this, function () {
-                    folder.trigger('route:show', folders);
-                }, this.showError);
+            folder.trigger('route:show', 'left');
         },
 
-        attachLeft: function (module, view) {
-            this.layout.registerView(view, 'left');
+        attachLeft: function (module, view, region) {
+            this.layout.registerView(view, region || 'left');
         },
         attachMain: function (module, view) {
             this.layout.registerView(view, 'main');
@@ -110,7 +118,11 @@ define([
         },
 
         showDrafts: function () {
-            conversation.trigger('route:show:list');
+            draft.trigger('route:show:list');
+        },
+
+        showTrash: function () {
+            trash.trigger('route:show:list');
         },
 
         showOneConversation: function (id) {
@@ -121,10 +133,36 @@ define([
             compose.trigger('route:show:compose', id);
         },
 
-        showError: function () {
-            this.attachLeft(this, new View({
-                template: 'Une erreur est survenue'
-            }));
+        showFolder: function (id) {
+            var folder = 'folders/'+id;
+            if (!this.modules[folder]) {
+                this.connect(folder, new Conversation({
+                    type: id,
+                    startWithParent: false
+                }));
+                this.listenTo(this.modules[folder], 'do:view:attach', this.attachMain);
+                this.modules[folder].start();
+            }
+
+            this.modules[folder].thenWith(this, function () {
+                this.modules[folder].trigger('route:show:list');
+            });
+        },
+
+        showFolderItem: function (id, conversationid) {
+            var folder = 'folders/'+id;
+            if (!this.modules[folder]) {
+                this.connect(folder, new Conversation({
+                    type: id,
+                    startWithParent: false
+                }));
+                this.listenTo(this.modules[folder], 'do:view:attach', this.attachMain);
+                this.modules[folder].start();
+            }
+
+            this.modules[folder].thenWith(this, function () {
+                this.trigger('route:show:one', conversationid);
+            });
         }
     });
 
