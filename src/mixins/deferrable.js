@@ -171,9 +171,17 @@ define(['underscore', '../deferred'], function (_, Deferred) {
                 return "pending" !== p.state();
             });
             _.any(this.promises, function (p, index) {
+                var args;
                 if (p === promise) {
                     this.results.splice(index, 1, data.length <= 2 ? data[0] : _.rest(data, 1));
-                    return true;
+                    // for jQuery xhr, there is 2 arguments
+                    // second being the xhr
+                    if (data.length === 3 && data[2].statusText) {
+                        args = data[0];
+                    } else {
+                        args = data;
+                    }
+                    this.results.splice(index, 1, args);
                 }
             }, this);
             if (!processed) { return this; }
