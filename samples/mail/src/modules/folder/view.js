@@ -7,7 +7,7 @@ define([
 
     var ItemView = View.extend({
         tagName: 'li',
-        template: '<a href="{{id}}">{{label}}</a>',
+        template: '<a href="#folders/{{name}}">{{label}}</a>',
         getViewData: function () {
             return this.model.toJSON();
         }
