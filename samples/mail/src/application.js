@@ -141,7 +141,7 @@ define([
 
             this.useView(this.layout);
 
-            return this.layout;
+            return this;
         },
 
         // Modules triggers 'do:view:attach' to attach a view.
