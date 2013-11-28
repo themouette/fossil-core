@@ -63,8 +63,10 @@ define([
                 .prepareConversations()
                 .thenWith(this, function () {
                     this.useView('list', this.conversations);
-                })
-                .thenUseView(null, 'error');
+                }, function (error) {
+                    this.conversations.loaded = false;
+                    this.useView('error', error);
+                });
         },
 
         show: function (id) {
