@@ -1,0 +1,98 @@
+$headerBackground:      #000;
+$headerColor:           #fff;
+
+$backgroundColor:       #ececec;
+$mainPanelBackground:   #fff;
+$mainPanelText:         #444;
+
+$footerHeight:          60px;
+$footerBorderColor:     $mainPanelBackground;
+$footerBackground:      #999;
+
+
+
+html, body, body > div {margin:0;padding:0; height: 100%;}
+
+#l-wrap {
+    width: 100%;
+    min-height: 100%;
+    margin-bottom: -($footerHeight+1);
+    background-color: $backgroundColor;
+}
+
+#l-wrap > header {
+    background-color: $headerBackground;
+    color: $headerColor;
+    padding: 0 10px;
+    h1 {margin:0; padding: 0; line-height: 1.8em; font-size: 2em;}
+}
+
+#l-wrap > section {
+    display: inline-block;
+    vertical-align:top;
+    -webkit-box-sizing: border-box; /* Safari/Chrome, other WebKit */
+    -moz-box-sizing: border-box;    /* Firefox, other Gecko */
+    box-sizing: border-box;
+    margin-top: 10px;
+    padding: 10px 1% ($footerHeight+1) 1%;
+}
+#l-wrap > #l-left{
+    width: 15%;
+    padding-left: 0;
+}
+#l-wrap > #l-main {
+    width: 84%;
+    background-color: $mainPanelBackground;
+    color: $mainPanelText;
+}
+#l-footer {
+    height: $footerHeight;
+    border-top: 1px solid $backgroundColor;
+    background-color: $footerBackground;
+}
+
+/* mod-folders */
+
+.mod-folders {
+    & > a {
+        display: block;
+        background-color: #007ba1;
+        border-color: #007ba1;
+        color: #fff;
+        padding: 10px;
+        font-size: 1.2em;
+        margin: 0 auto 10px auto;
+        width: 120px;
+        text-align: center;
+        text-decoration: none;
+
+        &:hover {
+            background-color: #008cba;
+        }
+    }
+
+    ul, li {margin:0; padding: 0; list-style: none;}
+
+    li a {
+        display: block;
+        padding: 2px 10px;
+        color: #444;
+        text-decoration: none;
+        border-left: 10px solid $backgroundColor;
+
+        &:hover {
+            background-color: $mainPanelBackground;
+            color: $mainPanelText;
+        }
+        &.selected {
+            border-color: $mainPanelBackground;
+        }
+    }
+
+    h3 {
+        margin: 0;
+        padding: 5px 20px;
+        font-size: 1em;
+    }
+
+}
