@@ -13,6 +13,9 @@ define([
     "use strict";
 
     var Application = Module.extend({
+        // option to override layout.
+        layoutOptions: null,
+
         events: {
             'start': 'startListener',
             'standby': 'standbyListener',
@@ -45,7 +48,8 @@ define([
         // configured with useDeep.
         //
         // Module connection has been extended to leverage the region option.
-        initialize: function () {
+        initialize: function (options) {
+            utils.copyOption('layoutOptions', this, options);
             _.bindAll(this, 'setModuleRegion');
 
             this
@@ -130,14 +134,16 @@ define([
 
         // create the mail layout.
         initLayout: function () {
-            this.layout = new RegionManager({
+            var defaultOptions = {
                 regions: {
                     'left': 'section[data-fossil-region=left]',
                     'main': 'section[data-fossil-region=main]'
                 },
                 template: layoutTpl,
                 managerRendering: false
-            });
+            };
+            var layoutOptions = this.layoutOptions ? _.clone(this.layoutOptions) : {};
+            this.layout = new RegionManager(_.defaults(layoutOptions, defaultOptions));
 
             this.useView(this.layout);
 
