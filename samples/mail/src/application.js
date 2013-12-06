@@ -1,7 +1,7 @@
 define([
     'fossil/utils',
     'underscore',
-    'fossil/module', 'fossil/views/view', 'fossil/views/regionManager',
+    './lib/regionModule', 'fossil/views/view', 'fossil/views/regionManager',
     'hbars!templates/layout',
     'module.compose',
     'module.conversation',
@@ -9,16 +9,12 @@ define([
     'module.trash',
     'module.folder',
     './modules/conversation/conversation'
-], function (utils, _, Module, View, RegionManager, layoutTpl, compose, conversation, draft, trash, folder, Conversation) {
+], function (utils, _, RegionModule, View, RegionManager, layoutTpl, compose, conversation, draft, trash, folder, Conversation) {
     "use strict";
 
-    var Application = Module.extend({
-        // option to override layout.
-        layoutOptions: null,
-
+    var Application = RegionModule.extend({
         events: {
             'start': 'startListener',
-            'standby': 'standbyListener',
             // route events
             // ------------
             //
@@ -49,154 +45,91 @@ define([
         //
         // Module connection has been extended to leverage the region option.
         initialize: function (options) {
-            utils.copyOption('layoutOptions', this, options);
-            _.bindAll(this, 'setModuleRegion');
-
+            options || (options = {});
             this
-                .connect('compose', compose, {region: 'main'})
-                .connect('inbox', conversation, {region: 'main'})
-                .connect('drafts', draft, {region: 'main'})
-                .connect('trash', trash, {region: 'main'})
-                .connect('folder', folder, {region: 'left'});
+                .connectCompose(options.compose)
+                .connectInbox(options.inbox)
+                .connectDrafts(options.drafts)
+                .connectTrash(options.trash);
         },
 
-        startListener: function () {
-            // every submodule should refer to this one when it comes to view
-            // attachement.
-            //
-            // See `forwardModuleAttach` documentation to see how this is handled
-            _.each(this.modules, function (mod) {
-                this.forwardModuleAttach(mod);
-            }, this);
-            this
-                // create the layout
-                .initLayout()
-                // and load folders
-                .loadFolders();
+        // create the compose module if not provided
+        connectCompose: function (composeOption) {
+            return this
+                .connect('compose', composeOption || compose, {region: 'main'});
         },
 
-        standbyListener: function () {
-            // remove layout.
-            // It also removes subviews.
-            this.layout.remove();
-            // release submodules events
-            _.each(this.modules, function (mod) {
-                mod.stopListening(this);
-            }, this);
+        // create the conversation module if not provided
+        connectInbox: function (conversationOption) {
+            return this
+                .connect('inbox', conversationOption || conversation, {region: 'main'});
         },
 
+        // create the drafts module if not provided
+        connectDrafts: function (draftOption) {
+            return this
+                .connect('drafts', draftOption || draft, {region: 'main'});
+        },
+
+        // create the trash module if not provided
+        connectTrash: function (trashOption) {
+            return this
+                .connect('trash', trashOption || trash, {region: 'main'});
+        },
+
+        // create the folder module if not provided
+        connectFolderList: function (folderOption) {
+            var module = this.modules.folder;
+
+            if (!module) {
+                module = folderOption || folder;
+                this.connect('folder', module, {region: 'main'});
+            }
+
+            return module;
+        },
+
+        // create the folder module if not provided
+        connectFolder: function (folderid) {
+            var folder = 'folders/'+folderid;
+            var module = this.modules[folder];
+
+            if (!module) {
+                module = new Conversation({
+                    type: folderid,
+                    startWithParent: true
+                });
+                this.connect(folder, module, {region: 'main'});
+            }
+
+            return module;
+        },
+
+        // load folders
+        // ------------
+        //
         // trigger command for the folder to render on left region.
         // the param is given as the target region.
         //
         // see Folder module to learn more.
-        loadFolders: function () {
+        startListener: function () {
+            this.connectFolderList();
+            var folder = this.modules.folder;
             folder.trigger('route:show', 'left');
-
-            return this;
         },
 
-        ///////////////////////////////////////////////////////////////////////
-        //                                                                   //
-        //  Layout related                                                   //
-        //  --------------                                                   //
-        //                                                                   //
-        //  Layout offer 2 regions: 'left' and 'main'.                       //
-        //  Layout is available under `this.layout`                          //
-        //                                                                   //
-        //  Methods `setRegion` and `setModuleRegion` are used to set view   //
-        //  in regions.                                                      //
-        //                                                                   //
-        //  Module attach behavior is initialized in `fowawrdModuleAttach`   //
-        //  method.                                                          //
-        //                                                                   //
-        ///////////////////////////////////////////////////////////////////////
-
-        // Override the connect method to copy
+        // Options for the main layout.
         //
-        // If main module is started, then an handler is registered on the
-        // modules 'do:view:attach' event.
-        // Otherwise, this is done on main module start.
-        //
-        // For now only `region` options is available
-        //
-        // @param String    id
-        // @param Module    module
-        // @param Object    options extra options.
-        connect: function (id, module, options) {
-            utils.copyOption('region', module, options);
-            Module.prototype.connect.call(this, id, module);
-            if (this.run) {
-                this.forwardModuleAttach(module);
-            }
+        // A basic RegionManager is used.
+        computeLayoutOptions: function (options) {
 
-            return this;
-        },
-
-        // create the mail layout.
-        initLayout: function () {
-            var defaultOptions = {
+            return _.extend(options, {
                 regions: {
                     'left': 'section[data-fossil-region=left]',
                     'main': 'section[data-fossil-region=main]'
                 },
-                template: layoutTpl,
-                managerRendering: false
-            };
-            var layoutOptions = this.layoutOptions ? _.clone(this.layoutOptions) : {};
-            this.layout = new RegionManager(_.defaults(layoutOptions, defaultOptions));
-
-            this.useView(this.layout);
-
-            return this;
-        },
-
-        // Modules triggers 'do:view:attach' to attach a view.
-        //
-        // By default nothing happens as nothing listens to this event.
-        // An orchestration module handles its children attachement. In our
-        // case a region manager is used, but feel free to be inventive.
-        //
-        // This method listens to children 'do:view:attach' events and
-        // handles attachement.
-        //
-        // An other way to do that would be to forward events:
-        //
-        // ```
-        // // forwarded attach events
-        // events: {
-        //     'do:view:attach:region': 'setModuleRegion'
-        // },
-        //
-        // forwardModuleAttach: function (module) {
-        //     module.forward('do:view:attach', 'parent!do:view:attach:region');
-        // }
-        // ```
-        forwardModuleAttach: function (module) {
-            this.listenTo(module, 'do:view:attach', this.setModuleRegion);
-
-            return this;
-        },
-
-        // replace the view in a region with the new one.
-        //
-        // @param View      view    the view to attach.
-        // @param String    region  the name of region to set.
-        // @return Module
-        setRegion: function (view, region) {
-            this.layout.registerView(view, region);
-
-            return this;
-        },
-        // Place the view in the default module.region.
-        //
-        // @param Module    module  the module sending command.
-        // @param View      view    the view to attach.
-        // @param String    region  the name of region to set.
-        // @return Module
-        setModuleRegion: function (module, view, region) {
-            this.setRegion(view, region || module.region);
-
-            return this;
+                template: layoutTpl
+            });
         },
 
         ///////////////////////////////////////////////////////////////////////
@@ -220,39 +153,23 @@ define([
         },
 
         page404: function (route) {
-            this.attachMain(this, new View({template:'404'}));
+            this.setRegion(new View({template:'404'}), 'main');
         },
 
         showFolder: function (id) {
-            var folder = 'folders/'+id;
-            if (!this.modules[folder]) {
-                this.connect(folder, new Conversation({
-                    type: id,
-                    startWithParent: false
-                }), {region: 'main'});
-                this.listenTo(this.modules[folder], 'do:view:attach', this.attachMain);
-                this.modules[folder].start();
-            }
+            var module = this.connectFolder(id);
+            var sidebar = this.connectFolderList(id);
 
-            this.modules[folder].thenWith(this, function () {
-                this.modules[folder].trigger('route:show:list');
-            });
+            module.thenTrigger('route:show:list');
+            sidebar.thenTrigger('select:folder', null, null, id);
         },
 
         showFolderItem: function (id, conversationid) {
-            var folder = 'folders/'+id;
-            if (!this.modules[folder]) {
-                this.connect(folder, new Conversation({
-                    type: id,
-                    startWithParent: false
-                }), {region: 'main'});
-                this.listenTo(this.modules[folder], 'do:view:attach', this.attachMain);
-                this.modules[folder].start();
-            }
+            var folder = this.connectFolder(id);
+            var sidebar = this.connectFolderList(id);
 
-            this.modules[folder].thenWith(this, function () {
-                this.trigger('route:show:one', conversationid);
-            });
+            folder.thenTrigger('route:show:one', null, null, conversationid);
+            sidebar.thenTrigger('select:folder', null, null, id);
         }
     });
 
