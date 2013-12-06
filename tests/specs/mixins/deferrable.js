@@ -1,6 +1,6 @@
 define([
-    'assert', 'underscore', 'fossil/mixin', 'fossil/mixins/deferrable', 'fossil/deferred'
-],function (assert, _, Mixin, Deferrable, Deferred) {
+    'assert', 'sinon', 'underscore', 'fossil/mixin', 'fossil/mixins/deferrable', 'fossil/deferred'
+],function (assert, sinon, _, Mixin, Deferrable, Deferred) {
     'use strict';
     var TIMEOUT = 20;
 
@@ -17,7 +17,7 @@ define([
             assert.strictEqual(q, q.abort());
         });
 
-        suite('waitFor method', function () {
+        suite('#waitFor()', function () {
             test('accepts raw values', function(done) {
                 this.timeout(TIMEOUT);
                 var q = new Queue();
@@ -116,7 +116,7 @@ define([
             });
         });
 
-        suite('then method', function () {
+        suite('#then()', function () {
             test('can be used in synchronous mode', function() {
                 var value = 0;
                 var q = new Queue();
@@ -167,7 +167,7 @@ define([
             });
         });
 
-        suite('thenWith method', function () {
+        suite('#thenWith()', function () {
             test('can be used in synchronous mode', function() {
                 var value = 0;
                 var q = new Queue();
@@ -252,7 +252,7 @@ define([
             });
         });
 
-        suite('abort method', function () {
+        suite('#abort()', function () {
             test('should be possible to abort', function (done) {
                 this.timeout(TIMEOUT);
                 var q = new Queue();
