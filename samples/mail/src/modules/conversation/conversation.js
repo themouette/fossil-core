@@ -11,12 +11,12 @@ define([
         collection: null,
         // the type of collection to display
         type: null,
-
+/*
         routes: {
             '': 'route:show:list',
             ':id': 'route:show:one'
         },
-
+*/
         events: {
             'start': 'startListener',
             'standby': 'standbyListener',
@@ -70,8 +70,9 @@ define([
         },
 
         show: function (id) {
-            this.waitFor(id);
-            this.useView('Show {{id}}');
+            this
+                .waitFor(id)
+                .thenUseView('show');
         },
 
         // retrive or instanciat a view from store

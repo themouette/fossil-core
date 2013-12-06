@@ -22,9 +22,9 @@ define([
             });
         });
 
-        store.set('show', function (draft) {
+        store.set('show', function (conversation) {
             return new ShowView({
-                model: draft
+                model: conversation
             });
         });
 

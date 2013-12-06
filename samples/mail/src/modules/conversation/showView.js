@@ -5,7 +5,10 @@ define([
     "use strict";
 
     var ListView = View.extend({
-        template: tpl
+        template: tpl,
+        getViewData: function () {
+            return {id: this.model};
+        }
     });
 
     return ListView;
