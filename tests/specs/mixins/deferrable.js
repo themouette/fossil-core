@@ -165,6 +165,43 @@ define([
                 d.resolve();
                 assert.equal(calls, 2);
             });
+            suite('should forward arguments', function() {
+                var module, d, success, error, always;
+                setup(function() {
+                    success = sinon.spy();
+                    error = sinon.spy();
+                    always = sinon.spy();
+                    module = new Queue();
+                    d = new Deferred();
+                    module.waitFor(d);
+                    module.then(success, error, always);
+                });
+                test('should tigger success and always on success', function (done) {
+                    d.resolve('foo');
+
+                    // ensure promise is fully resolved
+                    module.then(function () {
+                        assert.ok(success.calledWith('foo'), 'should call success with arguments');
+
+                        assert.ok(always.calledWith('foo'), 'should call always');
+
+                        assert.notOk(error.called, 'should NOT call error');
+                        done();
+                    });
+                });
+                test('should trigger error and always on error', function (done) {
+                    d.reject('foo');
+
+                    // ensure promise is fully resolved
+                    module.then(function () {
+                        assert.ok(error.calledWith('foo'), 'should call error with arguments');
+
+                        assert.ok(always.calledWith('foo'), 'should call always');
+
+                        done();
+                    });
+                });
+            });
         });
 
         suite('#thenWith()', function () {
@@ -234,7 +271,7 @@ define([
                 q.waitFor(d);
                 q.thenWith(
                     q2,
-                    function () {
+                    function (foo) {
                         calls++;
                         assert.equal(this, q2);
                     },
@@ -247,7 +284,7 @@ define([
                     }
                 );
 
-                d.resolve();
+                d.resolve('foo');
                 assert.equal(calls, 2);
             });
         });

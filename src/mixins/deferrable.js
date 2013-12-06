@@ -174,9 +174,11 @@ define(['underscore', '../deferred'], function (_, Deferred) {
                 var args;
                 if (p === promise) {
                     this.results.splice(index, 1, data.length <= 2 ? data[0] : _.rest(data, 1));
-                    // for jQuery xhr, there is 2 arguments
-                    // second being the xhr
-                    if (data.length === 3 && data[2].statusText) {
+                    if (data.length === 1) {
+                        args = data[0];
+                    } else if (data.length === 3 && data[2].statusText) {
+                        // for jQuery xhr, there is 2 arguments
+                        // second being the xhr
                         args = data[0];
                     } else {
                         args = data;
