@@ -14,6 +14,10 @@ define([
     });
 
     return CollectionView.extend({
+        selectFolder: function (id) {
+            this.$('a.selected').removeClass('selected');
+            this.$('a[href="#folders/'+id+'"]').addClass('selected');
+        },
         ItemView: ItemView,
         template: listTpl,
         selector: 'ul.folders'

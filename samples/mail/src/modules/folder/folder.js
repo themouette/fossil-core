@@ -14,7 +14,9 @@ define([
         events: {
             // 'route:show' event executes method `show`.
             // This is a controller that show the folder list.
-            'route:show': 'show'
+            'route:show': 'show',
+
+            'select:folder': 'selectFolder'
         },
 
         routes: {
@@ -38,9 +40,13 @@ define([
                 this
                     .abort()
                     .useView('loading')
+                    .waitFor(this.folders)
                     .waitFor(this.folders.fetch());
 
                 this.folders.loaded = true;
+            } else {
+                this
+                    .waitFor(this.folders);
             }
 
             return this;
@@ -53,10 +59,10 @@ define([
         show: function (region) {
             this
                 .prepareFolders()
-                .thenWith(this, function () {
+                .thenWith(this, function (folders) {
                     // create view
-                    var view = new View({
-                        collection: this.folders,
+                    var view = this.view = new View({
+                        collection: folders,
                         className: 'mod-folders'
                     });
 
@@ -68,6 +74,11 @@ define([
             this.useView(new View({
                 template: 'Une erreur est survenue'
             }));
+        },
+
+        selectFolder: function (id) {
+            this.view.selectFolder(id);
+            console.log('select folder %s', id);
         }
     });
 
