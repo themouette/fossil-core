@@ -423,7 +423,7 @@ define([
                         done();
                     });
                 });
-                test('should trigger error and always on error', function () {
+                test('should trigger error and always on error', function (done) {
                     d.reject('foo');
 
                     // ensure promise is fully resolved
@@ -436,6 +436,46 @@ define([
                         assert.ok(always.calledOnce, 'should call always only once');
 
                         assert.notOk(success.called, 'should NOT call success');
+                        done();
+                    });
+                });
+            });
+
+            suite('#thenTrigger()', function() {
+                var module, d, success, error, always;
+                setup(function() {
+                    success = sinon.spy();
+                    error = sinon.spy();
+                    always = sinon.spy();
+                    module = new Module();
+                    d = new Deferred();
+                    module.waitFor(d);
+                    module.on('success', success);
+                    module.on('error', error);
+                    module.on('always', always);
+                    module.thenTrigger('success', 'error', 'always', 'bar');
+                });
+                test('should tigger success and always on success', function (done) {
+                    d.resolve('foo');
+
+                    // ensure promise is fully resolved
+                    module.then(function () {
+                        assert.ok(success.calledWith('bar', 'foo'), 'should call success with arguments');
+
+                        assert.ok(always.calledWith('bar', 'foo'), 'should call always');
+
+                        done();
+                    });
+                });
+                test('should trigger error and always on error', function (done) {
+                    d.reject('foo');
+
+                    // ensure promise is fully resolved
+                    module.then(function () {
+                        assert.ok(error.calledWith('bar', 'foo'), 'should call error with arguments');
+
+                        assert.ok(always.calledWith('bar', 'foo'), 'should call always');
+                        done();
                     });
                 });
             });

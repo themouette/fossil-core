@@ -196,6 +196,10 @@ define([
             module.parent.replay(pubsub);
             module.parent = pubsub;
 
+            // start module if parent is started
+            // and module should start with parent.
+            this.run && module.startWithParent && module.start();
+
             // trigger connect on child
             if (module.trigger) {
                 module.trigger.apply(module, ['do:connect:to:parent', this, id, module].concat(extra));
@@ -332,13 +336,15 @@ define([
 
         thenTrigger: function (success, error, always) {
             var mod = this;
-            function thenTriggerWithArgs(eventname, extra) {
+            var extra = _.tail(arguments, 3);
+            function thenTriggerWithArgs(eventname) {
+                var extra = _.tail(arguments);
                 mod.trigger.apply(mod, [eventname].concat(extra));
             }
             return this.then(
-                success ? _.partial(thenTriggerWithArgs, success) : success,
-                error ? _.partial(thenTriggerWithArgs, error) : error,
-                always ? _.partial(thenTriggerWithArgs, always) : always
+                success ? _.partial.apply(_, [thenTriggerWithArgs, success].concat(extra)) : success,
+                error ? _.partial.apply(_, [thenTriggerWithArgs, error].concat(extra)) : error,
+                always ? _.partial.apply(_, [thenTriggerWithArgs, always].concat(extra)) : always
             );
         },
 
