@@ -1,6 +1,6 @@
 define([
-    'assert', 'sinon', 'underscore', 'fossil/module', 'backbone', 'fossil/views/view'
-], function (assert, sinon, _, Module, Backbone, View) {
+    'assert', 'sinon', 'underscore', 'fossil/module', 'backbone', 'fossil/views/view', 'fossil/deferred'
+], function (assert, sinon, _, Module, Backbone, View, Deferred) {
   "use strict";
 
     suite('Module', function () {
@@ -392,6 +392,53 @@ define([
                     assert.equal(spy.callCount, 0);
                 });
             }); // end of suite observable methods
+
+            suite('#thenTrigger()', function() {
+                var module, d, success, error, always;
+                setup(function() {
+                    success = sinon.spy();
+                    error = sinon.spy();
+                    always = sinon.spy();
+                    module = new Module();
+                    d = new Deferred();
+                    module.waitFor(d);
+                    module.on('success', success);
+                    module.on('error', error);
+                    module.on('always', always);
+                    module.thenTrigger('success', 'error', 'always');
+                });
+                test('should tigger success and always on success', function (done) {
+                    d.resolve('foo');
+
+                    // ensure promise is fully resolved
+                    module.then(function () {
+                        assert.ok(success.called, 'should call success');
+                        assert.ok(success.calledOnce, 'should call success only once');
+                        assert.ok(success.calledWith('foo'), 'should call success with arguments');
+
+                        assert.ok(always.called, 'should call always');
+                        assert.ok(always.calledOnce, 'should call always only once');
+
+                        assert.notOk(error.called, 'should NOT call error');
+                        done();
+                    });
+                });
+                test('should trigger error and always on error', function () {
+                    d.reject('foo');
+
+                    // ensure promise is fully resolved
+                    module.then(function () {
+                        assert.ok(error.called, 'should call error');
+                        assert.ok(error.calledWith('foo'), 'should call error with arguments');
+                        assert.ok(error.calledOnce, 'should call error only once');
+
+                        assert.ok(always.called, 'should call always');
+                        assert.ok(always.calledOnce, 'should call always only once');
+
+                        assert.notOk(success.called, 'should NOT call success');
+                    });
+                });
+            });
         }); // end of suite Event
 
         suite('Options', function () {

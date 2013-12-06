@@ -330,6 +330,18 @@ define([
             return this;
         }),
 
+        thenTrigger: function (success, error, always) {
+            var mod = this;
+            function thenTriggerWithArgs(eventname, extra) {
+                mod.trigger.apply(mod, [eventname].concat(extra));
+            }
+            return this.then(
+                success ? _.partial(thenTriggerWithArgs, success) : success,
+                error ? _.partial(thenTriggerWithArgs, error) : error,
+                always ? _.partial(thenTriggerWithArgs, always) : always
+            );
+        },
+
         // for every module that should start with parent
         _doStart: function () {
             Startable._doStart.apply(this, arguments);
