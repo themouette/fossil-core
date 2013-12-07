@@ -1,7 +1,8 @@
 define([
+    'backbone',
     'fossil/utils', 'fossil/module', './view',
     '../../collections/folder'
-], function (utils, Module, View, FolderCollection) {
+], function (Backbone, utils, Module, View, FolderCollection) {
     "use strict";
 
     var Folder = Module.extend({
@@ -16,7 +17,8 @@ define([
             // This is a controller that show the folder list.
             'route:show': 'show',
 
-            'select:folder': 'selectFolder'
+            // command to select folder.
+            'do:select:folder': 'selectFolder'
         },
 
         routes: {
@@ -35,21 +37,43 @@ define([
                 });
             }
 
+            this
+                .waitFor(this.folders);
+
             if (!this.folders.loaded) {
 
                 this
-                    .abort()
                     .useView('loading')
-                    .waitFor(this.folders)
-                    .waitFor(this.folders.fetch());
+                    .waitFor(this.folders.fetch())
+                    .then(null, function folderFetchError() {this.folders.loaded = false;});
 
                 this.folders.loaded = true;
-            } else {
-                this
-                    .waitFor(this.folders);
             }
 
             return this;
+        },
+
+        // a model to store module state.
+        //
+        // * selected: the selected folder uri.
+        //
+        // return Backbone.Model
+        prepareStateModel: function () {
+            if (!this.stateModel) {
+                this.stateModel = new Backbone.Model({
+                    selected: null
+                });
+            }
+
+            return this.stateModel;
+        },
+
+        // listen to 'do:select:folder'
+        //
+        // Set stateModel 'select' value.
+        selectFolder: function (id) {
+            var stateModel = this.prepareStateModel();
+            stateModel.set('selected', id);
         },
 
         // the main controller.
@@ -57,13 +81,16 @@ define([
         //
         // @param region the region to use as display
         show: function (region) {
+            var stateModel = this.prepareStateModel();
             this
+                .abort()
                 .prepareFolders()
                 .thenWith(this, function (folders) {
                     // create view
                     var view = this.view = new View({
                         collection: folders,
-                        className: 'mod-folders'
+                        className: 'mod-folders',
+                        model: stateModel
                     });
 
                     return this.render(view).attach(view, region);
@@ -74,11 +101,6 @@ define([
             this.useView(new View({
                 template: 'Une erreur est survenue'
             }));
-        },
-
-        selectFolder: function (id) {
-            this.view.selectFolder(id);
-            console.log('select folder %s', id);
         }
     });
 

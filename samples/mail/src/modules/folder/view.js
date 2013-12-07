@@ -1,8 +1,9 @@
 define([
+    'underscore',
     'fossil/views/view',
     'fossil/views/collection',
     'hbars!./list'
-], function (View, CollectionView, listTpl) {
+], function (_, View, CollectionView, listTpl) {
     "use strict";
 
     var ItemView = View.extend({
@@ -14,12 +15,27 @@ define([
     });
 
     return CollectionView.extend({
-        selectFolder: function (id) {
-            this.$('a.selected').removeClass('selected');
-            this.$('a[href="#folders/'+id+'"]').addClass('selected');
-        },
         ItemView: ItemView,
         template: listTpl,
-        selector: 'ul.folders'
+        selector: 'ul.folders',
+        iniitialize: function (options) {
+            _.bindAll(this, 'onSelectModuleChange');
+        },
+        attachPlugins: function () {
+            if (this.model.has('selected')) {
+                this.selectFolder(this.model.get('selected'));
+            }
+            this.listenTo(this.model, 'change:selected', this.onSelectModuleChange);
+        },
+        detachPlugins: function () {
+            this.stopListening(this.model);
+        },
+        selectFolder: function (uri) {
+            this.$('li.is-selected').removeClass('is-selected');
+            this.$('a[href="#'+uri+'"]').parent().addClass('is-selected');
+        },
+        onSelectModuleChange: function (model, uri) {
+            this.selectFolder(uri);
+        }
     });
 });
