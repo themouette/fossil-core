@@ -11,12 +11,12 @@ define([
         collection: null,
         // the type of collection to display
         type: null,
-/*
+
         routes: {
             '': 'route:show:list',
             ':id': 'route:show:one'
         },
-*/
+
         events: {
             'start': 'startListener',
             'standby': 'standbyListener',
