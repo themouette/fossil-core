@@ -14,7 +14,6 @@ define([
 
     var Application = RegionModule.extend({
         events: {
-            'start': 'startListener',
             // route events
             // ------------
             //
@@ -23,7 +22,11 @@ define([
             // when module is reused inside another application.
             'route:index': 'index',
             'route:listfolder': 'showFolder',
-            'route:showfolderitem': 'showFolderItem'
+            'route:showfolderitem': 'showFolderItem',
+            // whenever a module is attached to main area,
+            // it triggers this event.
+            // This is used update other modules state.
+            'do:module:select:main': 'selectFolder'
         },
 
         routes: {
@@ -33,6 +36,11 @@ define([
             // routes maps to event by default when there is no matching
             // method.
             '': 'route:index',
+            'inbox*parts': 'showInbox',
+            'drafts': 'showDrafts',
+            'drafts/:id': 'showDraftsItem',
+            'trash': 'showTrash',
+            'trash/:id': 'showTrashItem',
             'folders/:id': 'route:listfolder',
             'folders/:folder/:id': 'route:showfolderitem'
         },
@@ -48,33 +56,58 @@ define([
             options || (options = {});
             this
                 .connectCompose(options.compose)
-                .connectInbox(options.inbox)
-                .connectDrafts(options.drafts)
-                .connectTrash(options.trash);
+                // .connectInbox(options.inbox)
+                // .connectDrafts(options.drafts)
+                // .connectTrash(options.trash)
+                ;
         },
 
         // create the compose module if not provided
         connectCompose: function (composeOption) {
-            return this
-                .connect('compose', composeOption || compose, {region: 'main'});
+            var module = this.modules.compose;
+
+            if (!module) {
+                module = composeOption || compose;
+                this.connect('compose', module, {region: 'main'});
+            }
+
+            return module;
         },
 
         // create the conversation module if not provided
         connectInbox: function (conversationOption) {
-            return this
-                .connect('inbox', conversationOption || conversation, {region: 'main'});
+            var module = this.modules.inbox;
+
+            if (!module) {
+                module = conversationOption || conversation;
+                this.connect('inbox', module, {region: 'main'});
+            }
+
+            return module;
         },
 
         // create the drafts module if not provided
         connectDrafts: function (draftOption) {
-            return this
-                .connect('drafts', draftOption || draft, {region: 'main'});
+            var module = this.modules.drafts;
+
+            if (!module) {
+                module = draftOption || draft;
+                this.connect('drafts', module, {region: 'main'});
+            }
+
+            return module;
         },
 
         // create the trash module if not provided
         connectTrash: function (trashOption) {
-            return this
-                .connect('trash', trashOption || trash, {region: 'main'});
+            var module = this.modules.trash;
+
+            if (!module) {
+                module = trashOption || trash;
+                this.connect('trash', module, {region: 'main'});
+            }
+
+            return module;
         },
 
         // create the folder module if not provided
@@ -84,6 +117,11 @@ define([
             if (!module) {
                 module = folderOption || folder;
                 this.connect('folder', module, {region: 'main'});
+                // trigger command for the folder to render on left region.
+                // the param is given as the target region.
+                //
+                // see Folder module to learn more.
+                module.thenTrigger('route:show', null, null, 'left');
             }
 
             return module;
@@ -105,17 +143,25 @@ define([
             return module;
         },
 
-        // load folders
-        // ------------
-        //
-        // trigger command for the folder to render on left region.
-        // the param is given as the target region.
-        //
-        // see Folder module to learn more.
-        startListener: function () {
-            this.connectFolderList();
-            var folder = this.modules.folder;
-            folder.trigger('route:show', 'left');
+        moduleSelectedListener: function (moduleid, module, view, region) {
+            region || (region = module.region);
+
+            // a module is attached to main region, so warn main module.
+            // trigger a generic event
+            module.trigger('parent!do:module:select', region, moduleid, module, view);
+
+            // trigger specialized event
+            var eventname = _.template('parent!do:module:select:<%- region %>', {region: region});
+            module.trigger(eventname, moduleid, module, view);
+        },
+
+        forwardModuleAttach: function (moduleid, module) {
+            // call parent method
+            RegionModule.prototype.forwardModuleAttach.call(this, moduleid, module);
+            // on module attach, handle module selection
+            this.listenTo(module, 'do:view:attach', _.bind(this.moduleSelectedListener, this, moduleid));
+
+            return this;
         },
 
         // Options for the main layout.
@@ -148,28 +194,79 @@ define([
         //                                                                   //
         ///////////////////////////////////////////////////////////////////////
 
+        // bound on 'do:module:select:main'.
+        //
+        // Whenever a module is happened to main panel,
+        // select according item in menu.
+        //
+        // Folders are initialized, then it receives a change of state command.
+        selectFolder: function (moduleid, module) {
+            var sidebar = this.connectFolderList();
+
+            sidebar.thenTrigger('do:select:folder', null, null, moduleid);
+        },
+
         index: function () {
-            this.navigate('inbox', {trigger: true, replace: false});
+            this.navigate('inbox', {trigger: true, replace: true});
         },
 
         page404: function (route) {
             this.setRegion(new View({template:'404'}), 'main');
         },
 
-        showFolder: function (id) {
-            var module = this.connectFolder(id);
-            var sidebar = this.connectFolderList(id);
 
-            module.thenTrigger('route:show:list');
-            sidebar.thenTrigger('select:folder', null, null, id);
+        // Load inbox module.
+        //
+        // inbox module urls will overload this one.
+        // This is only for connecting module the first time.
+        showInbox: function (part) {
+            var inbox = this.connectInbox();
+
+            // A url change is required to have the forward change.
+            inbox.navigate('loading', {trigger: true, replace:true});
+
+            inbox.then(function () {
+                inbox.navigate(part || '', {trigger: true, replace:true});
+            });
+        },
+
+
+        showDrafts: function () {
+            var drafts = this.connectDrafts();
+
+            drafts.thenTrigger('route:show:list');
+        },
+
+        showDraftsItem: function (id) {
+            var drafts = this.connectDrafts();
+
+            drafts.thenTrigger('route:show:one', null, null, id);
+        },
+
+
+        showTrash: function () {
+            var trash = this.connectTrash();
+
+            trash.thenTrigger('route:show:list');
+        },
+
+        showTrashItem: function (id) {
+            var trash = this.connectTrash();
+
+            trash.thenTrigger('route:show:one', null, null, id);
+        },
+
+
+        showFolder: function (id) {
+            var folder = this.connectFolder(id);
+
+            folder.thenTrigger('route:show:list');
         },
 
         showFolderItem: function (id, conversationid) {
             var folder = this.connectFolder(id);
-            var sidebar = this.connectFolderList(id);
 
             folder.thenTrigger('route:show:one', null, null, conversationid);
-            sidebar.thenTrigger('select:folder', null, null, id);
         }
     });
 
