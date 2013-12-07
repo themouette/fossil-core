@@ -130,21 +130,11 @@ define([
         //
         // This method listens to children 'do:view:attach' events and
         // handles attachement.
-        //
-        // An other way to do that would be to forward events:
-        //
-        // ```
-        // // forwarded attach events
-        // events: {
-        //     'do:view:attach:region': 'setModuleRegion'
-        // },
-        //
-        // forwardModuleAttach: function (id, module) {
-        //     module.forward('do:view:attach', 'parent!do:view:attach:region');
-        // }
-        // ```
         forwardModuleAttach: function (moduleid, module) {
+            // Attach view on region
             this.listenTo(module, 'do:view:attach', this.setModuleRegion);
+            // on module attach, handle module selection
+            this.listenTo(module, 'do:view:attach', _.bind(this.moduleSelectedListener, this, moduleid));
 
             return this;
         },
@@ -169,6 +159,23 @@ define([
             this.setRegion(view, region || module.region);
 
             return this;
+        },
+
+        // triggers 'do:module:select' on RegionModule when a view is attached
+        // to regionManager.
+        //
+        // @trigger 'do:module:select'                  function (region, moduleid, module, view) {}
+        // @trigger 'do:module:select:<%- region %>'    function (moduleid, module, view) {}
+        moduleSelectedListener: function (moduleid, module, view, region) {
+            region || (region = module.region);
+
+            // a module is attached to main region, so warn main module.
+            // trigger a generic event
+            module.trigger('parent!do:module:select', region, moduleid, module, view);
+
+            // trigger specialized event
+            var eventname = _.template('parent!do:module:select:<%- region %>', {region: region});
+            module.trigger(eventname, moduleid, module, view);
         }
     });
 

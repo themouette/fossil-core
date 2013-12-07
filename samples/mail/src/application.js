@@ -143,27 +143,6 @@ define([
             return module;
         },
 
-        moduleSelectedListener: function (moduleid, module, view, region) {
-            region || (region = module.region);
-
-            // a module is attached to main region, so warn main module.
-            // trigger a generic event
-            module.trigger('parent!do:module:select', region, moduleid, module, view);
-
-            // trigger specialized event
-            var eventname = _.template('parent!do:module:select:<%- region %>', {region: region});
-            module.trigger(eventname, moduleid, module, view);
-        },
-
-        forwardModuleAttach: function (moduleid, module) {
-            // call parent method
-            RegionModule.prototype.forwardModuleAttach.call(this, moduleid, module);
-            // on module attach, handle module selection
-            this.listenTo(module, 'do:view:attach', _.bind(this.moduleSelectedListener, this, moduleid));
-
-            return this;
-        },
-
         // Options for the main layout.
         //
         // A basic RegionManager is used.
