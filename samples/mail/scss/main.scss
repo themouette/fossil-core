@@ -76,7 +76,7 @@ html, body, body > div {margin:0;padding:0; height: 100%;}
         padding-left: 10px;
     }
     li {
-        border-left: 10px solid $backgroundColor;
+        border-left: 10px solid transparent;
         &.is-selected {
             border-color: $mainPanelBackground;
         }
