@@ -25,7 +25,7 @@ define([
             'route:showfolderitem': 'showFolderItem',
             // whenever a module is attached to main area,
             // it triggers this event.
-            // This is used update other modules state.
+            // This is used to update other modules state.
             'do:module:select:main': 'selectFolder'
         },
 
