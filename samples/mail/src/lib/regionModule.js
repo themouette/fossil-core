@@ -14,6 +14,7 @@ define([
         // Copy options and bind methods.
         constructor: function (options) {
             utils.copyOption(['layoutOptions'], this, options);
+            this.forwardModuleAttach = utils.keyValueOrObject(this.forwardModuleAttach);
             _.bindAll(this, 'setModuleRegion');
             Module.apply(this, arguments);
         },
@@ -26,9 +27,7 @@ define([
             // attachement.
             //
             // See `forwardModuleAttach` documentation to see how this is handled
-            _.each(this.modules, function (mod) {
-                this.forwardModuleAttach(mod);
-            }, this);
+            this.forwardModuleAttach(this.modules);
 
             Module.prototype._doStart.apply(this, arguments);
         },
@@ -77,7 +76,7 @@ define([
             utils.copyOption('region', module, options);
             Module.prototype.connect.call(this, id, module);
             if (this.run) {
-                this.forwardModuleAttach(module);
+                this.forwardModuleAttach(id, module);
             }
 
             return this;
@@ -140,11 +139,11 @@ define([
         //     'do:view:attach:region': 'setModuleRegion'
         // },
         //
-        // forwardModuleAttach: function (module) {
+        // forwardModuleAttach: function (id, module) {
         //     module.forward('do:view:attach', 'parent!do:view:attach:region');
         // }
         // ```
-        forwardModuleAttach: function (module) {
+        forwardModuleAttach: function (moduleid, module) {
             this.listenTo(module, 'do:view:attach', this.setModuleRegion);
 
             return this;
