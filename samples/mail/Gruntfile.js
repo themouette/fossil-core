@@ -4,6 +4,10 @@ module.exports = function(grunt) {
     // Project configuration.
     grunt.initConfig({
         pkg: grunt.file.readJSON('package.json'),
+        config: {
+            out: 'app.js',
+            tmp: ''
+        },
         port: port,
         concat: {
             kernel: {
@@ -13,7 +17,52 @@ module.exports = function(grunt) {
                     'src/config.js',
                     'src/kernel.js'
                 ],
-                dest: 'app.js'
+                dest: '<%- config.out %>'
+            },
+
+            release: {
+                src: [
+                    'bower_components/almond/almond.js',
+                    'src/config.js',
+                    '<%- config.out %>'
+                ],
+                dest: '<%- config.out %>'
+            }
+        },
+
+        requirejs: {
+            release: {
+                options: {
+                    out: '<%- config.out %>',
+                    optimize: 'none',
+                    baseUrl: 'src/',
+                    include: ['services', 'kernel'],
+                    mainConfigFile: "src/config.js"
+                }
+            }
+        },
+
+        uglify: {
+            release: {
+                options: {
+                    banner: '/*! <%= pkg.name %> <%= grunt.template.today("yyyy-mm-dd") %> */\n'
+                },
+                library: {
+                    src: '<%- config.out %>',
+                    dest: '<%- config.out %>'
+                }
+            }
+        },
+        compress: {
+            js: {
+                options: {
+                    mode: 'gzip'
+                },
+                expand: true,
+                src: ['<%- config.out %>'],
+                cwd: './',
+                dest: './',
+                ext: '.gz.js'
             }
         },
 
@@ -61,6 +110,9 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-connect');
   grunt.loadNpmTasks('grunt-contrib-watch');
   grunt.loadNpmTasks('grunt-contrib-concat');
+  grunt.loadNpmTasks('grunt-contrib-requirejs');
+  grunt.loadNpmTasks('grunt-contrib-uglify');
+  grunt.loadNpmTasks('grunt-contrib-compress');
   grunt.loadNpmTasks('grunt-concurrent');
   grunt.loadNpmTasks('grunt-sass');
 
@@ -70,7 +122,13 @@ module.exports = function(grunt) {
   grunt.registerTask('build:theme', 'Build application themes', ['sass']);
 
   grunt.registerTask('build:dev', ['concat:kernel', 'build:theme']);
-  grunt.registerTask('build:release', ['concat:kernel', 'build:theme']);
+  grunt.registerTask('build:release', [
+        'requirejs:release',
+        'concat:release',
+        'uglify:release',
+        'compress:js',
+        'build:theme'
+    ]);
 
   grunt.registerTask('dev', ['build:dev', 'concurrent:dev']);
   grunt.registerTask('release', ['test', 'build:release']);

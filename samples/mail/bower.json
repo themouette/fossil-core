@@ -23,6 +23,7 @@
     "underscore": "~1.5.2",
     "requirejs-handlebars": "git://github.com/jfparadis/requirejs-handlebars.git",
     "requirejs-text": "~2.0.10",
-    "handlebars": "~1.1.2"
+    "handlebars": "~1.1.2",
+    "almond": "~0.2.7"
   }
 }

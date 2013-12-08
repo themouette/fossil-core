@@ -11,7 +11,8 @@ require.config({
         'text': '../bower_components/requirejs-text/text'
     },
     map: {
-        'hbars': {'Handlebars': 'handlebars'}
+        'hbars': {'Handlebars': 'handlebars'},
+        '*': {'Handlebars': 'handlebars'}
     },
     shim: {
         'underscore': {exports: '_'},
