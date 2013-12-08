@@ -1,3 +1,54 @@
+// RegionModule
+// ============
+//
+// A module with a built in fossil view `regionManager`.
+//
+// Main goal of this kind of modules is to organise submodules into the layout.
+// It provides events and bindings to ease management.
+//
+// Define Region To Use For Modules
+// --------------------------------
+//
+// Add an extra `region` property on a submodule to make it automaticly attach
+// on dedicated region.
+// It is also possible to pass region to `connect` method or to `attach` method.
+//
+// ``` javascript
+// // Set region as a module property
+// child.region = 'main';
+// module.connect('child', child);
+//
+// // OR
+// // Provide a region option to `connect`.
+// module.connect('child', child, {region: main});
+//
+// // OR
+// // Specify region at render method
+// module.connect('child', child);
+// child.attach('main');
+// ```
+//
+// Detect changes
+// --------------
+//
+// When a module attaches a view on a region, a generic event is triggered on
+// regionModule: 'do:module:select'.
+// In the meantime a region specific event is triggered too on regionModule:
+// 'do:module:select:<%- region %>'.
+//
+// Those events can be used to detect when something changes and impact modules
+// in other regions.
+//
+// > Note that those events are triggered every time the view is attached.
+//
+// Define layout
+// -------------
+//
+// There is two extension points for you to define the layout.
+//
+// ### Override options
+//
+// ### Create layout
 define([
     'fossil/utils',
     'underscore',
