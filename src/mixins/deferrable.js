@@ -11,6 +11,17 @@ define(['underscore', '../deferred'], function (_, Deferred) {
     var uuidCounter = 0;
 
     var Deferrable = {
+        // Defer execution until `promise` is resolved.
+        //
+        // Possible options are:
+        //
+        // * `failFast`, default true, should the first error stop all
+        //   deferred?
+        // * `timeout`, default: false, timeout (in ms) before this promise is
+        //   aborted.
+        //
+        // @param Defered   promise     the object to sync.
+        // @param Object    options     options for this promise.
         waitFor: function (promise, options) {
             if (!this.isWaiting()) {
                 this.async = new Wait();
@@ -22,22 +33,102 @@ define(['underscore', '../deferred'], function (_, Deferred) {
 
             return this;
         },
+        // fetch a model or collection and returns the object on success
+        //
+        // Default Backbone behavior is to return ajax promise.
+        //
+        // ``` javascript
+        // var collection = new Backbone.Collection();
+        //
+        // module
+        //    .abort()
+        //    .useView('loading')
+        //    .waitForFetch(collection)
+        //    .thenWith(this, function (collection) {
+        //        module.useView(new CollectionView({
+        //            collection: collection
+        //        }));
+        //    });
+        // ```
+        //
+        // @param Model|Collection  obj     the object to sync.
+        // @param Object            options see waitFor.
+        waitForFetch: function (obj, options) {
+            var req = obj.fetch();
+            var deferred = new Deferred();
+            // enqueue the deferred.
+            this.waitFor(deferred, options);
+
+            // on resultion, return object or forward error.
+            req.then(function fetchSuccess() {
+                deferred.resolve(obj);
+            }, function fetchError(err) {
+                deferred.reject(err);
+            });
+
+            return this;
+        },
+        // Fetch the object only once.
+        //
+        // Fetching being optimistic, you should **not** assume it is fully
+        // loaded, and therefore should use obj events to keep in sync and
+        // reflect changes.
+        //
+        // ``` javascript
+        // var collection = new Backbone.Collection();
+        //
+        // module
+        //    .abort()
+        //    .useView('loading')
+        //    .waitForFetchOnce(collection)
+        //    .thenUseView('list', 'error');
+        // ```
+        //
+        // @param Model|Collection  obj     the object to sync.
+        // @param Object            options see waitFor.
+        waitForFetchOnce: function (obj, options) {
+            if (!obj.loaded) {
+                this
+                    .waitForFetch(obj, options)
+                    // reset loaded on error
+                    .then(null, function () {obj.loaded = false;});
+
+                // mark object as loaded.
+                // This is an optimistic aproach, you should use object
+                // sync and change event to reflect changes on your views
+                // from here.
+                obj.loaded = true;
+
+                return this;
+            }
+
+            // set it as argument even if no fetch is required.
+            this.waitFor(obj, options);
+
+            return this;
+        },
         then: function (success, error, always) {
+            var extra = _.tail(arguments, 3);
             if (!this.isWaiting()) {
                 if (success) { success(); }
                 if (always) { always(); }
                 return this;
             }
-            this.async.then(success, error, always);
+            this.async.then(
+                success ? _.partial.apply(_, [success].concat(extra)) : success,
+                error ? _.partial.apply(_, [error].concat(extra)) : error,
+                always ? _.partial.apply(_, [always].concat(extra)) : always
+            );
 
             return this;
         },
         thenWith: function (context, success, error, always) {
-            return this.then(
+            var extra = _.tail(arguments, 4);
+            return this.then.apply(this, [
                 success ? _.bind(success, context) : success,
                 error ? _.bind(error, context) : error,
                 always ? _.bind(always, context) : always
-            );
+            ].concat(extra));
         },
         abort: function () {
             if (this.isWaiting()) {
