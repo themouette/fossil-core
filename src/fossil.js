@@ -3,6 +3,8 @@ define([
     'utils',
     'mixin',
     'module',
+    'modules/region',
+    'modules/lazy',
     'service',
     'observableBuffer',
     'viewStore',
@@ -17,7 +19,8 @@ define([
     'engines/handlebars',
     'engines/underscore'
 ], function (deferred,
-    utils, Mixin, Module, Service, ObservableBuffer, ViewStore,
+    utils, Mixin, Module, RegionModule, LazyModule,
+    Service, ObservableBuffer, ViewStore,
     Observable, Startable, Deferrable,
     Session, Canvas, Routing, Events, Template,
     Underscore, Handlebars
@@ -33,6 +36,10 @@ define([
             Deferrable: Deferrable
         },
         Module: Module,
+        modules: {
+            region: RegionModule,
+            lazy: LazyModule
+        },
         Service: Service,
         services: {
             Session: Session,
