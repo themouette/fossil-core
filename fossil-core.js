@@ -1,5 +1,6 @@
 var Fossil = (function () {
 var deferred = function ($) {
+        
         return $.Deferred;
     }(jquery);
 var utils = function (_) {
@@ -144,6 +145,117 @@ var mixin = function (_, utils) {
         });
         return Mixin;
     }(underscore, utils);
+var modules_region = function (utils, _, Module, RegionManager) {
+        
+        var RegionModule = Module.extend({
+                layout: null,
+                constructor: function (options) {
+                    utils.copyOption(['layout'], this, options);
+                    this.forwardModuleAttach = utils.keyValueOrObject(this.forwardModuleAttach);
+                    _.bindAll(this, 'setModuleRegion');
+                    Module.apply(this, arguments);
+                },
+                _doStart: function () {
+                    this.initLayout();
+                    this.forwardModuleAttach(this.modules);
+                    Module.prototype._doStart.apply(this, arguments);
+                },
+                _doStandby: function () {
+                    Module.prototype._doStandby.apply(this, arguments);
+                    this.removeLayout();
+                    _.each(this.modules, function (mod) {
+                        mod.stopListening(this);
+                    }, this);
+                },
+                connect: function (id, module, options) {
+                    utils.copyOption('region', module, options);
+                    Module.prototype.connect.apply(this, arguments);
+                    if (this.run) {
+                        this.forwardModuleAttach(id, module);
+                    }
+                    return this;
+                },
+                computeLayoutOptions: function (options) {
+                    return options;
+                },
+                createLayout: function (options) {
+                    return new RegionManager(options);
+                },
+                initLayout: function () {
+                    var layout = _.result(this, 'layout');
+                    var options;
+                    if (!layout) {
+                        options = this.computeLayoutOptions({ managerRendering: false });
+                        layout = this.createLayout(options);
+                    }
+                    this.layout = layout;
+                    this.useView(this.layout);
+                    return this;
+                },
+                removeLayout: function () {
+                    this.layout.remove();
+                    return this;
+                },
+                forwardModuleAttach: function (moduleid, module) {
+                    this.listenTo(module, 'do:view:attach', this.setModuleRegion);
+                    this.listenTo(module, 'do:view:attach', _.bind(this.moduleSelectedListener, this, moduleid));
+                    return this;
+                },
+                setRegion: function (view, region) {
+                    this.layout.registerView(view, region);
+                    return this;
+                },
+                setModuleRegion: function (module, view, region) {
+                    this.setRegion(view, region || module.region);
+                    return this;
+                },
+                moduleSelectedListener: function (moduleid, module, view, region) {
+                    region || (region = module.region);
+                    module.trigger('parent!do:module:select', region, moduleid, module, view);
+                    var eventname = _.template('parent!do:module:select:<%- region %>', { region: region });
+                    module.trigger(eventname, moduleid, module, view);
+                }
+            });
+        return RegionModule;
+    }(utils, underscore, module, views_regionManager);
+var modules_lazy = function (utils, _, Module) {
+        
+        var LazyModule = Module.extend({
+                initialize: function (options) {
+                    this.options = options;
+                    utils.copyOption('factory', this, options);
+                },
+                events: { 'do:connect:to:parent': 'connectListener' },
+                factory: function (options) {
+                    console.error('Please provide a factory to LazyModule');
+                },
+                connectListener: function (parent, childid, child) {
+                    var extra = _.tail(arguments, 3);
+                    var lazy = this;
+                    parent.once('start', function () {
+                        parent.route(lazy.url + '*parts', _.bind(lazy.loadOnRouteMatch, lazy, parent, childid, extra));
+                    });
+                },
+                loadOnRouteMatch: function (parent, id, extra, uri) {
+                    var child = this.factory(this.options);
+                    parent.connect.apply(parent, [
+                        id,
+                        child
+                    ].concat(extra));
+                    child.then(function () {
+                        child.navigate('loading', {
+                            trigger: true,
+                            replace: true
+                        });
+                        child.navigate(uri, {
+                            trigger: true,
+                            replace: true
+                        });
+                    });
+                }
+            });
+        return LazyModule;
+    }(utils, underscore, module);
 var mixins_observable = function (_, Backbone) {
         
         var exposedPubsubProperties = [
@@ -305,10 +417,10 @@ var service = function (_, utils, Mixin, Observable) {
                     dispose(this, serviceid, module);
                 },
                 onChildConnectListener: function (serviceid, child, childid, parent) {
-                    use(this, serviceid, child, parent);
+                    use(this, serviceid, child, parent, childid);
                 },
                 onChildDisconnectListener: function (serviceid, child, childid, parent) {
-                    dispose(this, serviceid, child, parent);
+                    dispose(this, serviceid, child, parent, childid);
                 },
                 doLink: function (element, serviceid) {
                     element[serviceid] = this;
@@ -329,23 +441,23 @@ var service = function (_, utils, Mixin, Observable) {
                 }
             });
         Service.mix(Observable);
-        function use(service, serviceid, module, parent) {
+        function use(service, serviceid, module, parent, childid) {
             if (_.result(service, 'link')) {
                 service.doExpose(module, serviceid);
             }
             if (_.result(service, 'expose')) {
                 service.doExpose(module, serviceid);
             }
-            service.use(module, parent);
+            service.use(module, parent, childid);
             if (service.useDeep) {
-                _.each(module.modules, function (submodule) {
-                    use(service, serviceid, submodule, module);
+                _.each(module.modules, function (submodule, childid) {
+                    use(service, serviceid, submodule, module, childid);
                 }, service);
                 module.on('on:child:connect', _.bind(service.onChildConnectListener, service, serviceid));
                 module.on('on:child:disconnect', _.bind(service.onChildDisconnectListener, service, serviceid));
             }
         }
-        function dispose(service, serviceid, module, parent) {
+        function dispose(service, serviceid, module, parent, childid) {
             if (_.result(service, 'link')) {
                 service.undoLink(module, serviceid);
             }
@@ -353,17 +465,18 @@ var service = function (_, utils, Mixin, Observable) {
                 service.undoExpose(module, serviceid);
             }
             if (service.useDeep) {
-                _.each(module.modules, function (submodule) {
-                    dispose(service, serviceid, submodule, module);
+                _.each(module.modules, function (submodule, childid) {
+                    dispose(service, serviceid, submodule, module, childid);
                 }, service);
                 module.off('on:child:connect', null, service);
                 module.off('on:child:disconnect', null, service);
             }
-            service.dispose(module, parent);
+            service.dispose(module, parent, childid);
         }
         return Service;
     }(underscore, utils, mixin, mixins_observable);
-var observableBuffer = function (Mixin) {
+var observableBuffer = function (Mixin, _) {
+        
         var ObservableBuffer = Mixin.extend({
                 constructor: function () {
                     this.store = [];
@@ -377,23 +490,28 @@ var observableBuffer = function (Mixin) {
                         case 'on':
                         case 'off':
                         case 'once':
-                            if (args && this === args[2]) {
-                                on[method].apply(on, args.slice(0, 2).concat([on]).concat(args.slice(3)));
-                                break;
-                            }
+                            callAndReplaceWithArg(method, args, 2, on, this);
+                            break;
                         case 'stopListening':
                         case 'listenToOnce':
                         case 'listenTo':
-                            if (args && this === args[1]) {
-                                on[method].apply(on, args.slice(0, 1).concat([on]).concat(args.slice(2)));
-                                break;
-                            }
+                            callAndReplaceWithArg(method, args, 1, on, this);
+                            break;
                         default:
                             on[method].apply(on, args);
                         }
                     }, this);
                 }
             });
+        function callAndReplaceWithArg(method, args, position, on, ifEqual) {
+            var newArgs;
+            if (args && ifEqual === args[position]) {
+                newArgs = args.slice(0, position).concat([on]).concat(args.slice(position + 1));
+            } else {
+                newArgs = args;
+            }
+            on[method].apply(on, newArgs);
+        }
         _.each([
             'on',
             'off',
@@ -413,8 +531,9 @@ var observableBuffer = function (Mixin) {
             };
         });
         return ObservableBuffer;
-    }(mixin);
+    }(mixin, underscore);
 var viewStore = function (_, utils, Mixin) {
+        
         var ViewStore = Mixin.extend({
                 factories: null,
                 views: null,
@@ -467,7 +586,7 @@ var viewStore = function (_, utils, Mixin) {
             });
         return ViewStore;
     }(underscore, utils, mixin);
-var mixins_startable = function () {
+var mixins_startable = function (_, Deferred) {
         
         var Startable = {
                 run: false,
@@ -475,11 +594,15 @@ var mixins_startable = function () {
                     if (this.run) {
                         return false;
                     }
+                    this.run = true;
+                    var d = new Deferred();
+                    this.waitFor(d);
                     if (!this._firstStarted) {
-                        this._firstStart();
                         this._firstStarted = true;
+                        this._firstStart();
                     }
                     this._doStart();
+                    d.resolve(true);
                     this.thenWith(this, null, this._startError);
                 },
                 standby: function () {
@@ -506,7 +629,6 @@ var mixins_startable = function () {
                 },
                 _doStart: function () {
                     this.trigger('start', this);
-                    this.run = true;
                 },
                 _doStandby: function () {
                     this.trigger('standby', this);
@@ -518,7 +640,7 @@ var mixins_startable = function () {
                 }
             };
         return Startable;
-    }();
+    }(underscore, deferred);
 var mixins_deferrable = function (_, Deferred) {
         
         var messages = {
@@ -540,7 +662,30 @@ var mixins_deferrable = function (_, Deferred) {
                     this.async.enqueue(promise, options);
                     return this;
                 },
+                waitForFetch: function (obj, options) {
+                    var req = obj.fetch();
+                    var deferred = new Deferred();
+                    this.waitFor(deferred, options);
+                    req.then(function fetchSuccess() {
+                        deferred.resolve(obj);
+                    }, function fetchError(err) {
+                        deferred.reject(err);
+                    });
+                    return this;
+                },
+                waitForFetchOnce: function (obj, options) {
+                    if (!obj.loaded) {
+                        this.waitForFetch(obj, options).then(null, function () {
+                            obj.loaded = false;
+                        });
+                        obj.loaded = true;
+                        return this;
+                    }
+                    this.waitFor(obj, options);
+                    return this;
+                },
                 then: function (success, error, always) {
+                    var extra = _.tail(arguments, 3);
                     if (!this.isWaiting()) {
                         if (success) {
                             success();
@@ -550,11 +695,16 @@ var mixins_deferrable = function (_, Deferred) {
                         }
                         return this;
                     }
-                    this.async.then(success, error, always);
+                    this.async.then(success ? _.partial.apply(_, [success].concat(extra)) : success, error ? _.partial.apply(_, [error].concat(extra)) : error, always ? _.partial.apply(_, [always].concat(extra)) : always);
                     return this;
                 },
                 thenWith: function (context, success, error, always) {
-                    return this.then(success ? _.bind(success, context) : success, error ? _.bind(error, context) : error, always ? _.bind(always, context) : always);
+                    var extra = _.tail(arguments, 4);
+                    return this.then.apply(this, [
+                        success ? _.bind(success, context) : success,
+                        error ? _.bind(error, context) : error,
+                        always ? _.bind(always, context) : always
+                    ].concat(extra));
                 },
                 abort: function () {
                     if (this.isWaiting()) {
@@ -677,9 +827,17 @@ var mixins_deferrable = function (_, Deferred) {
                         return 'pending' !== p.state();
                     });
                 _.any(this.promises, function (p, index) {
+                    var args;
                     if (p === promise) {
                         this.results.splice(index, 1, data.length <= 2 ? data[0] : _.rest(data, 1));
-                        return true;
+                        if (data.length === 1) {
+                            args = data[0];
+                        } else if (data.length === 3 && data[2].statusText) {
+                            args = data[0];
+                        } else {
+                            args = data;
+                        }
+                        this.results.splice(index, 1, args);
                     }
                 }, this);
                 if (!processed) {
@@ -755,84 +913,46 @@ var services_session = function (_, Backbone, utils, Service) {
             });
         return Session;
     }(underscore, backbone, utils, service);
-var services_canvas = function ($, Service, utils, Region) {
+var services_canvas = function ($, _, Service, utils) {
+        
         var Canvas = Service.extend({
                 selector: 'body',
-                canvas: null,
-                useDeep: true,
+                empty: true,
+                useDeep: false,
                 initialize: function (options) {
                     utils.copyOption([
                         'selector',
-                        'canvas'
+                        'empty'
                     ], this, options);
-                    if (!this.canvas) {
-                        this.canvas = new Region({
-                            template: $(this.selector).html(),
-                            manageRendering: false
-                        });
-                    }
+                    this.currentView = {};
                 },
                 use: function (module, parent) {
-                    var container = parent && parent.canvas || this.canvas;
-                    var canvasRegion = module.containerRegion || parent && parent.region;
-                    utils.copyOption(['region'], module, module.options);
-                    if (!parent) {
-                        if (module.run) {
-                            this.renderAndAppendService(module);
-                        } else {
-                            module.on('start', this.renderAndAppendService, this);
-                        }
-                    }
-                    if (module.canvas) {
-                        if (module.run) {
-                            this.renderAndAppendCanvas(canvasRegion, module, container);
-                        } else {
-                            module.on('start', _.bind(this.renderAndAppendCanvas, this, canvasRegion, module, container), this);
-                        }
-                    } else {
-                        module.canvas = container;
-                    }
+                    utils.copyOption(['selector'], module, module.options);
                     module.on('do:view:attach', this.attachView, this);
                 },
                 dispose: function (module, parent) {
-                    if (!parent) {
-                        this.disposeRoot(module);
-                    } else {
-                        this.disposeRegion(module, parent);
-                    }
-                },
-                renderAndAppendService: function (module) {
-                    this.canvas.setElement(this.selector);
-                    module.render(this.canvas);
-                },
-                renderAndAppendCanvas: function (region, module, container) {
-                    module.render(module.canvas);
-                    container.registerView(module.canvas, region);
+                    module.off('do:view:attach', this.attachView, this);
                 },
                 attachView: function (module, view) {
-                    var canvas = module.canvas || this.canvas;
-                    canvas.registerView(view, module.region);
-                },
-                useRegion: function (module, parent) {
-                    var canvas = parent && parent.canvas || this.canvas;
-                    if (module.canvas) {
-                    } else if (parent) {
-                        parent.attach(canvas);
+                    var selector = module.selector || this.selector;
+                    var $selector = $(selector);
+                    if (this.currentView[selector]) {
+                        this.currentView[selector].remove();
                     }
-                    module.on('do:view:attach', function (module, view) {
-                        var canvas = module.canvas || parent && parent.canvas || this.canvas;
-                        canvas.registerView(view, module.region);
-                    }, this);
-                },
-                disposeRoot: function (module) {
-                    module.off('start:first', null, this);
-                },
-                disposeRegion: function (module, parent) {
-                    module.off('do:view:attach', null, this);
+                    if (this.empty) {
+                        $selector.empty();
+                    }
+                    this.currentView[selector] = view;
+                    $selector.append(view.$el);
+                    if (view._attachPlugins) {
+                        view._attachPlugins();
+                    } else if (view.attachPlugins) {
+                        view.attachPlugins();
+                    }
                 }
             });
         return Canvas;
-    }(jquery, service, utils, views_regionManager);
+    }(jquery, underscore, service, utils);
 var services_routing = function (_, Backbone, utils, Service) {
         
         var Routing = Service.extend({
@@ -851,16 +971,16 @@ var services_routing = function (_, Backbone, utils, Service) {
                         this.router = new Backbone.Router();
                     }
                 },
-                use: function (module, parent) {
+                use: function (module, parent, moduleid) {
                     if (!parent) {
                         this.listenTo(module, 'start:first', this.startHistory);
                         this.listenTo(module, 'stop', this.stopHistory);
                     }
                     this.listenTo(module, 'do:route:navigate', this.navigate);
                     this.listenTo(module, 'do:route:register', this.route);
-                    this.setModuleUrl(module, parent).registerModuleRoutes(module);
+                    this.setModuleUrl(module, parent, moduleid).registerModuleRoutes(module);
                 },
-                dispose: function (module, parent) {
+                dispose: function (module, parent, moduleid) {
                     this.unregisterModuleRoutes(module);
                     module.url = null;
                     this.stopListening(module, 'do:route:navigate', this.navigate);
@@ -870,9 +990,12 @@ var services_routing = function (_, Backbone, utils, Service) {
                         this.stopListening(module, 'stop', this.stopHistory);
                     }
                 },
-                setModuleUrl: function (module, parent) {
+                setModuleUrl: function (module, parent, moduleid) {
                     var parentUrl = parent ? parent.url : this.prefix;
                     utils.copyOption(['urlRoot'], module, module.options);
+                    if (typeof module.urlRoot === 'undefined' || null === module.urlRoot) {
+                        module.urlRoot = moduleid;
+                    }
                     module.url = url(parentUrl, module.urlRoot);
                     return this;
                 },
@@ -964,6 +1087,7 @@ var services_routing = function (_, Backbone, utils, Service) {
         return Routing;
     }(underscore, backbone, utils, service);
 var services_events = function (_, Service) {
+        
         var Events = Service.extend({
                 useDeep: true,
                 initialize: function () {
@@ -987,6 +1111,7 @@ var services_events = function (_, Service) {
         return Events;
     }(underscore, service);
 var services_template = function (_, utils, Service) {
+        
         var Template = Service.extend({
                 engine: null,
                 useDeep: true,
@@ -1034,6 +1159,7 @@ var services_template = function (_, utils, Service) {
         return Template;
     }(underscore, utils, service);
 var engines_handlebars = function (_, Backbone, Handlebars, Mixin, Observable, Deferrable, Startable) {
+        
         var ViewExtension = {
                 precompile: function (template) {
                     if (typeof template === 'string') {
@@ -1051,7 +1177,6 @@ var engines_handlebars = function (_, Backbone, Handlebars, Mixin, Observable, D
                     Startable._firstStart.apply(this, arguments);
                 },
                 _doStop: function () {
-                    var engine = this.engine;
                     _.each(ViewExtension, function unmix(method, name) {
                         if (Backbone.View.prototype[name] === method) {
                             Backbone.View.prototype[name] = null;
@@ -1074,6 +1199,7 @@ var engines_handlebars = function (_, Backbone, Handlebars, Mixin, Observable, D
         return Engine;
     }(underscore, backbone, handlebars, mixin, mixins_observable, mixins_deferrable, mixins_startable);
 var engines_underscore = function (_, Backbone, Mixin, Observable, Deferrable, Startable) {
+        
         var ViewExtension = {
                 precompile: function (template) {
                     if (typeof template === 'string') {
@@ -1120,7 +1246,8 @@ var engines_underscore = function (_, Backbone, Mixin, Observable, Deferrable, S
         ]);
         return Engine;
     }(underscore, backbone, mixin, mixins_observable, mixins_deferrable, mixins_startable);
-var fossil = function (deferred, utils, Mixin, Module, Service, ObservableBuffer, ViewStore, Observable, Startable, Deferrable, Session, Canvas, Routing, Events, Template, Underscore, Handlebars) {
+var fossil = function (deferred, utils, Mixin, Module, RegionModule, LazyModule, Service, ObservableBuffer, ViewStore, Observable, Startable, Deferrable, Session, Canvas, Routing, Events, Template, Underscore, Handlebars) {
+        
         var Fossil = {
                 utils: utils,
                 Mixin: Mixin,
@@ -1130,6 +1257,10 @@ var fossil = function (deferred, utils, Mixin, Module, Service, ObservableBuffer
                     Deferrable: Deferrable
                 },
                 Module: Module,
+                modules: {
+                    region: RegionModule,
+                    lazy: LazyModule
+                },
                 Service: Service,
                 services: {
                     Session: Session,
@@ -1146,4 +1277,4 @@ var fossil = function (deferred, utils, Mixin, Module, Service, ObservableBuffer
                 ObservableBuffer: ObservableBuffer
             };
         return Fossil;
-    }(deferred, utils, mixin, {}, service, observableBuffer, viewStore, mixins_observable, mixins_startable, mixins_deferrable, services_session, services_canvas, services_routing, services_events, services_template, engines_handlebars, engines_underscore);return fossil;})();
+    }(deferred, utils, mixin, {}, modules_region, modules_lazy, service, observableBuffer, viewStore, mixins_observable, mixins_startable, mixins_deferrable, services_session, services_canvas, services_routing, services_events, services_template, engines_handlebars, engines_underscore);return fossil;})();
