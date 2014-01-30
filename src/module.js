@@ -334,6 +334,13 @@ define([
             return this;
         }),
 
+        // Triggers an event when current deferred are not resolved.
+        //
+        // ``` javascript
+        // module
+        //    .waitFor(deferred)
+        //    .thenTrigger('do:sidebar:show', 'error');
+        // ```
         thenTrigger: function (success, error, always) {
             var mod = this;
             var extra = _.tail(arguments, 3);
