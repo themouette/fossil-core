@@ -46,6 +46,8 @@ Usage
 
 Fossil is available as both amd module and standalone build.
 
+> **WARNING** For now only AMD is stable.
+
 ``` html
 <html>
     <head></head>
