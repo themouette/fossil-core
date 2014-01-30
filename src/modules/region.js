@@ -50,9 +50,9 @@
 //
 // ### Create layout
 define([
-    'fossil/utils',
+    '../utils',
     'underscore',
-    'fossil/module', 'fossil/views/regionManager'
+    '../module', 'fossil/views/regionManager'
 ], function (utils, _, Module, RegionManager) {
     "use strict";
 
@@ -64,7 +64,7 @@ define([
         //
         // Copy options and bind methods.
         constructor: function (options) {
-            utils.copyOption(['layoutOptions'], this, options);
+            utils.copyOption(['layout'], this, options);
             this.forwardModuleAttach = utils.keyValueOrObject(this.forwardModuleAttach);
             _.bindAll(this, 'setModuleRegion');
             Module.apply(this, arguments);
@@ -125,7 +125,7 @@ define([
         // @param Object    options extra options.
         connect: function (id, module, options) {
             utils.copyOption('region', module, options);
-            Module.prototype.connect.call(this, id, module);
+            Module.prototype.connect.apply(this, arguments);
             if (this.run) {
                 this.forwardModuleAttach(id, module);
             }
