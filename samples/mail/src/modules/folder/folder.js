@@ -30,24 +30,29 @@ define([
             utils.copyOption(['collection'], this, options);
         },
 
-        prepareFolders: function () {
-            if (!this.folders) {
-                this.folders = new FolderCollection({
+        // fetch folder collection
+        prepareFolders: function (region) {
+            var folders = this.folders;
+
+            if (!folders) {
+                folders = this.folders = new FolderCollection({
                     type: this.type
                 });
             }
 
-            this
-                .waitFor(this.folders);
 
-            if (!this.folders.loaded) {
+            if (!folders.loaded) {
 
                 this
-                    .useView('loading')
-                    .waitFor(this.folders.fetch())
-                    .then(null, function folderFetchError() {this.folders.loaded = false;});
+                    .useView('loading', region)
+                    .waitForFetch(folders)
+                    .then(null, function folderFetchError() {folders.loaded = false;});
 
-                this.folders.loaded = true;
+                folders.loaded = true;
+            }
+            else {
+                this
+                    .waitFor(folders);
             }
 
             return this;
@@ -81,23 +86,26 @@ define([
         //
         // @param region the region to use as display
         show: function (region) {
-            var stateModel = this.prepareStateModel();
             this
                 .abort()
-                .prepareFolders()
-                .thenWith(this, function (folders) {
-                    // create view
-                    var view = this.view = new View({
-                        collection: folders,
-                        className: 'mod-folders',
-                        model: stateModel
-                    });
-
-                    return this.render(view).attach(view, region);
-                }, this.showError);
+                // region is passed to append loading view in the same region.
+                .prepareFolders(region)
+                .thenWith(this, this.renderShow, this.showError, null, region);
         },
 
-        showError: function (error) {
+        renderShow: function (region, folders) {
+            var stateModel = this.prepareStateModel();
+            // create view
+            var view = this.view = new View({
+                collection: folders,
+                className: 'mod-folders',
+                model: stateModel
+            });
+
+            return this.render(view).attach(view, region);
+        },
+
+        showError: function (region, error) {
             this.useView(new View({
                 template: 'Une erreur est survenue'
             }));

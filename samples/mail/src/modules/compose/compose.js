@@ -1,6 +1,6 @@
 define([
-    'fossil/module', 'fossil/views/view'
-], function (Module, View) {
+    'fossil/module', './view', '../../models/mail'
+], function (Module, View, Mail) {
     "use strict";
 
     var Compose = Module.extend({
@@ -13,7 +13,14 @@ define([
         },
 
         compose: function (id) {
-            this.useView('Compose');
+            var view = new View({
+                model: new Mail({
+                    id: id,
+                    to: 'joe@fossil.js',
+                    content: ''
+                })
+            });
+            this.useView(view);
         }
     });
     return Compose;

@@ -38,35 +38,18 @@ define([
             this.conversations = null;
         },
 
-        prepareConversations: function () {
+        list: function () {
             if (!this.conversations) {
                 this.conversations = new Conversations({
                     type: this.type
                 });
             }
 
-            if (!this.conversations.loaded) {
-
-                this
-                    .abort()
-                    .useView('loading')
-                    .waitFor(this.conversations.fetch());
-
-                this.conversations.loaded = true;
-            }
-
-            return this;
-        },
-
-        list: function () {
             this
-                .prepareConversations()
-                .thenWith(this, function () {
-                    this.useView('list', this.conversations);
-                }, function (error) {
-                    this.conversations.loaded = false;
-                    this.useView('error', error);
-                });
+                .abort()
+                .useView('loading')
+                .waitForFetchOnce(this.conversations)
+                .thenUseView('list', 'error');
         },
 
         show: function (id) {

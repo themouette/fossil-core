@@ -1,7 +1,7 @@
 define([
     'fossil/utils',
     'underscore',
-    './lib/regionModule', 'fossil/views/view', 'fossil/views/regionManager',
+    'fossil/modules/region', 'fossil/modules/lazy', 'fossil/views/view', 'fossil/views/regionManager',
     'hbars!templates/layout',
     'module.compose',
     'module.conversation',
@@ -9,7 +9,7 @@ define([
     'module.trash',
     'module.folder',
     './modules/conversation/conversation'
-], function (utils, _, RegionModule, View, RegionManager, layoutTpl, compose, conversation, draft, trash, folder, Conversation) {
+], function (utils, _, RegionModule, LazyModule, View, RegionManager, layoutTpl, compose, conversation, draft, trash, folder, Conversation) {
     "use strict";
 
     var Application = RegionModule.extend({
@@ -36,7 +36,7 @@ define([
             // routes maps to event by default when there is no matching
             // method.
             '': 'route:index',
-            'inbox*parts': 'showInbox',
+//            'inbox*parts': 'showInbox',
             'drafts': 'showDrafts',
             'drafts/:id': 'showDraftsItem',
             'trash': 'showTrash',
@@ -55,8 +55,12 @@ define([
         initialize: function (options) {
             options || (options = {});
             this
+                .connect('inbox', new LazyModule({
+                    factory: function inboxFactory(options) {
+                        return conversation;
+                    }
+                }), {region: 'main'})
                 .connectCompose(options.compose)
-                // .connectInbox(options.inbox)
                 // .connectDrafts(options.drafts)
                 // .connectTrash(options.trash)
                 ;
@@ -73,18 +77,18 @@ define([
 
             return module;
         },
-
-        // create the conversation module if not provided
-        connectInbox: function (conversationOption) {
-            var module = this.modules.inbox;
-
-            if (!module) {
-                module = conversationOption || conversation;
-                this.connect('inbox', module, {region: 'main'});
-            }
-
-            return module;
-        },
+//
+//        // create the conversation module if not provided
+//        connectInbox: function (conversationOption) {
+//            var module = this.modules.inbox;
+//
+//            if (!module) {
+//                module = conversationOption || conversation;
+//                this.connect('inbox', module, {region: 'main'});
+//            }
+//
+//            return module;
+//        },
 
         // create the drafts module if not provided
         connectDrafts: function (draftOption) {
@@ -192,22 +196,22 @@ define([
         page404: function (route) {
             this.setRegion(new View({template:'404'}), 'main');
         },
-
-
-        // Load inbox module.
-        //
-        // inbox module urls will overload this one.
-        // This is only for connecting module the first time.
-        showInbox: function (part) {
-            var inbox = this.connectInbox();
-
-            // A url change is required to have the forward change.
-            inbox.navigate('loading', {trigger: true, replace:true});
-
-            inbox.then(function () {
-                inbox.navigate(part || '', {trigger: true, replace:true});
-            });
-        },
+//
+//
+//        // Load inbox module.
+//        //
+//        // inbox module urls will overload this one.
+//        // This is only for connecting module the first time.
+//        showInbox: function (part) {
+//            var inbox = this.connectInbox();
+//
+//            // A url change is required to have the forward change.
+//            inbox.navigate('loading', {trigger: true, replace:true});
+//
+//            inbox.then(function () {
+//                inbox.navigate(part || '', {trigger: true, replace:true});
+//            });
+//        },
 
 
         showDrafts: function () {
