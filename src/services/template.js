@@ -72,9 +72,12 @@ define(['underscore', '../utils', '../service'], function (_, utils, Service) {
         // forward view rendering to engine.
         //
         // this is this service main goal
-        doViewRender: function (module, view) {
-            var helpers = this.getHelpers(module, view);
-            var globals = this.getExtraData(module, view);
+        doViewRender: function (module, view, helpers, globals) {
+            helpers || (helpers = {});
+            globals || (globals = {});
+
+            _.extend(helpers, this.getHelpers(module, view));
+            _.extend(globals, this.getExtraData(module, view));
 
             this.engine.render(view, helpers, globals);
         },
