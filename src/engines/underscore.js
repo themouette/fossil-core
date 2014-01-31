@@ -72,6 +72,11 @@ define([
             );
 
             return view.render(extra);
+        },
+
+        // there is no default escaping in underscore.
+        safe: function (str) {
+            return str;
         }
     });
 

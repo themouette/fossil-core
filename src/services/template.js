@@ -69,6 +69,15 @@ define(['underscore', '../utils', '../service'], function (_, utils, Service) {
             return this;
         }),
 
+        // Return a safe string for template engine.
+        safe: function (str) {
+            if (this.engine.safe) {
+                return this.engine.safe(str);
+            }
+
+            return str;
+        },
+
         // forward view rendering to engine.
         //
         // this is this service main goal

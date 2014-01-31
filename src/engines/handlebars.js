@@ -53,6 +53,10 @@ define([
             };
 
             return view.render(extra);
+        },
+
+        safe: function (str) {
+            return new Handlebars.SafeString(str);
         }
     });
 

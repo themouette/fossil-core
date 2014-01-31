@@ -386,7 +386,7 @@ template.helper('linkTo', function (title, url) {
     // fragments are all but title and extra arguments
     var fragments = _.initial(_.tail(arguments));
     // note that it is possible to call other helpers in helper.
-    return '<a href="' + extra.helpers.url.apply(this, fragments) +'">'+title+'</a>';
+    return template.safe('<a href="' + extra.helpers.url.apply(this, fragments) +'">'+title+'</a>');
 });
 ```
 
