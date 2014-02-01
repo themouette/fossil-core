@@ -1,6 +1,6 @@
 define([
-    'fossil/utils', 'fossil/module', './viewStore', '../../collections/conversation'
-], function (utils, Module, viewStore, Conversations) {
+    'underscore', 'fossil/utils', 'fossil/module', './viewStore', '../../collections/conversation'
+], function (_, utils, Module, viewStore, Conversations) {
     "use strict";
 
     var Conversation = Module.extend({
@@ -30,10 +30,12 @@ define([
 
         startListener: function () {
             this.viewStore = viewStore();
+            this.viewStore.decorateModule(this);
         },
 
         standbyListener: function () {
             this.viewStore.clean();
+            this.viewStore.restoreModule(this);
             this.conversations.stopListening();
             this.conversations = null;
         },
@@ -56,14 +58,6 @@ define([
             this
                 .waitFor(id)
                 .thenUseView('show');
-        },
-
-        // retrive or instanciat a view from store
-        useView: function (name, options) {
-            if (this.viewStore.has(name)) {
-                return Module.prototype.useView.call(this, this.viewStore.get.apply(this.viewStore, arguments));
-            }
-            return Module.prototype.useView.apply(this, arguments);
         }
     });
     return Conversation;

@@ -1,4 +1,5 @@
 define([
+    'underscore',
     'fossil/module',
     'fossil/viewStore',
     'fossil/views/view',
@@ -6,7 +7,7 @@ define([
     './todoCollection',
     './listView',
     './showView'
-], function (Module, ViewStore, View, Todo, TodoCollection, ListView, ShowView) {
+], function (_, Module, ViewStore, View, Todo, TodoCollection, ListView, ShowView) {
     "use strict";
     var Application = Module.extend({
 
@@ -18,6 +19,9 @@ define([
         startListener: function (app) {
 
             var store = this.store = new ViewStore();
+
+            store.decorateModule(this);
+
             store.set('404', function (message) {
                 return new View({template: message || 'Not found'});
             });
@@ -62,6 +66,7 @@ define([
             // and delete it.
             this.todos = null;
 
+            this.viewStore.restoreModule(this);
             this.store.clean();
             this.store = null;
         },
@@ -88,14 +93,6 @@ define([
                 model: todo
             });
             this.useView(view);
-        },
-
-        // retrive or instanciat a view from store
-        useView: function (name, options) {
-            if (this.store.has(name)) {
-                return Module.prototype.useView.call(this, this.store.get.apply(this.store, arguments));
-            }
-            return Module.prototype.useView.apply(this, arguments);
         }
     });
 
