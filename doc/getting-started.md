@@ -480,6 +480,18 @@ var Application = Module.extend({
             });
         });
 
+        // Finally decorate `useView` method to leverage viewStore.
+        store.decorateModule(this);
+
+        // From now on, just call `useView('list', 'error', null, null, collection)`
+        // Or more friendly:
+        //
+        // ``` javascript
+        // module
+        //  .waitForFetch(collection)
+        //  .thenUseView('list', 'error');
+        // ```
+
         /*
             previous code
         */
@@ -492,29 +504,13 @@ var Application = Module.extend({
             previous code
         */
 
+        // restore original useView method
+        this.store.undecorateModule(this);
+        // clean all existing views, this cleans all bindings and instanciated
+        // views.
         this.store.clean();
         this.store = null;
     },
-});
-```
-
-A simple application extension add the ability to pass view key to `useView`:
-
-``` javascript
-// src/application.js
-var Application = Module.extend({
-
-    /*
-        previous code
-    */
-
-    // retrive or instanciate a view from store
-    useView: function (name, options) {
-        if (this.store.has(name)) {
-            return Module.prototype.useView.call(this, this.store.get.apply(this.store, arguments));
-        }
-        return Module.prototype.useView.apply(this, arguments);
-    }
 });
 ```
 
