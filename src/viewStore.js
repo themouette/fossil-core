@@ -188,8 +188,53 @@ define(['underscore', './utils', './mixin'], function (_, utils, Mixin) {
             if (this.views[id]) {
                 this.views[id].remove(true);
             }
+        },
+
+        decorateModule: function (module) {
+            // keep a reference for undecorate method.
+            if (module.hasOwnProperty('useView')) {
+                module.__Fossil_ViewStore_useViewOrig = module.useView;
+            }
+
+            useViewDecrator(this, module);
+        },
+
+        // restore original useView method.
+        //
+        // @see decorateModule
+        // @return
+        undecorateModule: function (module) {
+            // there were an instance method
+            if (module.__Fossil_ViewStore_useViewOrig) {
+                module.useView = module.__Fossil_ViewStore_useViewOrig;
+                delete module.__Fossil_ViewStore_useViewOrig;
+
+                return this;
+            }
+
+            // back to prototype
+            delete module.useView;
+            return this;
         }
     });
 
     return ViewStore;
+
+    function useViewDecrator(store, module) {
+        var useView = module.useView;
+        // retrieve or instantiate a view from store
+        module.useView = function (name, helpers, data) {
+            if (store.has(name)) {
+                // all promised arguments
+                var promised = _.rest(arguments, 3);
+                // retrieve view from viewStore
+                var view = store.get.apply(store, [name].concat(promised));
+                // replace view argument
+                var newArgs = [view].concat(_.rest(arguments, 1));
+
+                return useView.apply(this, newArgs);
+            }
+            return useView.apply(this, arguments);
+        };
+    }
 });

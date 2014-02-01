@@ -111,5 +111,108 @@ define([
                 assert.ok(spy.calledWith(true));
             });
         });
+
+        suite('module decoration', function () {
+            var removeSpy, view, undef, ModuleStub, module, factory;
+            setup(function () {
+
+                // let's fill our store.
+                view = {uuid: "module decoration"}; // this is the view returned by store.
+                factory = sinon.stub().returns(view);
+                store.set('foo', factory);
+
+                // create a stub module class
+                ModuleStub = function () {};
+                module = new ModuleStub();
+            });
+            suite('#decorateModule() should preserve call to original `useView` method', function () {
+                test('with useView as prototype method', function () {
+                    // define useView as `prototype` method.
+                    var spy = ModuleStub.prototype.useView = sinon.spy();
+
+                    // resume classic process
+                    store.decorateModule(module);
+
+                    module.useView('foo');
+
+                    assert.ok(spy.called, 'should call the original method');
+                    assert.ok(spy.calledOnce, 'should call the original method only once');
+                    assert.ok(spy.calledOn(module), 'should call on module context');
+                    assert.ok(spy.calledWith(view, undef, undef), 'should call original method with store view');
+                });
+                test('with useView as instance property', function () {
+                    // define useView as `prototype` method.
+                    var spy = module.useView = sinon.spy();
+
+                    // resume classic process
+                    store.decorateModule(module);
+
+                    module.useView('foo');
+
+                    assert.ok(spy.called, 'should call the original method');
+                    assert.ok(spy.calledOnce, 'should call the original method only once');
+                    assert.ok(spy.calledOn(module), 'should call on module context');
+                    assert.ok(spy.calledWith(view, undef, undef), 'should call original method with store view');
+                });
+            });
+            suite('#decorateModule() should forward paramters to store', function () {
+                var data, helpers, storeArgs;
+                setup(function () {
+                    data = {foo: 1};
+                    helpers = {};
+                    storeArgs = {store: true};
+                });
+                test('with useView as prototype method', function () {
+                    // define useView as `prototype` method.
+                    var spy = ModuleStub.prototype.useView = sinon.spy();
+
+                    // resume classic process
+                    store.decorateModule(module);
+
+                    module.useView('foo', helpers, data, storeArgs);
+
+                    assert.ok(factory.called, 'should call the original method');
+                    assert.ok(factory.calledOnce, 'should call the original method only once');
+                    assert.ok(factory.calledWith(storeArgs), 'should call store factory with extra args');
+                    assert.ok(spy.calledWith(view, helpers, data), 'should call original method with store view and extras');
+                });
+                test('with useView as instance property', function () {
+                    // define useView as `prototype` method.
+                    var spy = module.useView = sinon.spy();
+
+                    // resume classic process
+                    store.decorateModule(module);
+
+                    module.useView('foo', helpers, data, storeArgs);
+
+                    assert.ok(factory.called, 'should call the original method');
+                    assert.ok(factory.calledOnce, 'should call the original method only once');
+                    assert.ok(factory.calledWith(storeArgs), 'should call store factory with extra args');
+                    assert.ok(spy.calledWith(view, helpers, data), 'should call original method with store view and extras');
+                });
+            });
+            suite('#undecorateModule() should restore original', function () {
+                test('with useView as prototype method', function () {
+                    // define useView as `prototype` method.
+                    var spy = ModuleStub.prototype.useView = sinon.spy();
+
+                    // resume classic process
+                    store.decorateModule(module);
+                    store.undecorateModule(module);
+
+                    assert.strictEqual(module.useView, spy, 'should restore original method');
+                });
+                test('with useView as instance property', function () {
+                    // define useView as `prototype` method.
+                    var spy = module.useView = sinon.spy();
+
+                    // resume classic process
+                    store.decorateModule(module);
+                    store.undecorateModule(module);
+
+                    assert.strictEqual(module.useView, spy, 'should restore original method');
+                });
+            });
+        });
     }); //end of main suite
 });
