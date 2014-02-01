@@ -74,6 +74,45 @@ define([
                 });
             });
 
+            suite('#thenUseView()', function () {
+                var module, view;
+                setup(function () {
+                    module = new Module();
+                    view = new Backbone.View();
+                });
+                test('should call `useView` at resolution', function(done) {
+                    var helpers = {linkTo: 'bar'},
+                        data = {'foo': 'bar'};
+                    module.useView = sinon.spy();
+
+                    module
+                        .thenUseView(view, null, helpers, data)
+                        .then(function () {
+                            assert.ok(module.useView.called, 'Should call useView');
+                            assert.ok(module.useView.calledOnce, 'Should call useView Only once');
+                            assert.ok(module.useView.calledOn(module), 'Should call useView on module context');
+                            assert.ok(module.useView.calledWith(view, helpers, data), 'Should forward helpers and data');
+                            done();
+                        });
+                });
+                test('should forward promised data `useView` at resolution', function(done) {
+                    var fetched = {'foo': 'bar'};
+                    var undef;
+                    module.useView = sinon.spy();
+
+                    module
+                        .waitFor(fetched)
+                        .thenUseView(view)
+                        .then(function () {
+                            assert.ok(module.useView.called, 'Should call useView');
+                            assert.ok(module.useView.calledOnce, 'Should call useView Only once');
+                            assert.ok(module.useView.calledOn(module), 'Should call useView on module context');
+                            assert.ok(module.useView.calledWith(view, undef, undef, fetched), 'Should forward promised data after data and helpers.');
+                            done();
+                        });
+                });
+            });
+
         }); // end of View suite
 
         suite('Module', function () {

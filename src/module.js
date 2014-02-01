@@ -131,9 +131,12 @@ define([
         // module.useView(view); // will render and attach view
         // ```
         //
+        // @param view      View    the view to render
+        // @param helpers   Object  extra helpers
+        // @param globals   Object  extra globals
         // @see Module#render
         // @see Module#attach
-        useView: function (view) {
+        useView: function (view, helpers, globals) {
             var args;
             if (typeof(view) === "string") {
                 view = new View({template: view});
@@ -153,10 +156,15 @@ define([
         // Replaces current view once all deferred are processed.
         // If all promises went right, then `viewOk` will be used
         // and otherwise `viewKo` will be used.
-        thenUseView: function (viewOk, viewKo) {
+        //
+        // @param view      View    the view to render
+        // @param helpers   Object  extra helpers
+        // @param globals   Object  extra globals
+        // @return Module
+        thenUseView: function (viewOk, viewKo, helpers, globals) {
             this.then(
-                viewOk ? _.bind(this.useView, this, viewOk) : null,
-                viewKo ? _.bind(this.useView, this, viewKo) : null
+                viewOk ? _.bind(this.useView, this, viewOk, helpers, globals) : null,
+                viewKo ? _.bind(this.useView, this, viewKo, helpers, globals) : null
             );
 
             return this;
