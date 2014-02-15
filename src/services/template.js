@@ -7,6 +7,9 @@
 //
 // Template engine listens to modules 'do:view:render' event so it is totally
 // transparent to the module.
+//
+// Every view, once rendered, provides a `refresh` method, to ensure data required
+// by helpers are available.
 define(['underscore', '../utils', '../service'], function (_, utils, Service) {
     "use strict";
 
@@ -88,6 +91,8 @@ define(['underscore', '../utils', '../service'], function (_, utils, Service) {
             _.extend(helpers, this.getHelpers(module, view));
             _.extend(globals, this.getExtraData(module, view));
 
+            decorateViewRefresh(this, view, _.rest(arguments, 2));
+
             this.engine.render(view, helpers, globals);
         },
 
@@ -118,6 +123,22 @@ define(['underscore', '../utils', '../service'], function (_, utils, Service) {
         }
 
     });
+
+    function decorateViewRefresh(module, view, args) {
+        var refresh;
+        // restore undecorated method.
+        // This might be decorated with another module or other data.
+        if (view.hasOwnProperty('__Fossil_Module_refreshOrig')) {
+            module.refresh = view.__Fossil_Module_refreshOrig;
+        }
+        // keep a reference to undecorate method for further undecoration.
+        if (view.hasOwnProperty('refresh')) {
+            refresh = module.__Fossil_Module_refreshOrig = view.refresh;
+        }
+        view.refresh = function decoratedViewRefresh() {
+            module.render.apply(module, [module, view].concat(args));
+        };
+    }
 
     return Template;
 });
