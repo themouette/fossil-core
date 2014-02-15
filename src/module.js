@@ -96,10 +96,13 @@ define([
         // module.render(view, extra); // will pass `(module, view, extra)` to handlers.
         // ```
         //
+        // **WARNING** Only `view` argument is stable. further arguments are just
+        // today implmeentation default. You should not use them.
+        //
         // @triggers 'do:view:render'
-        render: function () {
-            var args = _.toArray(arguments);
-            this.trigger.apply(this, ['do:view:render', this].concat(args));
+        render: function (view/* this might change: , helpers, globals*/) {
+            var args = _.rest(arguments, 1);
+            this.trigger.apply(this, ['do:view:render', this, view].concat(args));
 
             return this;
         },
