@@ -190,6 +190,17 @@ define(['underscore', './utils', './mixin'], function (_, utils, Mixin) {
             }
         },
 
+        // Replaces module original useView method to use current store views.
+        //
+        // ```javascript
+        // store.set('myView', function (collection) {
+        //     return new MyView({
+        //         collection: collection
+        //     });
+        // });
+        // store.decorateModule(module);
+        // module.useView('myView', users);
+        // ```
         decorateModule: function (module) {
             // keep a reference for undecorate method.
             if (module.hasOwnProperty('useView')) {
