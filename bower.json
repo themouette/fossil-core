@@ -17,17 +17,17 @@
     "components"
   ],
   "dependencies": {
-    "requirejs": "~2.1.6",
+    "requirejs": ">=2.1.6",
     "requirejs-tpl": "latest",
     "backbone": ">=1.0.0",
-    "jquery": "~2.0.2",
-    "underscore": "~1.4.4"
+    "jquery": ">=2.0.2",
+    "underscore": ">=1.4.4"
   },
   "devDependencies": {
     "chai": "~1.8.1",
     "mocha": "~1.13.0",
     "sinon": "http://sinonjs.org/releases/sinon-1.7.3.js",
-    "handlebars": "~1.0.0",
-    "almond": "~0.2.6"
+    "handlebars": ">=1.0.0",
+    "almond": ">=0.2.6"
   }
 }
