@@ -43,7 +43,7 @@ define(['underscore', '../deferred'], function (_, Deferred) {
         // module
         //    .abort()
         //    .useView('loading')
-        //    .waitForFetch(collection)
+        //    .waitForFetch(collection, {reset: true})
         //    .thenWith(this, function (collection) {
         //        module.useView(new CollectionView({
         //            collection: collection
@@ -52,9 +52,9 @@ define(['underscore', '../deferred'], function (_, Deferred) {
         // ```
         //
         // @param Model|Collection  obj     the object to sync.
-        // @param Object            options see waitFor.
+        // @param Object            options see waitFor. options are fowreded to model or collection.
         waitForFetch: function (obj, options) {
-            var req = obj.fetch();
+            var req = obj.fetch(options);
             var deferred = new Deferred();
             // enqueue the deferred.
             this.waitFor(deferred, options);
@@ -80,12 +80,12 @@ define(['underscore', '../deferred'], function (_, Deferred) {
         // module
         //    .abort()
         //    .useView('loading')
-        //    .waitForFetchOnce(collection)
+        //    .waitForFetchOnce(collection, {reset: true})
         //    .thenUseView('list', 'error');
         // ```
         //
         // @param Model|Collection  obj     the object to sync.
-        // @param Object            options see waitFor.
+        // @param Object            options see waitForFetch.
         waitForFetchOnce: function (obj, options) {
             if (!obj.loaded) {
                 this
